@@ -36,3 +36,11 @@ def start_audio(stop_event):
     sound_file.writeframes(b"".join(frames))
     sound_file.close()
     print("Saved audio")
+
+if __name__ == "__main__":
+    """
+    To record a recording and test it 
+    run this commandin terminal:
+    python record.py
+    """
+    start_audio()
