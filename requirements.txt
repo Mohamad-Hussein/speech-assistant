@@ -1,0 +1,11 @@
+# For the model
+torch==2.0.1
+transformers==4.35.2
+accelerate==0.24.1
+# For typing
+PyAutoGUI==0.9.54
+# For hotkeys
+python-xlib==0.33
+python3-xlib==0.15
+# For audio
+PyAudio==0.2.14
