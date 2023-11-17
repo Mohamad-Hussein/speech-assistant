@@ -1,2 +1,6 @@
 *.wav
 test*.py
+
+# Cache files
+model
+__pycache__
