@@ -18,9 +18,11 @@ class Listener:
         self.pipe = pipe
         self.start_event = start_event
         self.hotkey_held = False
-
-        self.hotkey = {"grave or quoteleft", "Control", "Shift"}
-
+        
+        # -- Hotkey --
+        self.hotkey = {"Super", "Shift"}
+        # ------------
+        
     def keycode_to_key(self, keycode, state):
         i = 0
         if state & X.ShiftMask:
