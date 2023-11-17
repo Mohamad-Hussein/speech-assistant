@@ -9,11 +9,9 @@ from Xlib.display import Display
 from Xlib import X, XK
 from Xlib.ext import record
 from Xlib.protocol import rq
-from multiprocessing import Pipe
-
 
 class Listener:
-    def __init__(self, pipe: Pipe, start_event):
+    def __init__(self, pipe, start_event):
         self.disp = None
         self.keys_down = set()
         self.pipe = pipe
