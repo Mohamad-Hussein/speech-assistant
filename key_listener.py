@@ -18,11 +18,11 @@ class Listener:
         self.pipe = pipe
         self.start_event = start_event
         self.hotkey_held = False
-        
+
         # -- Hotkey --
         self.hotkey = {"Super", "Shift"}
         # ------------
-        
+
     def keycode_to_key(self, keycode, state):
         i = 0
         if state & X.ShiftMask:
@@ -66,7 +66,7 @@ class Listener:
         if key in self.keys_down:
             self.keys_down.remove(key)
             self.print_keys()
-        
+
         # Removing shift key on up
         elif key == "[0]" and "Shift" in self.keys_down:
             self.keys_down.remove("Shift")
@@ -95,11 +95,17 @@ class Listener:
 
             elif event.type == X.KeyRelease:
                 self.up(self.keycode_to_string(event.detail, event.state))
-                if (self.hotkey.issubset(self.keys_down) == False and self.hotkey_held == True):
-                    print("Hit\n\n")
+
+                if (
+                    self.hotkey.issubset(self.keys_down) == False
+                    and self.hotkey_held == True
+                ):
+                    print("Stop recording\n\n")
                     self.pipe.send("Stop")
                     self.hotkey_held = False
                     self.start_event.clear()
+                    # To remove sticky keys to not interfere with hotkey
+                    self.keys_down.clear()
 
             elif event.type == X.ButtonPress:
                 self.down(self.mouse_to_string(event.detail))
