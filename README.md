@@ -22,6 +22,7 @@ python main.py
 4. Release hotkey to stop the recording
 5. And voila! The model will output the transcription on your text cursor!
 ## Notes and Considerations
+- Installing with requirement.txt, package ffmpeg will be missing on model inference. This module can be downloaded with anaconda with -c pytorch.
 - Users with dedicated graphics cards will have a better experience running the big models
 
 ## Configurations
@@ -57,3 +58,4 @@ python3 -m  pip install PyAudio
 - Add windows compatibility by using keyboard library
 - Add GUI
 - Stress tests to make reliable
+- Make Dockerfile
