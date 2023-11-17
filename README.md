@@ -1,5 +1,5 @@
 # speech-assistant
-Welcome to Speech-Assistant! This is a project to implement a private and local real time speech-to-text transcription using the distil-whisper models from HuggingFace, based on this [repo](https://github.com/huggingface/distil-whisper). The speech-to-text assistant writes down spoken words directly to the keyboard cursor. To use it is easy, hold down a hotkey combination of Windows key (Super) and Shift to begin, and let go to end the recording. This is to employ a more efficient and seamless experience. It employs multi-processing to divide workload and deliver an efficient experience.
+Welcome to Speech-Assistant! This is a project to implement a private and local real-time Linux speech-to-text transcription using the distil-whisper models from HuggingFace, based on this [repo](https://github.com/huggingface/distil-whisper). The speech-to-text assistant writes down spoken words directly to the keyboard cursor. To use it is easy, hold down a hotkey combination of Windows key (Super) and Shift to begin, and let go to end the recording. This is to employ a more efficient and seamless experience.
 
 This can also record any microphone chosen such as the input from your system, so it can transcribe any speech playing on your system.
 
