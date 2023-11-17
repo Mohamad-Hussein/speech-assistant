@@ -22,9 +22,9 @@ python main.py
 4. Release hotkey to stop the recording
 5. And voila! The model will output the transcription on your text cursor!
 ## Notes and Considerations
+- Make sure to locate your primary sound input device!
 - Installing with requirement.txt, package ffmpeg will be missing on model inference. This module can be downloaded with anaconda with -c pytorch.
-- Users with dedicated graphics cards will have a better experience running the big models
-
+- Users with dedicated graphics cards will have a better experience running the big models.
 ## Configurations
 
 | Model                                                                      | Params / M | Rel. Latency | Short-Form WER | Long-Form WER |
@@ -42,7 +42,6 @@ python3 -m  pip install PyAudio
 
 
 ## Issues to solve
-- At times, mic doesn't capture audio
 - Current pressed values saves capital letters (somewhat fixed, current pressed down var cleared once pressing hotkey)
 - Fix directory structure
 - Make a real way to exit program.
