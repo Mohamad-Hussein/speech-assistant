@@ -2,7 +2,7 @@ from multiprocessing import Process, Event, Pipe
 # from tkinter import messagebox
 
 from key_listener import Listener
-import record
+from record import start_audio
 from model_inference import service
 
 
@@ -70,7 +70,7 @@ if __name__ == "__main__":
                 # Start recording process
                 print("Recording")
                 recording_process = Process(
-                    target=record.start_audio, args=(stop_event,)
+                    target=start_audio, args=(stop_event,)
                 )
                 recording_process.start()
 
