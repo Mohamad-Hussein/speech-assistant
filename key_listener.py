@@ -12,13 +12,14 @@ from multiprocessing import Pipe
 
 
 class Listener:
-    def __init__(self, pipe: Pipe):
+    def __init__(self, pipe: Pipe, start_event):
         self.disp = None
         self.keys_down = set()
         self.pipe = pipe
-
-        self.hotkey = {"grave or quoteleft", "Control"}
+        self.start_event = start_event
         self.hotkey_held = False
+
+        self.hotkey = {"grave or quoteleft", "Control", "Shift"}
 
     def keycode_to_key(self, keycode, state):
         i = 0
@@ -63,6 +64,7 @@ class Listener:
         if key in self.keys_down:
             self.keys_down.remove(key)
             self.print_keys()
+        
         # Removing shift key on up
         elif key == "[0]" and "Shift" in self.keys_down:
             self.keys_down.remove("Shift")
@@ -81,8 +83,12 @@ class Listener:
 
             if event.type == X.KeyPress:
                 self.down(self.keycode_to_string(event.detail, event.state))
+
+                ## Hotkey
                 if self.hotkey.issubset(self.keys_down) and not self.hotkey_held:
                     self.pipe.send("Start")
+                    print("Start\n\n")
+                    self.start_event.set()
                     self.hotkey_held = True
 
             elif event.type == X.KeyRelease:
@@ -91,6 +97,7 @@ class Listener:
                     print("Hit\n\n")
                     self.pipe.send("Stop")
                     self.hotkey_held = False
+                    self.start_event.clear()
 
             elif event.type == X.ButtonPress:
                 self.down(self.mouse_to_string(event.detail))
