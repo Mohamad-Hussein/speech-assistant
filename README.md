@@ -14,7 +14,7 @@ To get started on Linux (tested on Ubuntu 22.04) we will use Anaconda. Here are 
 conda env create -f env.yml
 conda activate speech-assistant
 ```
-2. Start running the program. The program will download the distil-whisper/distil-large-v2 model by default and cache locally in a folder named 'model'.  It is ~1.5 GB and you can chose the smaller or bigger model. The different choices are in this [configuration](#configurations). You can change this in [model_inference.py]().
+2. Start running the program. The program will download the distil-whisper/distil-large-v2 model by default and cache locally in a folder named 'model'.  It is ~1.5 GB and you can chose the smaller or bigger model. The different choices are in this [configuration](#configurations). You can change this in [model_inference.py](https://github.com/Mohamad-Hussein/speech-assistant/blob/main/src/model_inference.py).
 ```
 python main.py
 ```
