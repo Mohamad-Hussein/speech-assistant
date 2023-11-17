@@ -1,5 +1,5 @@
 from src.parent import main
-
+from os.path import exists
 title = """
        _____                                _          
       / ____|                              | |         
@@ -30,8 +30,14 @@ title2 = """
 ╚═╝░░╚═╝╚═════╝░╚═════╝░╚═╝░░░╚═╝░░░╚═╝░░╚═╝╚═╝░░╚══╝░░░╚═╝░░░
     """
 
-print(title2)
-del title, title2
-
 if __name__ == "__main__":
+    # Welcome message
+    print(title2)
+    del title, title2
+    
+    # Creating wav file if isn't already created
+    if not exists('recording.wav'):
+        with open('recording.wav', 'w') as file:
+            pass
+    
     main()
