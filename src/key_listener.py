@@ -139,4 +139,4 @@ class Listener:
 
 
 if __name__ == "__main__":
-    Listener().run()
+    Listener('test pipe', 'test event').run()
