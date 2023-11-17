@@ -1,12 +1,12 @@
-import pyaudio
-import wave
+from pyaudio import PyAudio, paInt16
+from wave import open
 
 
 def start_audio(stop_event):
-    audio = pyaudio.PyAudio()
+    audio = PyAudio()
 
     stream = audio.open(
-        format=pyaudio.paInt16,
+        format=paInt16,
         channels=1,
         rate=44100,
         input=True,
@@ -29,23 +29,10 @@ def start_audio(stop_event):
     stream.close()
     audio.terminate()
 
-    sound_file = wave.open("recording.wav", "wb")
+    sound_file = open("recording.wav", "wb")
     sound_file.setnchannels(1)
-    sound_file.setsampwidth(audio.get_sample_size(pyaudio.paInt16))
+    sound_file.setsampwidth(audio.get_sample_size(paInt16))
     sound_file.setframerate(44100)
     sound_file.writeframes(b"".join(frames))
     sound_file.close()
     print("Saved audio")
-
-
-# if __name__ == "__main__":
-
-#     key_thread = threading.Thread(target=key_input)
-#     key_thread.daemon = True
-#     audio_thread = threading.Thread(save_audio)
-
-#     audio_thread.start()
-#     key_thread.start()
-
-#     key_thread.join()
-#     audio_thread.join()
