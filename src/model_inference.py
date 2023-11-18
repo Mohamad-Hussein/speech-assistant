@@ -29,7 +29,7 @@ def service(pipe, event):
 
     processor = AutoProcessor.from_pretrained(MODEL_ID, cache_dir=local_cache_dir)
 
-    pipe = pipeline(
+    model_pipe = pipeline(
         "automatic-speech-recognition",
         model=model,
         tokenizer=processor.tokenizer,
@@ -42,7 +42,7 @@ def service(pipe, event):
     )
 
     # Clearing memory
-    if 'cuda' in device:
+    if "cuda" in device:
         print(f"\nModel loaded to {get_device_name(device)}\n\n")
     else:
         print(f"\nModel loaded to CPU\n\n")
@@ -62,7 +62,7 @@ def service(pipe, event):
         while 1:
             event.wait()
             t0 = time()
-            result = pipe(file_path)
+            result = model_pipe(file_path)
             logger.info(f"Time for inference: {time() - t0:.4f} seconds")
             typewrite(result["text"])
             print(
