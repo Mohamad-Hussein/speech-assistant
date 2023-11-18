@@ -43,4 +43,6 @@ if __name__ == "__main__":
     run this commandin terminal:
     python record.py
     """
-    start_audio()
+    from multiprocessing import Event
+    stop_event = Event()
+    start_audio(stop_event)
