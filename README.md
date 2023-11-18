@@ -53,6 +53,7 @@ python3 -m  pip install PyAudio
 
 ## Needed features
 - Add optimizations suggested by HuggingFace
+- Add capability for AMD GPUs
 - Add option to use whatever keybind of user's choosing
 - Add GUI
 - Stress tests to make reliable
