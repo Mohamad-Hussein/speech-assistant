@@ -9,14 +9,14 @@ This is a project to implement a working desktop application on both Linux and W
 # Getting Started
 ## Linux/Windows
 ### Anaconda
-To get started you can get started on any operating system you would like. The program was tested in Pop-Os (Ubuntu22.04), Windows 10 and 11. Here are its installation [instructions](https://docs.anaconda.com/free/anaconda/install/). If you are on Windows make sure to have access to the conda command using the Anaconda cmd terminal, or to source it directly (time-consuming).
+To get started you can get started on any operating system you would like. The program was tested in Pop-Os (Ubuntu22.04), Windows 10 and 11. Here is Anaconda's installation [instructions](https://docs.anaconda.com/free/anaconda/install/). If you are on Windows make sure to have access to the conda command using the Anaconda **cmd** terminal, or to source it directly (time-consuming).
 
 1. Create a running environment from env.yml, this will take ~5-15 minutes depending on your internet connection
 ```
 conda env create -f env.yml
 conda activate speech-assistant
 ```
-2. Start running the program. The program will download the distil-whisper/distil-medium.en model by default and cache it locally in a folder named 'model'.  It is ~800 MB and you can choose the bigger models if you would like, however the smaller model is very accurate and the best choice. The different choices are in this [configuration](#configurations). You can change this in [model_inference.py](https://github.com/Mohamad-Hussein/speech-assistant/blob/main/src/model_inference.py).
+2. Start running the program. The program will download the distil-whisper/distil-medium.en model by default and cache it locally in a folder named 'model'.  It is ~800 MB and you can choose the bigger models if you would like, however, the smaller model is very accurate and the best choice. The different choices are in this [configuration](#configurations). You can change this in [model_inference.py](https://github.com/Mohamad-Hussein/speech-assistant/blob/main/src/model_inference.py).
 ```
 python main.py
 ```
@@ -36,12 +36,13 @@ python main.py
 | [whisper-large-v2](https://huggingface.co/openai/whisper-large-v2)         | 1550       | 1.0          | **9.1**        | 11.7          |
 | [distil-large-v2](https://huggingface.co/distil-whisper/distil-large-v2)   | 756        | 5.8          | 10.1           | **11.6**      |
 | [distil-medium.en](https://huggingface.co/distil-whisper/distil-medium.en) | **394**    | **6.8**      | 11.1           | 12.4          |
+
 # Problems faced along the way
 ## Could not build wheels for PyGOObject
 ```bash
 sudo apt install libgirepository1.0-dev
 ```
-## If PyAudio doesn't work for your linux installation
+## If PyAudio doesn't work for your Linux installation
 ```bash
 sudo apt-get install python3.11-dev
 sudo apt install portaudio19-dev
