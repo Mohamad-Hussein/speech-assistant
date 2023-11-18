@@ -28,6 +28,7 @@ python main.py
 - There is a problem with using powershell, use cmd and activate conda env.
 - Installing with requirement.txt, package ffmpeg will be missing on model inference. This module can be downloaded with anaconda with -c pytorch.
 - Users with dedicated graphics cards will have a better experience running the big models.
+- For transcribing on windows you can use its built in dictation service with left windows + h. The whisper models can be useful for formatting expressive punctuation.
 ## Configurations
 
 | Model                                                                      | Params / M | Rel. Latency | Short-Form WER | Long-Form WER |
@@ -64,3 +65,5 @@ python3 -m  pip install PyAudio
 
 # Credits
 Sound effect: [soundsforyou](https://pixabay.com/users/soundsforyou-4861230/) on pixabay
+
+ Hello! How are you? I'm a lash tech. I have been doing it for two years because I'm such an entrepreneur and I'm a businesswoman and I like money basically.
