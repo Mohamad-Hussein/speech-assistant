@@ -26,9 +26,9 @@ class Listener:
             self.hotkey_held = False
 
     def run(self):
+        # This is to start program once listener is set
         print(f"Hotkey assigned: {self.hotkey}")
-        # add_hotkey(' + '.join(self.hotkey), self.down)
-        # on_release_key(self.hotkey, self.up)
+        self.start_event.set()
 
         try:
             while 1:
