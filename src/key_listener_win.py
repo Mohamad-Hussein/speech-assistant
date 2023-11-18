@@ -8,15 +8,12 @@ class Listener:
         self.hotkey_held = False
 
         # -- Hotkey --
-        self.hotkey = "win", "shift"
-        # ------------    
-
-        add_hotkey('+'.join(self.hotkey), self.down)
-        on_release_key(self.hotkey, self.up)
+        self.hotkey = "left windows", "shift"
+        # ------------
         
 
     def down(self):
-        # print(f"Key {e.name}")
+        print(f"\nHOTKEY PRESSED")
         if not self.hotkey_held and not self.start_event.is_set():
             print(f"{self.hotkey} is held")
             self.start_event.set()
@@ -29,16 +26,20 @@ class Listener:
             self.start_event.clear()
             self.hotkey_held = False
 
+
     def run(self):
-        
+        print(f"{' + '.join(self.hotkey)}")
+        add_hotkey(' + '.join(self.hotkey), self.down)
+        on_release_key(self.hotkey, self.up)
+
         try:
             while 1:
-                # print(self.start_event)     
+                print(self.start_event)     
                 sleep(1)
-        except KeyboardInterrupt:
+        finally:
             print("Ending hotkey listener")
             unhook_all()
-
+ 
 if __name__ == '__main__':
     """This is for testing purposes"""
     from multiprocessing import Event, Pipe
