@@ -1,22 +1,20 @@
 # speech-assistant
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
 
-Welcome to Speech-Assistant! This is a project to implement a private and local real-time Linux speech-to-text transcription using the distil-whisper models from HuggingFace, based on this [repo](https://github.com/huggingface/distil-whisper). The speech-to-text assistant writes down spoken words directly to the keyboard cursor. To use it is easy, hold down a hotkey combination of Windows key (Super) and Shift to begin, and let go to end the recording. This is to employ a more efficient and seamless experience.
+Welcome to Speech-Assistant! This is a project to implement a private and local real-time Linux speech-to-text transcription using the distil-whisper models from HuggingFace, based on this [repo](https://github.com/huggingface/distil-whisper). The speech-to-text assistant writes down spoken words directly to the keyboard cursor. To use it is easy, hold down a hotkey combination of Windows key (Super) and Shift to begin, and let go to end the recording. Your speech will be transcribed in real time and the transcription is going to be typed in for you at the keyboard cursor. I made this program to employ a more efficient and seamless experience with PC usage, and there isn't a speech-to-text service on Linux.
 
-This can also record any microphone chosen such as the input from your system, so it can transcribe any speech playing on your system.
 
 # Getting Started
-## Linux
+## Linux/Windows
 ### Anaconda
-To get started on Linux (tested on Ubuntu 22.04) we will use Anaconda. Here are its installation [instructions](https://docs.anaconda.com/free/anaconda/install/).
+To get started you can get started on any operating system you would like. The program was tested in Pop-Os (Ubuntu22.04), Windows 10 and 11. Here are its installation [instructions](https://docs.anaconda.com/free/anaconda/install/). If you are on Windows make sure to have access to the conda command using the Anaconda cmd terminal, or to source it directly (time-consuming).
 
-
-1. Create running environment from env.yml, this will take ~5-10 minutes depending on your internet connection
+1. Create a running environment from env.yml, this will take ~5-15 minutes depending on your internet connection
 ```
 conda env create -f env.yml
 conda activate speech-assistant
 ```
-2. Start running the program. The program will download the distil-whisper/distil-large-v2 model by default and cache locally in a folder named 'model'.  It is ~1.5 GB and you can chose the smaller or bigger model. The different choices are in this [configuration](#configurations). You can change this in [model_inference.py](https://github.com/Mohamad-Hussein/speech-assistant/blob/main/src/model_inference.py).
+2. Start running the program. The program will download the distil-whisper/distil-medium.en model by default and cache it locally in a folder named 'model'.  It is ~1.5 GB and you can choose the smaller or bigger model. The different choices are in this [configuration](#configurations). You can change this in [model_inference.py](https://github.com/Mohamad-Hussein/speech-assistant/blob/main/src/model_inference.py).
 ```
 python main.py
 ```
