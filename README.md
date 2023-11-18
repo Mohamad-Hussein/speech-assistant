@@ -23,6 +23,7 @@ python main.py
 5. And voila! The model will output the transcription on your text cursor!
 ## Notes and Considerations
 - Make sure to locate your primary sound input device!
+- There is a problem with using powershell, use cmd and activate conda env.
 - Installing with requirement.txt, package ffmpeg will be missing on model inference. This module can be downloaded with anaconda with -c pytorch.
 - Users with dedicated graphics cards will have a better experience running the big models.
 ## Configurations
