@@ -42,7 +42,11 @@ def service(pipe, event):
     )
 
     # Clearing memory
-    print(f"\nModel loaded to {get_device_name(device)}\n\n")
+    if 'cuda' in device:
+        print(f"\nModel loaded to {get_device_name(device)}\n\n")
+    else:
+        print(f"\nModel loaded to CPU\n\n")
+
     del device, torch_dtype, local_cache_dir, processor
 
     # Telling parent that model is loaded
