@@ -1,7 +1,7 @@
 # speech-assistant
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
 
-Welcome to Speech-Assistant! This is a project to implement a private and local real-time Linux speech-to-text transcription using the distil-whisper models from HuggingFace, based on this [repo](https://github.com/huggingface/distil-whisper). The speech-to-text assistant writes down spoken words directly to the keyboard cursor. To use it is easy, hold down a hotkey combination of Windows key (Super) and Shift to begin, and let go to end the recording. Your speech will be transcribed in real time and the transcription is going to be typed in for you at the keyboard cursor. I made this program to employ a more efficient and seamless experience with PC usage. Additionally, there isn't a reliable speech-to-text service on Linux.
+Welcome to Speech-Assistant! This is a project to implement a private and local real-time Linux speech-to-text transcription using the distil-whisper models from HuggingFace, based on this [repo](https://github.com/huggingface/distil-whisper). The speech-to-text assistant writes down spoken words directly to the keyboard cursor. To use it is easy, hold down a hotkey combination of Windows key (Super) and Shift to begin, and let go to end the recording. Your speech will be transcribed in real time and the transcription is going to be typed in for you at the keyboard cursor. I made this program to employ an efficient and seamless experience with PC usage. Additionally, there isn't a reliable speech-to-text model used for transcription on Linux, however, do check out this [repo](https://github.com/ideasman42/nerd-dictation) for the implementation of speech-to-text for the vosk models.
 
 
 # Getting Started
@@ -14,7 +14,7 @@ To get started you can get started on any operating system you would like. The p
 conda env create -f env.yml
 conda activate speech-assistant
 ```
-2. Start running the program. The program will download the distil-whisper/distil-medium.en model by default and cache it locally in a folder named 'model'.  It is ~1.5 GB and you can choose the smaller or bigger model. The different choices are in this [configuration](#configurations). You can change this in [model_inference.py](https://github.com/Mohamad-Hussein/speech-assistant/blob/main/src/model_inference.py).
+2. Start running the program. The program will download the distil-whisper/distil-medium.en model by default and cache it locally in a folder named 'model'.  It is ~800 MB and you can choose the bigger models if you would like, however the smaller model is very accurate and the best choice. The different choices are in this [configuration](#configurations). You can change this in [model_inference.py](https://github.com/Mohamad-Hussein/speech-assistant/blob/main/src/model_inference.py).
 ```
 python main.py
 ```
