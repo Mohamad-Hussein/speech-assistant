@@ -1,5 +1,5 @@
-
 from keyboard import unhook_all, wait, is_pressed
+
 
 class Listener:
     def __init__(self, pipe, start_event):
@@ -8,10 +8,8 @@ class Listener:
         self.hotkey_held = False
 
         # -- Hotkey --
-
         self.hotkey = "left windows + shift"
         # ------------
-        
 
     def down(self):
         print(f"\nHOTKEY PRESSED")
@@ -26,7 +24,6 @@ class Listener:
             # print(f"{self.hotkey} is released")
             self.start_event.clear()
             self.hotkey_held = False
-
 
     def run(self):
         print(f"Hotkey assigned: {self.hotkey}")
@@ -45,10 +42,12 @@ class Listener:
         finally:
             print("Ending hotkey listener")
             unhook_all()
- 
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     """This is for testing purposes"""
     from multiprocessing import Event, Pipe
+
     event = Event()
     pipe = Pipe()
     obj = Listener(pipe=Pipe, start_event=event)
