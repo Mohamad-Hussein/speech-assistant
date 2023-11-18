@@ -1,11 +1,15 @@
-from multiprocessing import Process, Event, Pipe
+from platform import system
 
-# from tkinter import messagebox
+# Differentiate between windows and linux
+if system() == 'Windows':
+    from src.key_listener_win import Listener
+else:
+    from src.key_listener import Listener
 
-from src.key_listener import Listener
 from src.record import start_audio
 from src.model_inference import service
 
+from multiprocessing import Process, Event, Pipe
 
 def run_listener(child_pipe, start_event):
     a = Listener(child_pipe, start_event)
@@ -21,12 +25,13 @@ def main():
     stop_event = Event()
     model_event = Event()
 
-    # Creating processes
-    userinput_process = Process(target=run_listener, args=(child_pipe, start_event))
-    userinput_process.start()
-
+    # Creating processes (model first)
     model_process = Process(target=service, args=(child_pipe, model_event))
     model_process.start()
+
+    userinput_process = Process(target=run_listener, args=(child_pipe, start_event))
+    userinput_process.start()
+    
     try:
         while 1:
             try:
