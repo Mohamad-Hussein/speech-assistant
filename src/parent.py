@@ -2,6 +2,8 @@ from platform import system
 from time import time
 from os.path import join
 import logging
+from shutil import copy
+
 
 # Differentiate between windows and linux
 if system() == 'Windows':
@@ -9,13 +11,13 @@ if system() == 'Windows':
 else:
     from src.key_listener import Listener
 
-# from src.record import start_audio
+from src.record import get_effects, get_audio
 from src.model_inference import service
 from wave import open
 
 from multiprocessing import Process, Event, Pipe
 
-from pyaudio import PyAudio, paInt16
+from pyaudio import paInt16
 
 # Global variables
 # -------------------------
@@ -24,44 +26,37 @@ from pyaudio import PyAudio, paInt16
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    filename='speech-assistant.log',
+    filename=join('logs','speech-assistant.log'),
     filemode='w'
 )
 # Create a logger instance
 logger = logging.getLogger(__name__)
 
-audio = PyAudio()
+# Getting audio inputs and outputs
+audio, stream_input, stream_output = get_audio()
+stream_input.stop_stream()
 
-stream_input = audio.open(
-    format=paInt16,
-    channels=1,
-    rate=44100,
-    input=True,
-    frames_per_buffer=1024,
-)
+# Get sound data
+sound_low, sound_high = get_effects("effects", "button-low.wav", "button-high.wav")
 
-stream_output = audio.open(
-    format=paInt16,
-    channels=1,
-    rate=44100,
-    output=True,
-)
+logger.info(f"Audio: Default input info: {audio.get_default_input_device_info()}")
+logger.info(f"Audio: Default output info: {audio.get_default_output_device_info()}")
+logger.info(f"Audio: Device count: {audio.get_device_count()}")
+
+
 # Sound file creation
-sound_file = open("recording.wav", "wb")
+sound_file = open("tmp.wav", "wb")
 sound_file.setnchannels(1)
 sound_file.setsampwidth(audio.get_sample_size(paInt16))
 sound_file.setframerate(44100)
-# Get sound data
-file_low = open(join('effects', 'button-low.wav'), 'rb')
-file_high = open(join('effects', 'button-high.wav'), 'rb')
-sound_low = file_low.readframes(file_low.getnframes())
-sound_high = file_high.readframes(file_high.getnframes())
-file_low.close()
-file_high.close()
+
+
 # -------------------------
 
-def start_audio(start_event):
+def start_audio(start_event, model_event):
     # This line to wake device from sleep state
+    logger.info('sound-high played')
+
     stream_output.write(sound_high)
 
     # stream_input.start_stream()
@@ -69,35 +64,37 @@ def start_audio(start_event):
     logger.debug(f"Get read: {stream_input.get_read_available()}")
     logger.debug(f"Is active: {stream_input.is_active()}")
 
+    stream_input.start_stream()
     if not stream_input.is_active():
         print("Stream is not active")
         return
     
-    print("Started audio recording")
     frames = []
-
     try:
+        print("Capture STARTED")
         while start_event.is_set():
-            print("Capture")
             data = stream_input.read(1024)
             frames.append(data)
         print("Capture FINISHED")
         stream_output.write(sound_low)
-        logger.info('sound-high played')
-    
+        logger.info('sound-low played')
+
     except KeyboardInterrupt:
         print("Keyboard interrupt")
         return
     except Exception:
         print(f"\nCAPTURE UNSUCCESFUL!")
         return
-    
-    logger.debug(f"{sound_file.tell()}")
+
+    stream_input.stop_stream()    
     # sound_file.
     sound_file.writeframes(b"".join(frames))
-    
+    model_event.set()
+    logger.debug(f"{sound_file.tell()}")
+    logger.debug(f"Sound file size: {sound_file.getnframes() / sound_file.getframerate():.2f} seconds")
     print("Saved audio")
-
+    sound_file.close()
+    copy("tmp.wav", "recording.wav")
 
 def run_listener(child_pipe, start_event):
     a = Listener(child_pipe, start_event)
@@ -105,7 +102,9 @@ def run_listener(child_pipe, start_event):
 
 def reset_sound_file():
     global sound_file
-    sound_file = open("recording.wav", "wb")
+    # Copying soundbyte for debugging purposes
+    copy("tmp.wav", "recording.wav")
+    sound_file = open("tmp.wav", "wb")
     sound_file.setnchannels(1)
     sound_file.setsampwidth(audio.get_sample_size(paInt16))
     sound_file.setframerate(44100)
@@ -125,10 +124,10 @@ def main():
     model_process.start()
 
     # Waiting for model to load
-    print(f"Waiting for model to load")
+    print(f"Waiting for model to load\n\nModel message: ", end='')
     model_event.wait()
     model_event.clear()
-    print(f"Model loaded!\n\n")
+    print(f"\nModel loaded!\n\n")
 
     # Creating process for Key listener
     userinput_process = Process(target=run_listener, args=(child_pipe, start_event), name='SA-KeyListener')
@@ -141,20 +140,16 @@ def main():
                 print("Waiting for hotkey")
                 start_event.wait()
 
-                # Previously had seperate process running, however 3 concurrent runnnig is enough
-                # recording_process = Process(target=start_audio, args=(stop_event, audio, stream))
-                # recording_process.start()
-
                 # Starting to Record
                 print("Recording")
                 if start_event.is_set():
-                    start_audio(start_event)
+                    start_audio(start_event, model_event)
                 else:
                     print("Did not record properly")
+                    continue
 
                 # Inference
                 print("Starting inference")
-                model_event.set()
                 while model_event.is_set():
                     pass
 
@@ -177,7 +172,6 @@ def main():
         stream_input.close()
         stream_output.close()
         audio.terminate()
-        sound_file.close()
+        # sound_file.close()
         logger.info('Program End')
         print(f"\n\nspeech-assistant ended\n\n")
-
