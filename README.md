@@ -1,4 +1,6 @@
 # speech-assistant
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
+
 Welcome to Speech-Assistant! This is a project to implement a private and local real-time Linux speech-to-text transcription using the distil-whisper models from HuggingFace, based on this [repo](https://github.com/huggingface/distil-whisper). The speech-to-text assistant writes down spoken words directly to the keyboard cursor. To use it is easy, hold down a hotkey combination of Windows key (Super) and Shift to begin, and let go to end the recording. This is to employ a more efficient and seamless experience.
 
 This can also record any microphone chosen such as the input from your system, so it can transcribe any speech playing on your system.
@@ -23,14 +25,15 @@ python main.py
 5. And voila! The model will output the transcription on your text cursor!
 ## Notes and Considerations
 - Make sure to locate your primary sound input device!
+- There is a problem with using powershell, use cmd and activate conda env.
 - Installing with requirement.txt, package ffmpeg will be missing on model inference. This module can be downloaded with anaconda with -c pytorch.
 - Users with dedicated graphics cards will have a better experience running the big models.
+- For transcribing on windows you can use its built in dictation service with left windows + h. The whisper models can be useful for formatting expressive punctuation.
 ## Configurations
 
 | Model                                                                      | Params / M | Rel. Latency | Short-Form WER | Long-Form WER |
 |----------------------------------------------------------------------------|------------|--------------|----------------|---------------|
 | [whisper-large-v2](https://huggingface.co/openai/whisper-large-v2)         | 1550       | 1.0          | **9.1**        | 11.7          |
-|                                                                            |            |              |                |               |
 | [distil-large-v2](https://huggingface.co/distil-whisper/distil-large-v2)   | 756        | 5.8          | 10.1           | **11.6**      |
 | [distil-medium.en](https://huggingface.co/distil-whisper/distil-medium.en) | **394**    | **6.8**      | 11.1           | 12.4          |
 ### If PyAudio doesn't work for your linux installation
@@ -58,3 +61,8 @@ python3 -m  pip install PyAudio
 - Add GUI
 - Stress tests to make reliable
 - Make Dockerfile
+
+# Credits
+Sound effect: [soundsforyou](https://pixabay.com/users/soundsforyou-4861230/) on pixabay
+
+ Hello! How are you? I'm a lash tech. I have been doing it for two years because I'm such an entrepreneur and I'm a businesswoman and I like money basically.

@@ -1,3 +1,4 @@
+from time import sleep, time
 from torch.cuda import is_available
 from torch import float16, float32
 from pyautogui import typewrite
@@ -39,18 +40,25 @@ def service(pipe, event):
     # Clearing memory
     del device, torch_dtype, local_cache_dir, processor
 
+    # Telling parent that model is loaded
+    event.set()
+    # To make sure event is cleared before model inference
+    sleep(1)
 
     # Waits in standy for inference
     file_path = "recording.wav"
+
+    # Make sure event is cleared before then
     try:
         while 1:
             event.wait()
+            t0 = time()
             print("Inference event set")
             result = pipe(file_path)
-            print(result["text"])
+            print(f"\nPrinted text: {result['text']}\nTime for inference: {time() - t0}")
             typewrite(result["text"])
             event.clear()
 
     finally:
         print("Closing model")
-        del model
+        del model, pipe

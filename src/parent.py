@@ -1,4 +1,7 @@
 from platform import system
+from time import time
+from os.path import join
+import logging
 
 # Differentiate between windows and linux
 if system() == 'Windows':
@@ -6,52 +9,148 @@ if system() == 'Windows':
 else:
     from src.key_listener import Listener
 
-from src.record import start_audio
+# from src.record import start_audio
 from src.model_inference import service
+from wave import open
 
 from multiprocessing import Process, Event, Pipe
+
+from pyaudio import PyAudio, paInt16
+
+# Global variables
+# -------------------------
+
+# Configure the logging settings
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    filename='speech-assistant.log',
+    filemode='w'
+)
+# Create a logger instance
+logger = logging.getLogger(__name__)
+
+audio = PyAudio()
+
+stream_input = audio.open(
+    format=paInt16,
+    channels=1,
+    rate=44100,
+    input=True,
+    frames_per_buffer=1024,
+)
+
+stream_output = audio.open(
+    format=paInt16,
+    channels=1,
+    rate=44100,
+    output=True,
+)
+# Sound file creation
+sound_file = open("recording.wav", "wb")
+sound_file.setnchannels(1)
+sound_file.setsampwidth(audio.get_sample_size(paInt16))
+sound_file.setframerate(44100)
+# Get sound data
+file_low = open(join('effects', 'button-low.wav'), 'rb')
+file_high = open(join('effects', 'button-high.wav'), 'rb')
+sound_low = file_low.readframes(file_low.getnframes())
+sound_high = file_high.readframes(file_high.getnframes())
+file_low.close()
+file_high.close()
+# -------------------------
+
+def start_audio(start_event):
+    # This line to wake device from sleep state
+    stream_output.write(sound_high)
+
+    # stream_input.start_stream()
+    logger.debug(f"stream is stopped: {stream_input.is_stopped()}")
+    logger.debug(f"Get read: {stream_input.get_read_available()}")
+    logger.debug(f"Is active: {stream_input.is_active()}")
+
+    if not stream_input.is_active():
+        print("Stream is not active")
+        return
+    
+    print("Started audio recording")
+    frames = []
+
+    try:
+        while start_event.is_set():
+            print("Capture")
+            data = stream_input.read(1024)
+            frames.append(data)
+        print("Capture FINISHED")
+        stream_output.write(sound_low)
+        logger.info('sound-high played')
+    
+    except KeyboardInterrupt:
+        print("Keyboard interrupt")
+        return
+    except Exception:
+        print(f"\nCAPTURE UNSUCCESFUL!")
+        return
+    
+    logger.debug(f"{sound_file.tell()}")
+    # sound_file.
+    sound_file.writeframes(b"".join(frames))
+    
+    print("Saved audio")
+
 
 def run_listener(child_pipe, start_event):
     a = Listener(child_pipe, start_event)
     a.run()
 
+def reset_sound_file():
+    global sound_file
+    sound_file = open("recording.wav", "wb")
+    sound_file.setnchannels(1)
+    sound_file.setsampwidth(audio.get_sample_size(paInt16))
+    sound_file.setframerate(44100)
 
 def main():
+    # Input device
+    print(f"Input device detected: \033[94m{audio.get_default_input_device_info()['name']}\033[0m")
     # Creating pipes just in case
     parent_pipe, child_pipe = Pipe(duplex=False)
 
     # Events for synchronization
     start_event = Event()
-    stop_event = Event()
     model_event = Event()
 
-    # Creating processes (model first)
-    model_process = Process(target=service, args=(child_pipe, model_event))
+    # Creating processe for model as it takes the longest to load
+    model_process = Process(target=service, args=(child_pipe, model_event), name='WhisperModel')
     model_process.start()
 
-    userinput_process = Process(target=run_listener, args=(child_pipe, start_event))
+    # Waiting for model to load
+    print(f"Waiting for model to load")
+    model_event.wait()
+    model_event.clear()
+    print(f"Model loaded!\n\n")
+
+    # Creating process for Key listener
+    userinput_process = Process(target=run_listener, args=(child_pipe, start_event), name='SA-KeyListener')
     userinput_process.start()
-    
+
     try:
         while 1:
             try:
                 # Waiting for Start event
-                print("Waiting now")
+                print("Waiting for hotkey")
                 start_event.wait()
 
-                # Start recording process
+                # Previously had seperate process running, however 3 concurrent runnnig is enough
+                # recording_process = Process(target=start_audio, args=(stop_event, audio, stream))
+                # recording_process.start()
+
+                # Starting to Record
                 print("Recording")
-                recording_process = Process(target=start_audio, args=(stop_event,))
-                recording_process.start()
-
-                # Waiting for Stop
-                print("Waiting for stop")
-                while start_event.is_set():
-                    pass
-
-                # Stopping recording
-                stop_event.set()
-                recording_process.join()
+                if start_event.is_set():
+                    start_audio(start_event)
+                else:
+                    print("Did not record properly")
 
                 # Inference
                 print("Starting inference")
@@ -59,16 +158,26 @@ def main():
                 while model_event.is_set():
                     pass
 
+                # To reset sound file, remove to continuously add more sound bytes
+                reset_sound_file()
+
                 # Clearing events
-                stop_event.clear()
                 start_event.clear()
 
-                print("Finished inference")
-
             except Exception as e:
+                print(f"Exception on parent!\n\n")
                 print(e)
                 break
 
     # To ensure that the processes are closed
     finally:
         userinput_process.join()
+        stream_input.stop_stream()
+        stream_output.stop_stream()
+        stream_input.close()
+        stream_output.close()
+        audio.terminate()
+        sound_file.close()
+        logger.info('Program End')
+        print(f"\n\nspeech-assistant ended\n\n")
+
