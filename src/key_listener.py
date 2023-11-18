@@ -59,17 +59,17 @@ class Listener:
     def down(self, key):
         # print(f"Key added: {key}")
         self.keys_down.add(key)
-        self.print_keys()
+        # self.print_keys()
 
     def up(self, key):
         if key in self.keys_down:
             self.keys_down.remove(key)
-            self.print_keys()
+            # self.print_keys()
 
         # Removing shift key on up
         elif key == "[0]" and "Shift" in self.keys_down:
             self.keys_down.remove("Shift")
-            self.print_keys()
+            # self.print_keys()
 
     def print_keys(self):
         keys = list(self.keys_down)
@@ -88,7 +88,7 @@ class Listener:
                 ## Hotkey
                 if self.hotkey.issubset(self.keys_down) and not self.hotkey_held:
                     self.pipe.send("Start")
-                    print("Start\n\n")
+                    print(f"\nHOTKEY PRESSED")
                     self.start_event.set()
                     self.hotkey_held = True
 
@@ -99,7 +99,6 @@ class Listener:
                     self.hotkey.issubset(self.keys_down) == False
                     and self.hotkey_held == True
                 ):
-                    print("Stop recording\n\n")
                     self.pipe.send("Stop")
                     self.hotkey_held = False
                     self.start_event.clear()
@@ -115,6 +114,11 @@ class Listener:
         self.disp = Display()
         XK.load_keysym_group("xf86")
         root = self.disp.screen().root
+
+        print(f"Hotkey assigned: {' + '.join(self.hotkey)}")
+        # To signal to parent that it is ready
+        self.start_event.set()
+        
         ctx = self.disp.record_create_context(
             0,
             [record.AllClients],
