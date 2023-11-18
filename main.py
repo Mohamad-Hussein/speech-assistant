@@ -1,5 +1,8 @@
 from src.parent import main
-from os.path import exists
+from os.path import exists, join
+from os import makedirs
+import logging
+
 title = """
        _____                                _          
       / ____|                              | |         
@@ -34,10 +37,19 @@ if __name__ == "__main__":
     # Welcome message
     print(title2)
     del title, title2
-    
-    # Creating wav file if isn't already created
-    if not exists('recording.wav'):
-        with open('recording.wav', 'w') as file:
-            pass
-    
+
+    # Creates logs directory if it doesn't exist
+    if not exists("logs"):
+        makedirs("logs")
+
+    # Configure the logging settings
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        filename=join("logs", "speech-assistant.log"),
+        filemode="w",
+    )
+    logger = logging.getLogger(__name__)
+    logger.info("Program started")
+
     main()
