@@ -1,15 +1,16 @@
-from os.path import join
 import logging
 from shutil import copy
 
-
-from src.funcs import get_effects, get_audio, run_listener
+from time import time
+from src.funcs import get_audio, run_listener
 from src.model_inference import service
 from wave import open
 
 from multiprocessing import Process, Event, Pipe
+from threading import Thread
 
 from pyaudio import paInt16
+from playsound import playsound
 
 # Global variables
 # -------------------------
@@ -17,18 +18,11 @@ from pyaudio import paInt16
 # Create a logger instance
 logger = logging.getLogger(__name__)
 
-# Getting audio inputs and outputs
-audio, stream_input, stream_output = get_audio()
-
-logger.info(f"Audio: Default input info: {audio.get_default_input_device_info()}")
-logger.info(f"Audio: Default output info: {audio.get_default_output_device_info()}")
-logger.info(f"Audio: Device count: {audio.get_device_count()}")
+# Getting audio inputs
+audio, stream_input = get_audio()
 
 # No audio being recorded
 stream_input.stop_stream()
-
-# Get sound data, global to not load them in each time
-sound_low, sound_high = get_effects("effects", "button-low.wav", "button-high.wav")
 
 
 # -------------------------
@@ -43,25 +37,34 @@ def create_sound_file():
 
 def start_recording(start_event, model_event, sound_file):
     logger.info("sound-high played")
+    t0 = time()
 
     # This line to wake device from sleep state
-    stream_output.write(sound_high)
+    # Huge performance gain from Threading and playsound
+    sound1 = Thread(target=playsound, args=("effects/button-high.wav",))
+    sound2 = Thread(target=playsound, args=("effects/button-low.wav",))
 
+    # Start stream
     stream_input.start_stream()
     logger.debug(f"Get read: {stream_input.get_read_available()}")
-    
+
     if not stream_input.is_active():
         print("Stream is not active")
         return
 
+    # Capturing audio
     frames = []
     try:
+        sound1.start()
+        logger.info(f"From start to capture: {time() - t0:.2f}s")
+
         print("Capture STARTED")
         while start_event.is_set():
             data = stream_input.read(1024)
             frames.append(data)
         print("Capture FINISHED")
-        stream_output.write(sound_low)
+
+        sound2.start()
         logger.info("sound-low played")
 
     except KeyboardInterrupt:
@@ -70,7 +73,11 @@ def start_recording(start_event, model_event, sound_file):
     except Exception:
         print(f"\nCAPTURE UNSUCCESFUL!")
         return
+    finally:
+        sound1.join()
+        sound2.join()
 
+    # Stop stream
     stream_input.stop_stream()
 
     # Writing to file
@@ -78,17 +85,25 @@ def start_recording(start_event, model_event, sound_file):
 
     # Start model to be quicker
     model_event.set()
-    logger.debug(f"{sound_file.tell()}")
+
+    # Logging
+    logger.debug(f"Sound file tell: {sound_file.tell()}")
     logger.debug(
         f"Sound file size: {sound_file.getnframes() / sound_file.getframerate():.2f}s"
     )
-    print("Saved audio")
+
+    # Sound file saving and copying
     sound_file.close()
+    print("Saved audio")
     copy("tmp.wav", "recording.wav")
 
 
 def main():
-    ## Initial processes
+    ## Initial processes ##
+    logger.info(f"Audio: Default input info: {audio.get_default_input_device_info()}")
+    logger.info(f"Audio: Default output info: {audio.get_default_output_device_info()}")
+    logger.info(f"Audio: Device count: {audio.get_device_count()}")
+    logger.info(f"Audio: Host API count: {audio.get_host_api_count()}")
 
     # Input device
     print(
@@ -119,10 +134,11 @@ def main():
     )
     userinput_process.start()
 
+    # Waiting for key listener to start
     start_event.wait()
     start_event.clear()
 
-    ## Main loop
+    ## Main loop ##
     try:
         sound_file = create_sound_file()
         while 1:
@@ -156,14 +172,15 @@ def main():
         print(f"Exception on parent!\n\n")
         print(e)
 
-    # To ensure that the processes are closed
     finally:
+        # Processes
+        model_process.join()
         userinput_process.join()
+        # Audio
         stream_input.stop_stream()
-        stream_output.stop_stream()
         stream_input.close()
-        stream_output.close()
         audio.terminate()
         sound_file.close()
+        # Logging
         logger.info("Program End")
         print(f"\n\nspeech-assistant ended\n\n")
