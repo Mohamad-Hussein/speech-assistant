@@ -103,6 +103,7 @@ def run_listener(child_pipe, start_event):
     a.run()
 
 def reset_sound_file():
+    global sound_file
     sound_file = open("recording.wav", "wb")
     sound_file.setnchannels(1)
     sound_file.setsampwidth(audio.get_sample_size(paInt16))
