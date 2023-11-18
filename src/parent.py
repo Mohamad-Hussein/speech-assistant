@@ -98,6 +98,7 @@ def start_audio(start_event):
     
     print("Saved audio")
 
+
 def run_listener(child_pipe, start_event):
     a = Listener(child_pipe, start_event)
     a.run()
@@ -179,3 +180,4 @@ def main():
         sound_file.close()
         logger.info('Program End')
         print(f"\n\nspeech-assistant ended\n\n")
+

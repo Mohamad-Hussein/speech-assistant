@@ -1,5 +1,5 @@
-from keyboard import add_hotkey, unhook_all, on_release_key, wait, is_pressed
-from time import sleep
+
+from keyboard import unhook_all, wait, is_pressed
 
 class Listener:
     def __init__(self, pipe, start_event):
@@ -8,6 +8,7 @@ class Listener:
         self.hotkey_held = False
 
         # -- Hotkey --
+
         self.hotkey = "left windows + shift"
         # ------------
         
