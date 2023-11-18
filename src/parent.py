@@ -46,7 +46,11 @@ stream_output = audio.open(
     rate=44100,
     output=True,
 )
-
+# Sound file creation
+sound_file = open("recording.wav", "wb")
+sound_file.setnchannels(1)
+sound_file.setsampwidth(audio.get_sample_size(paInt16))
+sound_file.setframerate(44100)
 # Get sound data
 file_low = open(join('effects', 'button-low.wav'), 'rb')
 file_high = open(join('effects', 'button-high.wav'), 'rb')
@@ -90,19 +94,21 @@ def start_audio(start_event):
         print(f"\nCAPTURE UNSUCCESFUL!")
         return
     
-    # Sound file creation
-    sound_file = open("recording.wav", "wb")
-    sound_file.setnchannels(1)
-    sound_file.setsampwidth(audio.get_sample_size(paInt16))
-    sound_file.setframerate(44100)
+    logger.debug(f"{sound_file.tell()}")
+    # sound_file.
     sound_file.writeframes(b"".join(frames))
-    sound_file.close()
+    
     print("Saved audio")
 
 def run_listener(child_pipe, start_event):
     a = Listener(child_pipe, start_event)
     a.run()
 
+def reset_sound_file():
+    sound_file = open("recording.wav", "wb")
+    sound_file.setnchannels(1)
+    sound_file.setsampwidth(audio.get_sample_size(paInt16))
+    sound_file.setframerate(44100)
 
 def main():
     # Input device
@@ -152,6 +158,9 @@ def main():
                 while model_event.is_set():
                     pass
 
+                # To reset sound file, remove to continuously add more sound bytes
+                reset_sound_file()
+
                 # Clearing events
                 start_event.clear()
 
@@ -168,3 +177,6 @@ def main():
         stream_input.close()
         stream_output.close()
         audio.terminate()
+        sound_file.close()
+        logger.info('Program End')
+        print(f"\n\nspeech-assistant ended\n\n")
