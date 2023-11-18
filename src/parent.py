@@ -22,10 +22,10 @@ from pyaudio import PyAudio, paInt16
 
 # Configure the logging settings
 logging.basicConfig(
-    level=logging.DEBUG,  # Set the desired logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-    format='%(asctime)s - %(levelname)s - %(message)s',  # Define the log message format
-    filename='example.log',  # Specify the log file name
-    filemode='w'  # 'w' for write, 'a' for append
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    filename='speech-assistant.log',
+    filemode='w'
 )
 # Create a logger instance
 logger = logging.getLogger(__name__)
@@ -73,19 +73,17 @@ def start_audio(start_event):
         print("Stream is not active")
         return
     
-
-    frames = []
-
     print("Started audio recording")
+    frames = []
 
     try:
         while start_event.is_set():
             print("Capture")
             data = stream_input.read(1024)
             frames.append(data)
-
-        stream_output.write(sound_low)
         print("Capture FINISHED")
+        stream_output.write(sound_low)
+        logger.info('sound-high played')
     
     except KeyboardInterrupt:
         print("Keyboard interrupt")
@@ -112,7 +110,7 @@ def reset_sound_file():
 
 def main():
     # Input device
-    print(f"This is the input device used: {audio.get_default_input_device_info()['name']}")
+    print(f"Input device detected: \033[94m{audio.get_default_input_device_info()['name']}\033[0m")
     # Creating pipes just in case
     parent_pipe, child_pipe = Pipe(duplex=False)
 
