@@ -45,9 +45,8 @@ python3 -m  pip install PyAudio
 
 
 ## Issues to solve
-- Current pressed values saves capital letters (somewhat fixed, current pressed down var cleared once pressing hotkey)
-- Fix directory structure
 - Make a real way to exit program.
+- Current pressed values saves capital letters (somewhat fixed, current pressed down var cleared once pressing hotkey)(key_listener.py)
 - Fix this warning:
 ```
 /home/mohamadhussein/anaconda3/envs/pytorch/lib/python3.11/site-packages/transformers/pipelines/base.py:1101: UserWarning: You seem to be using the pipelines sequentially on GPU. In order to maximize efficiency please use a dataset
@@ -55,14 +54,11 @@ python3 -m  pip install PyAudio
 ```
 
 ## Needed features
-- Add option to use whatever keybind of user's choosing
 - Add optimizations suggested by HuggingFace
-- Add windows compatibility by using keyboard library
+- Add option to use whatever keybind of user's choosing
 - Add GUI
 - Stress tests to make reliable
 - Make Dockerfile
 
 # Credits
 Sound effect: [soundsforyou](https://pixabay.com/users/soundsforyou-4861230/) on pixabay
-
- Hello! How are you? I'm a lash tech. I have been doing it for two years because I'm such an entrepreneur and I'm a businesswoman and I like money basically.
