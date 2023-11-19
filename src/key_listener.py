@@ -11,11 +11,12 @@ from Xlib.ext import record
 from Xlib.protocol import rq
 
 class Listener:
-    def __init__(self, pipe, start_event):
+    def __init__(self, pipe, start_event, model_event):
         self.disp = None
         self.keys_down = set()
         self.pipe = pipe
         self.start_event = start_event
+        self.model_event = model_event
         self.hotkey_held = False
 
         # -- Hotkey --
