@@ -175,9 +175,11 @@ def main():
             # Clearing events
             start_event.clear()
     except KeyboardInterrupt:
-        pass
+        print("\n\033[92m\033[4mparent.py\033[0m \033[92mprocess ended\033[0m")
     except Exception as e:
-        print(f"Exception on parent!\n\n")
+        logger.error(f"Exception on parent: {e}")
+        print("\n\033[91m\033[4mparent.py\033[0m \033[91mprocess ended\033[0m")
+
 
     finally:
         # Processes
@@ -190,5 +192,4 @@ def main():
         sound_file.close()
         # Logging
         logger.info("Program End")
-        print("\n\033[92m\033[4mparent.py\033[0m \033[92mprocess ended\033[0m")
 

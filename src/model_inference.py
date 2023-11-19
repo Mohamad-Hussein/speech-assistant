@@ -1,6 +1,4 @@
 from time import sleep, time
-from torch import cuda
-from torch import float16, float32
 from pyautogui import typewrite
 from os.path import join
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
@@ -86,8 +84,10 @@ def service(pipe, event):
             logger.debug(f"Result: {result}")
             event.clear()
     except KeyboardInterrupt:
-        pass
+        print("\n\033[92m\033[4mmodel_inference.py\033[0m \033[92mprocess ended\033[0m")
     except Exception as e:
         logger.error(f"Exception hit: {e}")
+        print("\n\033[91m\033[4mmodel_inference.py\033[0m \033[91mprocess ended\033[0m")
+        exit(1)
     finally:
-        print("\n\033[92m\033[4mmodel_inference.py\033[0m \033[92mprocess ended\033[0m")
+        pass

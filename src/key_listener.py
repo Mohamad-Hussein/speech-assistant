@@ -159,14 +159,17 @@ class Listener:
                 event = root.display.next_event()
         except KeyboardInterrupt:
             self.logger.info("Keyboard Interrupt")
-            pass
-        except Exception as e:
-            self.logger.exception(f"Exception occured: {e}")
-        finally:
-            self.disp.close()
             print(
                 "\n\033[92m\033[4mkey_listener.py\033[0m \033[92mprocess ended\033[0m"
             )
+        except Exception as e:
+            self.logger.error(f"Exception occured: {e}")
+            print(
+                "\n\033[91m\033[4mkey_listener.py\033[0m \033[91mprocess ended\033[0m"
+            )
+        finally:
+            self.disp.close()
+            
 
 
 if __name__ == "__main__":
