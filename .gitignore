@@ -6,3 +6,5 @@ test*.py
 model
 __pycache__
 speech-assistant.log
+
+logs
