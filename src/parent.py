@@ -2,7 +2,7 @@ from os.path import join
 import logging
 from shutil import copy
 
-from time import time
+from time import time, sleep
 from src.funcs import get_audio, run_listener
 from src.model_inference import service
 from wave import open
@@ -81,6 +81,12 @@ def start_recording(start_event, model_event, sound_file):
     # Stop stream
     stream_input.stop_stream()
 
+    # Checking extreme case
+    if model_event.is_set():
+        print("!!Already doing inference!!")
+        logger.error("Already doing inference, too quick")
+        return
+    
     # Writing to file
     sound_file.writeframes(b"".join(frames))
 
@@ -131,7 +137,7 @@ def main():
 
     # Creating process for Key listener
     userinput_process = Process(
-        target=run_listener, args=(child_pipe, start_event), name="SA-KeyListener"
+        target=run_listener, args=(child_pipe, start_event, model_event), name="SA-KeyListener"
     )
     userinput_process.start()
 
@@ -156,7 +162,7 @@ def main():
                 continue
 
             # Inference
-            print("Starting inference")
+            print("\n--Starting inference--")
             while model_event.is_set():
                 pass
 
