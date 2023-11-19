@@ -70,9 +70,10 @@ python3 -m  pip install PyAudio
 # Acknowledgements
 
 Distil-whisper paper:
-**Title:** Distil-Whisper: Robust Knowledge Distillation via Large-Scale Pseudo Labelling
-**Authors:** Sanchit Gandhi, Patrick von Platen, Alexander M. Rush
-**Year:** 2023
-**Link:** [ArXiv](https://arxiv.org/abs/2311.00430)
+
+- **Title:** Distil-Whisper: Robust Knowledge Distillation via Large-Scale Pseudo Labelling
+- **Authors:** Sanchit Gandhi, Patrick von Platen, Alexander M. Rush
+- **Year:** 2023
+- **Link:** [ArXiv](https://arxiv.org/abs/2311.00430)
 
 Sound effect: [soundsforyou](https://pixabay.com/users/soundsforyou-4861230/) on pixabay
