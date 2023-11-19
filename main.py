@@ -51,5 +51,10 @@ if __name__ == "__main__":
     )
     logger = logging.getLogger(__name__)
     logger.info("Program started")
-
-    main()
+    
+    try:
+        main()
+    except Exception as e:
+        pass
+    finally:
+        logger.info("Exited main.py")
