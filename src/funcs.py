@@ -29,16 +29,17 @@ def run_listener(child_pipe, start_event, model_event):
     a = Listener(child_pipe, start_event, model_event)
     a.run()
 
+
 def find_gpu_config(logger):
     from torch import cuda
     from torch import float16, float32
 
     logger.debug("Checking for GPU config")
-    
+
     # Assume, then check
     device = "cuda:0" if cuda.is_available() else "cpu"
     torch_dtype = float16 if cuda.is_available() else float32
-    device_name = ''
+    device_name = ""
 
     # CUDA
     if cuda.is_available():
@@ -52,17 +53,18 @@ def find_gpu_config(logger):
         logger.info(f"Device count: {cuda.device_count()}")
         logger.info(f"Device capability: {cuda.get_device_capability()}")
         logger.info(f"Current memory allocated: {cuda.mem_get_info()}")
-        
 
     # AMD, change 0 to 1 if you have an AMD GPU
     elif 0:
         try:
             import torch_directml as dml
         except ImportError:
-            print(f"Please install torch_directml to your environment to check if you have AMD GPU,\n"+
-                  "Use ` pip install torch-directml `."
-                  "If you don't and want to use CPU, although not recommended, "+
-                  "comment out this else statement.")
+            print(
+                f"Please install torch_directml to your environment to check if you have AMD GPU,\n"
+                + "Use ` pip install torch-directml `."
+                "If you don't and want to use CPU, although not recommended, "
+                + "comment out this else statement."
+            )
             logger.error(f"Package directml not found")
             exit(1)
 
@@ -78,12 +80,16 @@ def find_gpu_config(logger):
             logger.info(f"Default device: {dml.default_device()}")
             logger.info(f"Device name: {dml.device_name(0)}")
             logger.info(f"GPU memory: {dml.gpu_memory()}")
-            
+
         else:
             torch_dtype = float32
 
             logger.debug("No GPU detected, using cpu")
-            logger.warning("Attention, using the CPU is not recommended! Computation time will be long.")
+            logger.warning(
+                "Attention, using the CPU is not recommended! Computation time will be long."
+            )
 
-    logger.debug(f"GPU config -- device: {device}, device name: {device_name}, torch_dtype: {torch_dtype}")
+    logger.debug(
+        f"GPU config -- device: {device}, device name: {device_name}, torch_dtype: {torch_dtype}"
+    )
     return device, device_name, torch_dtype
