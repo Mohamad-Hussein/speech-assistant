@@ -174,10 +174,10 @@ def main():
 
             # Clearing events
             start_event.clear()
-
+    except KeyboardInterrupt:
+        pass
     except Exception as e:
         print(f"Exception on parent!\n\n")
-        print(e)
 
     finally:
         # Processes
@@ -190,4 +190,4 @@ def main():
         sound_file.close()
         # Logging
         logger.info("Program End")
-        print(f"\n\nspeech-assistant ended\n\n")
+        print(f"\n\033[92mparent.py process ended\033[0m")

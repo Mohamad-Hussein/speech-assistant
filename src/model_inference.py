@@ -79,8 +79,9 @@ def service(pipe, event):
             )
             logger.debug(f"Result: {result}")
             event.clear()
-    except Exception as e:
+    except KeyboardInterrupt:
         pass
+    except Exception as e:
+        logger.error(f"Exception hit: {e}")
     finally:
-        print("Closing model")
-        del model, pipe
+        print("\n\033[92mmodel_inference.py process ended\033[0m")

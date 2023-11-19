@@ -1,5 +1,5 @@
 from os.path import join
-from keyboard import unhook_all, wait, is_pressed
+from keyboard import wait, is_pressed
 from time import sleep
 import logging
 
@@ -60,10 +60,10 @@ class Listener:
 
                 # To make sure inference happens first
                 sleep(1)
-
+        except KeyboardInterrupt:
+            pass
         finally:
-            print("Ending hotkey listener")
-            unhook_all()
+            print("\n\033[92mkey_listener_win.py process ended\033[0m")
 
 
 if __name__ == "__main__":

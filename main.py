@@ -1,8 +1,7 @@
 from src.parent import main
 from os.path import exists, join
-from os import makedirs
+from os import makedirs, system
 import logging
-
 title = """
        _____                                _          
       / ____|                              | |         
@@ -35,9 +34,15 @@ title2 = """
 
 if __name__ == "__main__":
     # Welcome message
+    print("Welcome to")
     print(title2)
     del title, title2
 
+    system("") # Enable ANSI colors
+    print(
+        "Press \033[37;42m Hotkey \033[0m for dictation or "+
+        "Press \033[37;41m Ctrl + c \033[0m to end the program.")
+    print("--------------------------------------------------------------")
     # Creates logs directory if it doesn't exist
     if not exists("logs"):
         makedirs("logs")
@@ -54,7 +59,11 @@ if __name__ == "__main__":
     
     try:
         main()
+    except KeyboardInterrupt:
+        pass
     except Exception as e:
+        logger.error(f"Exception hit: {e}")
         pass
     finally:
+        print("\n\n\033[30;47m Thank you for using speech-assistant! \033[0m")
         logger.info("Exited main.py")
