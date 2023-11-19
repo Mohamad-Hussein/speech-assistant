@@ -52,7 +52,6 @@ python3 -m  pip install PyAudio
 
 
 ## Issues to solve
-- Make a real way to exit program.
 - Current pressed values saves capital letters (somewhat fixed, current pressed down var cleared once pressing hotkey)(key_listener.py)
 - Fix this warning:
 ```
