@@ -1,15 +1,29 @@
+from os.path import join
 from keyboard import unhook_all, wait, is_pressed
+from time import sleep
+import logging
 
 
 class Listener:
-    def __init__(self, pipe, start_event):
+    def __init__(self, pipe, start_event, model_event):
         self.pipe = pipe
         self.start_event = start_event
+        self.model_event = model_event
         self.hotkey_held = False
-
+        
         # -- Hotkey --
         self.hotkey = "left windows + shift"
         # ------------
+
+         # Configure the logging settings
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format="%(asctime)s - %(levelname)s - %(message)s",
+            filename=join("logs", "key_listener.log"),
+            filemode="w",
+        )
+        self.logger = logging.getLogger(__name__)
+        self.logger.info('Key listener started')
 
     def down(self):
         print(f"\nHOTKEY PRESSED")
@@ -33,11 +47,19 @@ class Listener:
         try:
             while 1:
                 wait(self.hotkey)
+                # So model can finish its inference first before continuing
+                if self.model_event.is_set(): 
+                    self.logger.warn("Hotkey pressed while inference is happening")
+                    continue
+
                 self.down()
                 # Wait until it is not pressed anymore
                 while is_pressed(self.hotkey):
                     pass
                 self.up()
+
+                # To make sure inference happens first
+                sleep(1)
 
         finally:
             print("Ending hotkey listener")
