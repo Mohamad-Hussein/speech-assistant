@@ -9,7 +9,7 @@ python-xlib==0.33
 python3-xlib==0.15
 # For audio
 PyAudio==0.2.14
-playsound==1.3.0
+playsound==1.2.2
 
 # Gave a problem on Ubuntu 22.04, fixed with 
 #   sudo apt install libgirepository1.0-dev
