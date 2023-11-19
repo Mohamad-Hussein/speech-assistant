@@ -34,10 +34,10 @@ def find_gpu_config(logger):
     from torch import float16, float32
 
     logger.debug("Checking for GPU config")
-    # Set to float 32 if cpu is used
-    torch_dtype = float16
+    
     # Assume, then check
     device = "cuda:0" if cuda.is_available() else "cpu"
+    torch_dtype = float16 if cuda.is_available() else float32
     device_name = ''
 
     # CUDA
@@ -67,6 +67,7 @@ def find_gpu_config(logger):
             exit(1)
 
         if dml.is_available():
+            torch_dtype = float16
             device = dml.device()
             device_name = dml.device_name(dml.default_device())
 
@@ -84,4 +85,5 @@ def find_gpu_config(logger):
             logger.debug("No GPU detected, using cpu")
             logger.warning("Attention, using the CPU is not recommended! Computation time will be long.")
 
+    logger.debug(f"GPU config -- device: {device}, device name: {device_name}, torch_dtype: {torch_dtype}")
     return device, device_name, torch_dtype
