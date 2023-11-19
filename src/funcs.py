@@ -19,12 +19,12 @@ def get_audio():
     return audio, stream_input
 
 
-def run_listener(child_pipe, start_event):
+def run_listener(child_pipe, start_event, model_event):
     # Differentiate between windows and linux
     if system() == "Windows":
         from src.key_listener_win import Listener
     else:
         from src.key_listener import Listener
 
-    a = Listener(child_pipe, start_event)
+    a = Listener(child_pipe, start_event, model_event)
     a.run()
