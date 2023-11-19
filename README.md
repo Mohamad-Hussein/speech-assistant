@@ -50,7 +50,7 @@ sudo apt install portaudio19-dev
 python3 -m  pip install PyAudio
 ```
 
-
+# Future contributions
 ## Issues to solve
 - Current pressed values saves capital letters (somewhat fixed, current pressed down var cleared once pressing hotkey)(key_listener.py)
 - Fix this warning:
