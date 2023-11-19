@@ -48,7 +48,7 @@ def find_gpu_config(logger):
         logger.debug("GPU detected from cuda")
         logger.info(f"Device: {device}")
         logger.info(f"Device name: {cuda.get_device_name()}")
-        logger.info(f"Device properties: {cuda.get_device_properties()}")
+        logger.info(f"Device properties: {cuda.get_device_properties(device)}")
         logger.info(f"Device count: {cuda.device_count()}")
         logger.info(f"Device capability: {cuda.get_device_capability()}")
         logger.info(f"Current memory allocated: {cuda.mem_get_info()}")
