@@ -16,6 +16,7 @@ title = """
  /_/    \_\ |___/ |___/ |_|  \__|  \__,_| |_| |_|  \__|
  """
 title2 = """
+                        Welcome to
 
       ░██████╗██████╗░███████╗███████╗░█████╗░██╗░░██╗
       ██╔════╝██╔══██╗██╔════╝██╔════╝██╔══██╗██║░░██║
@@ -34,7 +35,6 @@ title2 = """
 
 if __name__ == "__main__":
     # Welcome message
-    print("Welcome to")
     print(title2)
     del title, title2
 
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     print(
         "Press \033[37;42m Hotkey \033[0m for dictation or "+
         "Press \033[37;41m Ctrl + c \033[0m to end the program.")
-    print("--------------------------------------------------------------")
+    print("--------------------------------------------------------------------")
     # Creates logs directory if it doesn't exist
     if not exists("logs"):
         makedirs("logs")
