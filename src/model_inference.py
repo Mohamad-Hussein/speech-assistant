@@ -9,10 +9,19 @@ import logging
 MODEL_ID = "distil-whisper/distil-medium.en"  # ~900-1500 MiB of GPU memory
 # MODEL_ID = "distil-whisper/distil-large-v2"  # ~1700-2000 MiB of GPU memory
 
-logger = logging.getLogger(__name__)
 
 
 def service(pipe, event):
+    # Configure the logging settings
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        filename=join("logs", "model.log"),
+        filemode="w",
+    )
+    logger = logging.getLogger(__name__)
+
+
     device = "cuda:0" if is_available() else "cpu"
     torch_dtype = float16 if is_available() else float32
     local_cache_dir = join(".", "model")
@@ -70,7 +79,8 @@ def service(pipe, event):
             )
             logger.debug(f"Result: {result}")
             event.clear()
-
+    except Exception as e:
+        pass
     finally:
         print("Closing model")
         del model, pipe
