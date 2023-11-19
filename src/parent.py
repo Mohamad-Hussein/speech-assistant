@@ -1,3 +1,4 @@
+from os.path import join
 import logging
 from shutil import copy
 
@@ -41,8 +42,8 @@ def start_recording(start_event, model_event, sound_file):
 
     # This line to wake device from sleep state
     # Huge performance gain from Threading and playsound
-    sound1 = Thread(target=playsound, args=("effects/button-high.wav",))
-    sound2 = Thread(target=playsound, args=("effects/button-low.wav",))
+    sound1 = Thread(target=playsound, args=(join('effects', 'button-high.wav'),), name='play-sound1')
+    sound2 = Thread(target=playsound, args=(join('effects', 'button-low.wav'),), name='play-sound2')
 
     # Start stream
     stream_input.start_stream()
@@ -107,7 +108,7 @@ def main():
 
     # Input device
     print(
-        f"Input device detected: \033[94m{audio.get_default_input_device_info()['name']}\033[0m"
+        f"Input device detected: \033[94m{audio.get_default_input_device_info()['name']} \033[0m"
     )
 
     # Creating pipes just in case
