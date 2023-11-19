@@ -1,15 +1,15 @@
 name: speech-assistant
 channels:
   - pytorch
-  - nvidia
   - defaults
 dependencies:
   - ffmpeg=4.3
-  - python=3.11.5
-  - pytorch=2.1.1
-  - pytorch-cuda=11.8
-  - pip=23.3
+  - python=3.9
+  - cpuonly=2.0
+  - pytorch=2.0.0
+  - pip
   - pip:
+      - torch-directml
       - accelerate==0.24.1
       - pyaudio==0.2.14
       - playsound==1.2.2
@@ -17,3 +17,4 @@ dependencies:
       - python-xlib==0.33
       - python3-xlib==0.15
       - transformers==4.35.2
+      - keyboard==0.13.5

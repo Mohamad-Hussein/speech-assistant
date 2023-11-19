@@ -61,11 +61,16 @@ class Listener:
                 # To make sure inference happens first
                 sleep(1)
         except KeyboardInterrupt:
-            pass
-        finally:
             print(
                 "\n\033[92m\033[4mkey_listener_win.py\033[0m \033[92mprocess ended\033[0m"
             )
+        except Exception as e:
+            self.logger.error(f"Exception on key_listener_win.py: {e}")
+            print(
+                "\n\033[91m\033[4mkey_listener_win.py\033[0m \033[91mprocess ended\033[0m"
+            )
+        finally:
+            pass
 
 
 if __name__ == "__main__":

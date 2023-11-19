@@ -1,6 +1,7 @@
 # speech-assistant
-[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)   ![Linux](https://img.shields.io/badge/Linux-F2F2F2) ![Windows](https://img.shields.io/badge/Windows-17b3d2)
 
+<!-- ![Static Badge](https://img.shields.io/badge/any%20text-you%20like-blue) -->
 Welcome to Speech-Assistant! 
 
 This is a project to implement a working desktop application on both Linux and Windows that provides a real-time, offline speech-to-text dictation program. It uses the distil-whisper models from HuggingFace, based on this [repo](https://github.com/huggingface/distil-whisper). The speech-to-text assistant writes down spoken words directly to the keyboard cursor. To use it is easy, hold down a hotkey combination of Windows key (Super) and Shift to begin, and let go to end the recording. Your speech will be transcribed in real time and the transcription is going to be typed in for you at the keyboard cursor. I made this program to enhance efficiency  and add quality of life to the experience of PC users. Additionally, there isn't a reliable speech-to-text model used for transcription on Linux, however, do check out [nerd-dictation](https://github.com/ideasman42/nerd-dictation) for the implementation of speech-to-text for the vosk models.
@@ -8,13 +9,13 @@ This is a project to implement a working desktop application on both Linux and W
 Here is a [demo](https://youtu.be/p9-QpG0p9yQ) of speech-assistant.
 
 # Getting Started
-## Linux/Windows
-### Anaconda
-To get started you can get started on any operating system you would like. The program was tested in Pop-Os (Ubuntu22.04), Windows 10 and 11. Here is Anaconda's installation [instructions](https://docs.anaconda.com/free/anaconda/install/). If you are on Windows make sure to have access to the conda command using the Anaconda **cmd** terminal, or to source it directly (time-consuming).
 
-1. Create a running environment from env.yml, this will take ~5-15 minutes depending on your internet connection
+To get started you can get started on any operating system you would like. The program was tested in Pop-Os (Ubuntu22.04), Windows 10 and 11. Here is Anaconda's installation [instructions](https://docs.anaconda.com/free/anaconda/install/). If you are on Windows make sure to have access to the conda command using the Anaconda **cmd** terminal, or to source it directly (time-consuming). Nvidia and AMD have different packages needed to run Pytorch,please follow accordingly to ensure smooth compatibility.
+
+## Nvidia GPU
+1. Create a running environment from env-cuda.yml, this will take ~5-15 minutes depending on your internet connection
 ```
-conda env create -f env.yml
+conda env create -f env-cuda.yml -y
 conda activate speech-assistant
 ```
 2. Start running the program. The program will download the distil-whisper/distil-medium.en model by default and cache it locally in a folder named 'model'.  It is ~800 MB and you can choose the bigger models if you would like, however, the smaller model is very accurate and the best choice. The different choices are in this [configuration](#configurations). You can change this in [model_inference.py](https://github.com/Mohamad-Hussein/speech-assistant/blob/main/src/model_inference.py).
@@ -24,7 +25,34 @@ python main.py
 3. Hold the default hotkey Super + Shift to start recording your microphone
 4. Release hotkey to stop the recording
 5. And voila! The model will output the transcription on your text cursor!
-## Notes and Considerations
+
+## AMD GPU
+There are different steps depending on your operating system.
+
+### Windows
+We are going to be using the [torch-directml](https://learn.microsoft.com/en-us/windows/ai/directml/dml-intro) API from Microsoft instead of CUDA.
+1. Create conda environment from env-amd-win.yml and activate it.
+```
+conda env create -f env-amd-win.yml -y
+conda activate speech-assistant
+```
+2. Change [line](https://github.com/Mohamad-Hussein/speech-assistant/blob/main/src/funcs.py#L58) from ```elif 0:``` to ```elif 1:```
+3. Start program.
+```
+python main.py
+```
+### Linux
+To use AMD GPUs for PyTorch, we need to download the ROCm platform version of PyTorch.
+1. Create conda environment from env-amd-linux.yml and activate it.
+```
+conda env create -f env-amd-linux.yml -y
+conda activate speech-assistant
+```
+2. Start the program
+```
+python main.py
+```
+# Notes and Considerations
 - Make sure to locate your primary sound input device!
 - There is a problem with using powershell, use cmd and activate conda env.
 - Installing with requirement.txt, package ffmpeg will be missing on model inference. This module can be downloaded with anaconda with -c pytorch.

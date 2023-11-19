@@ -1,10 +1,11 @@
 from time import sleep, time
-from torch.cuda import is_available, get_device_name
-from torch import float16, float32
 from pyautogui import typewrite
 from os.path import join
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 import logging
+from sys import exit
+
+from src.funcs import find_gpu_config
 
 MODEL_ID = "distil-whisper/distil-medium.en"  # ~900-1500 MiB of GPU memory
 # MODEL_ID = "distil-whisper/distil-large-v2"  # ~1700-2000 MiB of GPU memory
@@ -20,10 +21,14 @@ def service(pipe, event):
     )
     logger = logging.getLogger(__name__)
 
-    device = "cuda:0" if is_available() else "cpu"
-    torch_dtype = float16 if is_available() else float32
+    
+    # Checking for GPU
+    device, device_name, torch_dtype = find_gpu_config(logger)
+
+    # Setting cache dir
     local_cache_dir = join(".", "model")
 
+    # Creating model
     model = AutoModelForSpeechSeq2Seq.from_pretrained(
         MODEL_ID,
         torch_dtype=torch_dtype,
@@ -31,9 +36,9 @@ def service(pipe, event):
         use_safetensors=True,
         cache_dir=local_cache_dir,
     )
-
     model.to(device)
 
+    # Making pipeline for inference
     processor = AutoProcessor.from_pretrained(MODEL_ID, cache_dir=local_cache_dir)
 
     model_pipe = pipeline(
@@ -48,11 +53,12 @@ def service(pipe, event):
         device=device,
     )
 
-    # Clearing memory
-    if "cuda" in device:
-        print(f"\nModel loaded to {get_device_name(device)}\n\n")
+    # Checking if GPU or CPU used
+    if device_name:
+        print(f"\nModel loaded to {device_name}\n\n")
     else:
-        print(f"\nModel loaded to CPU\n\n")
+        print(f"\nModel loaded to physical memory and CPU is used.\n"+
+              "WARNING: Unfortunatly these models are not optimal to be computed on CPU!\n\n")
 
     del device, torch_dtype, local_cache_dir, processor
 
@@ -78,8 +84,10 @@ def service(pipe, event):
             logger.debug(f"Result: {result}")
             event.clear()
     except KeyboardInterrupt:
-        pass
+        print("\n\033[92m\033[4mmodel_inference.py\033[0m \033[92mprocess ended\033[0m")
     except Exception as e:
         logger.error(f"Exception hit: {e}")
+        print("\n\033[91m\033[4mmodel_inference.py\033[0m \033[91mprocess ended\033[0m")
+        exit(1)
     finally:
-        print("\n\033[92m\033[4mmodel_inference.py\033[0m \033[92mprocess ended\033[0m")
+        pass
