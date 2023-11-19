@@ -4,11 +4,14 @@
 # Adapted from http://stackoverflow.com/questions/22367358/
 # Adapted from users CasualDemon and o9000 on stackoverflow
 # Requires python-xlib
+import logging
+from os.path import join
 
 from Xlib.display import Display
 from Xlib import X, XK
 from Xlib.ext import record
 from Xlib.protocol import rq
+
 
 class Listener:
     def __init__(self, pipe, start_event, model_event):
@@ -22,6 +25,16 @@ class Listener:
         # -- Hotkey --
         self.hotkey = {"Super", "Shift"}
         # ------------
+
+        # Configure the logging settings
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format="%(asctime)s - %(levelname)s - %(message)s",
+            filename=join("logs", "key_listener.log"),
+            filemode="w",
+        )
+        self.logger = logging.getLogger(__name__)
+        self.logger.info("Key listener for Linux started")
 
     def keycode_to_key(self, keycode, state):
         i = 0
@@ -112,36 +125,49 @@ class Listener:
                 self.up(self.mouse_to_string(event.detail))
 
     def run(self):
-        self.disp = Display()
-        XK.load_keysym_group("xf86")
-        root = self.disp.screen().root
+        try:
+            self.disp = Display()
+            XK.load_keysym_group("xf86")
+            root = self.disp.screen().root
 
-        print(f"Hotkey assigned: {' + '.join(self.hotkey)}")
-        # To signal to parent that it is ready
-        self.start_event.set()
-        
-        ctx = self.disp.record_create_context(
-            0,
-            [record.AllClients],
-            [
-                {
-                    "core_requests": (0, 0),
-                    "core_replies": (0, 0),
-                    "ext_requests": (0, 0, 0, 0),
-                    "ext_replies": (0, 0, 0, 0),
-                    "delivered_events": (0, 0),
-                    "device_events": (X.KeyReleaseMask, X.ButtonReleaseMask),
-                    "errors": (0, 0),
-                    "client_started": False,
-                    "client_died": False,
-                }
-            ],
-        )
-        self.disp.record_enable_context(ctx, lambda reply: self.event_handler(reply))
-        self.disp.record_free_context(ctx)
-        while True:
-            event = root.display.next_event()
+            print(f"Hotkey assigned: {' + '.join(self.hotkey)}")
+            # To signal to parent that it is ready
+            self.start_event.set()
+
+            ctx = self.disp.record_create_context(
+                0,
+                [record.AllClients],
+                [
+                    {
+                        "core_requests": (0, 0),
+                        "core_replies": (0, 0),
+                        "ext_requests": (0, 0, 0, 0),
+                        "ext_replies": (0, 0, 0, 0),
+                        "delivered_events": (0, 0),
+                        "device_events": (X.KeyReleaseMask, X.ButtonReleaseMask),
+                        "errors": (0, 0),
+                        "client_started": False,
+                        "client_died": False,
+                    }
+                ],
+            )
+            self.disp.record_enable_context(
+                ctx, lambda reply: self.event_handler(reply)
+            )
+            self.disp.record_free_context(ctx)
+            while True:
+                event = root.display.next_event()
+        except KeyboardInterrupt:
+            self.logger.info("Keyboard Interrupt")
+            pass
+        except Exception as e:
+            self.logger.exception(f"Exception occured: {e}")
+        finally:
+            self.disp.close()
+            print(
+                "\n\033[92m\033[4mkey_listener.py\033[0m \033[92mprocess ended\033[0m"
+            )
 
 
 if __name__ == "__main__":
-    Listener('test pipe', 'test event').run()
+    Listener("test pipe", "test event").run()

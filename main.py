@@ -2,6 +2,7 @@ from src.parent import main
 from os.path import exists, join
 from os import makedirs, system
 import logging
+
 title = """
        _____                                _          
       / ____|                              | |         
@@ -38,10 +39,11 @@ if __name__ == "__main__":
     print(title2)
     del title, title2
 
-    system("") # Enable ANSI colors
+    system("")  # Enable ANSI colors
     print(
-        "Press \033[37;42m Hotkey \033[0m for dictation or "+
-        "Press \033[37;41m Ctrl + c \033[0m to end the program.")
+        "Hold \033[37;42m Hotkey \033[0m for dictation or "
+        + "Press \033[37;41m Ctrl + c \033[0m to end the program."
+    )
     print("--------------------------------------------------------------------")
     # Creates logs directory if it doesn't exist
     if not exists("logs"):
@@ -56,7 +58,7 @@ if __name__ == "__main__":
     )
     logger = logging.getLogger(__name__)
     logger.info("Program started")
-    
+
     try:
         main()
     except KeyboardInterrupt:

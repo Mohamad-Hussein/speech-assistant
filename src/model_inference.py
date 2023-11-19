@@ -10,7 +10,6 @@ MODEL_ID = "distil-whisper/distil-medium.en"  # ~900-1500 MiB of GPU memory
 # MODEL_ID = "distil-whisper/distil-large-v2"  # ~1700-2000 MiB of GPU memory
 
 
-
 def service(pipe, event):
     # Configure the logging settings
     logging.basicConfig(
@@ -20,7 +19,6 @@ def service(pipe, event):
         filemode="w",
     )
     logger = logging.getLogger(__name__)
-
 
     device = "cuda:0" if is_available() else "cpu"
     torch_dtype = float16 if is_available() else float32
@@ -84,4 +82,4 @@ def service(pipe, event):
     except Exception as e:
         logger.error(f"Exception hit: {e}")
     finally:
-        print("\n\033[92mmodel_inference.py process ended\033[0m")
+        print("\n\033[92m\033[4mmodel_inference.py\033[0m \033[92mprocess ended\033[0m")

@@ -190,4 +190,5 @@ def main():
         sound_file.close()
         # Logging
         logger.info("Program End")
-        print(f"\n\033[92mparent.py process ended\033[0m")
+        print("\n\033[92m\033[4mparent.py\033[0m \033[92mprocess ended\033[0m")
+
