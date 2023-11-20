@@ -1,11 +1,23 @@
 # speech-assistant
-[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
-[![License badge](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/license/mit/)
+<div align="center">
 
-![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=flat&logo=python&logoColor=white)
-[![pytorch](https://img.shields.io/badge/PyTorch-2.1.1-EE4C2C.svg?style=flat&logo=pytorch)](https://pytorch.org)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+  <!-- Icons on the left -->
+  <div style="float: left; padding-right: 20px;">
+    [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
+    [![License badge](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/license/mit/)
+  </div>
 
+  <!-- Content in the center -->
+  <p>This is the main content of your README.</p>
+
+  <!-- Icons on the right -->
+  <div style="float: right; padding-left: 20px;">
+    ![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=flat&logo=python&logoColor=white)
+    [![pytorch](https://img.shields.io/badge/PyTorch-2.1.1-EE4C2C.svg?style=flat&logo=pytorch)](https://pytorch.org)
+    [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+  </div>
+
+</div>
 
 
 
