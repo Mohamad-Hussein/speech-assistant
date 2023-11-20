@@ -3,8 +3,9 @@
 
   <!-- Icons on the left -->
   <div style="float: left; padding-right: 20px;">
-    [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
-    [![License badge](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/license/mit/)
+    <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat"/>
+    <img src="https://img.shields.io/badge/License-MIT-blue.svg">
+    
   </div>
 
   <!-- Content in the center -->
@@ -19,7 +20,7 @@
 
 </div>
 
-
+[![License badge]()](https://opensource.org/license/mit/)
 
 
 <!-- 
