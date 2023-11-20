@@ -1,5 +1,6 @@
 # speech-assistant
-[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)  ![GitHub repo size](https://img.shields.io/github/repo-size/:Mohamad-Hussein/:speech-assistant)  ![Linux](https://img.shields.io/badge/Linux-F2F2F2) ![Windows](https://img.shields.io/badge/Windows-17b3d2) 
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)  ![GitHub repo size](https://img.shields.io/github/repo-size/:Mohamad-Hussein/:speech-assistant)  [![Anaconda-Server Badge](https://anaconda.org/fastai/fastai/badges/latest_release_date.svg)](https://anaconda.org/fastai/fastai)
+![Linux](https://img.shields.io/badge/Linux-F2F2F2) ![Windows](https://img.shields.io/badge/Windows-17b3d2) 
 
 
 <!-- ![Static Badge](https://img.shields.io/badge/any%20text-you%20like-blue) -->
