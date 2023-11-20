@@ -6,10 +6,6 @@
 [![Mohamad-Hussein github](https://img.shields.io/badge/GitHub-Mohamad-Hussein.svg?style=flat&logo=github)](https://github.com/Mohamad-Hussein)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)  
 
-![Linux](https://img.shields.io/badge/Linux-F2F2F2) ![Windows](https://img.shields.io/badge/Windows-17b3d2)
-
-
-
 
 <!-- 
 ![Static Badge](https://img.shields.io/badge/any%20text-you%20like-blue) 
@@ -22,7 +18,7 @@ This is a project to implement a working desktop application on both Linux and W
 Here is a quick [demo](https://youtu.be/rF8mtyhBZiM) of speech-assistant.
 
 # Getting Started
-
+![Linux](https://img.shields.io/badge/Linux-F2F2F2) ![Windows](https://img.shields.io/badge/Windows-17b3d2)
 You can get started on any operating system you would like. The program was tested in Pop-Os (Ubuntu22.04), Windows 10 and 11. Here is Anaconda's installation [instructions](https://docs.anaconda.com/free/anaconda/install/). If you are on Windows make sure to have access to the conda command using the Anaconda **cmd** terminal, or to source it directly (time-consuming). Nvidia and AMD have different packages needed to run Pytorch, please follow accordingly to ensure smooth compatibility.
 
 ## Nvidia GPU
