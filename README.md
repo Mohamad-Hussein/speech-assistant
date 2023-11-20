@@ -92,8 +92,6 @@ sudo apt-get install python3.11-dev
 sudo apt install portaudio19-dev
 python3 -m  pip install PyAudio
 ```
-
-# Future contributions
 ## Issues to solve
 - Current pressed values save capital letters (somewhat fixed, current pressed down var cleared once pressing hotkey)(key_listener.py)
 - Fix this warning:
@@ -101,14 +99,15 @@ python3 -m  pip install PyAudio
 /home/mohamadhussein/anaconda3/envs/pytorch/lib/python3.11/site-packages/transformers/pipelines/base.py:1101: UserWarning: You seem to be using the pipelines sequentially on GPU. To maximize efficiency please use a dataset
   warnings.warn()
 ```
-
+# Future contributions
 ## Needed features
 - Add optimizations suggested by HuggingFace
-- Add capability for AMD GPUs
 - Add the option to use whatever key bind of the user's choosing (GUI)
 - Add GUI
-- Stress tests to make reliable
-- Make Dockerfile
+- Make Dockerfile for containers
+
+## Future features
+- Add sequential inference, for transcription as you talk
 
 # Acknowledgements
 
