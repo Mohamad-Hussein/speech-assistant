@@ -1,24 +1,10 @@
 # speech-assistant
-<div align="center">
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
+[![License badge](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/license/mit/)
 
-  <!-- Icons on the left -->
-  <div style="float: left; padding-right: 20px;">
-    <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat"/>
-    <img src="https://img.shields.io/badge/License-MIT-blue.svg">
-  </div>
-
-  <!-- Icons on the right -->
-  <div style="float: right; padding-left: 20px;">
-    <img src="https://img.shields.io/badge/Python-3.11-3776AB.svg?style=flat&logo=python&logoColor=white">
-    <img src="https://img.shields.io/badge/PyTorch-2.1.1-EE4C2C.svg?style=flat&logo=pytorch">  
-    <img src="https://img.shields.io/badge/code%20style-black-000000.svg">  
-  </div>
-  <div style="clear: both;"></div>
-</div>
-    ![Python]()
-    [![pytorch]()](https://pytorch.org)
-    [![Code style: black]()](https://github.com/psf/black)
-[![License badge]()](https://opensource.org/license/mit/)
+![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=flat&logo=python&logoColor=white)
+[![pytorch](https://img.shields.io/badge/PyTorch-2.1.1-EE4C2C.svg?style=flat&logo=pytorch)](https://pytorch.org)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 
 <!-- 
