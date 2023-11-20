@@ -19,6 +19,7 @@ Here is a quick [demo](https://youtu.be/rF8mtyhBZiM) of speech-assistant.
 
 # Getting Started
 ![Linux](https://img.shields.io/badge/Linux-F2F2F2) ![Windows](https://img.shields.io/badge/Windows-17b3d2)
+
 You can get started on any operating system you would like. The program was tested in Pop-Os (Ubuntu22.04), Windows 10 and 11. Here is Anaconda's installation [instructions](https://docs.anaconda.com/free/anaconda/install/). If you are on Windows make sure to have access to the conda command using the Anaconda **cmd** terminal, or to source it directly (time-consuming). Nvidia and AMD have different packages needed to run Pytorch, please follow accordingly to ensure smooth compatibility.
 
 ## Nvidia GPU
