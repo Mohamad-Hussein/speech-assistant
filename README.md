@@ -3,15 +3,18 @@
 [![pytorch](https://img.shields.io/badge/PyTorch-2.1.1-EE4C2C.svg?style=flat&logo=pytorch)](https://pytorch.org)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 ![License badge](https://img.shields.io/badge/License-MIT-blue.svg)
-![GitHub repo size](https://img.shields.io/github/repo-size/:Mohamad-Hussein/:speech-assistant)
+
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)  
 
 ![Linux](https://img.shields.io/badge/Linux-F2F2F2) ![Windows](https://img.shields.io/badge/Windows-17b3d2)
 
-[![Mohamad-Hussein github](https://img.shields.io/badge/GitHub-Mohamad-Hussein-181717.svg?style=flat&logo=github)](https://github.com/Mohamad-Hussein)
+[![Mohamad-Hussein github](https://img.shields.io/badge/GitHub-Mohamad-Hussein.svg?style=flat&logo=github)](https://github.com/Mohamad-Hussein)
 
 
-<!-- ![Static Badge](https://img.shields.io/badge/any%20text-you%20like-blue) -->
+<!-- 
+![Static Badge](https://img.shields.io/badge/any%20text-you%20like-blue) 
+![GitHub repo size](https://img.shields.io/github/repo-size/:Mohamad-Hussein/:speech-assistant)
+-->
 Welcome to Speech-Assistant! 
 
 This is a project to implement a working desktop application on both Linux and Windows that provides a real-time, offline speech-to-text dictation program. It uses the distil-whisper models from HuggingFace, based on this [repo](https://github.com/huggingface/distil-whisper). The speech-to-text assistant writes down spoken words directly to the keyboard cursor. To use it is easy, hold down a hotkey combination of Windows key (Super) and Shift to begin, and let go to end the recording. Your speech will be transcribed in real time and the transcription is going to be typed in for you at the keyboard cursor. I made this program to enhance efficiency and add quality of life to the experience of PC users. Additionally, there isn't a reliable speech-to-text model used for transcription on Linux, however, do check out [nerd-dictation](https://github.com/ideasman42/nerd-dictation) for the implementation of speech-to-text for the vosk models.
