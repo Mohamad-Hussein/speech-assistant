@@ -1,12 +1,15 @@
 # speech-assistant
-[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)  ![GitHub repo size](https://img.shields.io/github/repo-size/:Mohamad-Hussein/:speech-assistant)  [![Anaconda-Server Badge](https://anaconda.org/fastai/fastai/badges/latest_release_date.svg)](https://anaconda.org/fastai/fastai)
-![Linux](https://img.shields.io/badge/Linux-F2F2F2) ![Windows](https://img.shields.io/badge/Windows-17b3d2)
-
-[![Mohamad-Hussein github](https://img.shields.io/badge/GitHub-Mohamad-Hussein-181717.svg?style=flat&logo=github)](https://github.com/Mohamad-Hussein)
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=flat&logo=python&logoColor=white)
 [![pytorch](https://img.shields.io/badge/PyTorch-2.1.1-EE4C2C.svg?style=flat&logo=pytorch)](https://pytorch.org)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![License badge](https://img.shields.io/badge/License-MIT-blue.svg)]
+![License badge](https://img.shields.io/badge/License-MIT-blue.svg)
+![GitHub repo size](https://img.shields.io/github/repo-size/:Mohamad-Hussein/:speech-assistant)
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)  
+
+![Linux](https://img.shields.io/badge/Linux-F2F2F2) ![Windows](https://img.shields.io/badge/Windows-17b3d2)
+
+[![Mohamad-Hussein github](https://img.shields.io/badge/GitHub-Mohamad-Hussein-181717.svg?style=flat&logo=github)](https://github.com/Mohamad-Hussein)
+
 
 <!-- ![Static Badge](https://img.shields.io/badge/any%20text-you%20like-blue) -->
 Welcome to Speech-Assistant! 
