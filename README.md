@@ -80,6 +80,25 @@ python main.py
 | [distil-large-v2](https://huggingface.co/distil-whisper/distil-large-v2)   | 756        | 5.8          | 10.1           | **11.6**      |
 | [distil-medium.en](https://huggingface.co/distil-whisper/distil-medium.en) | **394**    | **6.8**      | 11.1           | 12.4          |
 
+
+# Future contributions
+## Needed features
+- Add optimizations suggested by HuggingFace
+- Add the option to use whatever key bind of the user's choosing (GUI)
+- Add GUI
+- Make Dockerfile for containers
+
+## Future features
+- Add sequential inference, for transcription as you talk
+
+## Issues to solve
+- Current pressed values save capital letters (somewhat fixed, current pressed down var cleared once pressing hotkey)(key_listener.py)
+- Fix this warning:
+```
+/home/mohamadhussein/anaconda3/envs/pytorch/lib/python3.11/site-packages/transformers/pipelines/base.py:1101: UserWarning: You seem to be using the pipelines sequentially on GPU. To maximize efficiency please use a dataset
+  warnings.warn()
+```
+
 # Problems faced along the way
 ## Could not build wheels for PyGOObject
 ```bash
@@ -91,23 +110,6 @@ sudo apt-get install python3.11-dev
 sudo apt install portaudio19-dev
 python3 -m  pip install PyAudio
 ```
-## Issues to solve
-- Current pressed values save capital letters (somewhat fixed, current pressed down var cleared once pressing hotkey)(key_listener.py)
-- Fix this warning:
-```
-/home/mohamadhussein/anaconda3/envs/pytorch/lib/python3.11/site-packages/transformers/pipelines/base.py:1101: UserWarning: You seem to be using the pipelines sequentially on GPU. To maximize efficiency please use a dataset
-  warnings.warn()
-```
-# Future contributions
-## Needed features
-- Add optimizations suggested by HuggingFace
-- Add the option to use whatever key bind of the user's choosing (GUI)
-- Add GUI
-- Make Dockerfile for containers
-
-## Future features
-- Add sequential inference, for transcription as you talk
-
 # Acknowledgements
 
 Distil-whisper paper:
