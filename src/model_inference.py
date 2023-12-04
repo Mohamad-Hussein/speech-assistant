@@ -7,9 +7,10 @@ from sys import exit
 
 from src.funcs import find_gpu_config
 
+# MODEL_ID = "openai/whisper-tiny"  # ~400 MiB of GPU memory
 MODEL_ID = "distil-whisper/distil-medium.en"  # ~900-1500 MiB of GPU memory
 # MODEL_ID = "distil-whisper/distil-large-v2"  # ~1700-2000 MiB of GPU memory
-
+# MODEL_ID = "openai/whisper-large-v3"  # ~4000 MiB of GPU memory
 
 def service(pipe, event):
     # Configure the logging settings
