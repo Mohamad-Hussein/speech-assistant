@@ -8,3 +8,6 @@ __pycache__
 speech-assistant.log
 
 logs
+.vscode
+*.txt
+*.ipynb
