@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 def get_audio():
+    """Creates the audio stream for recording audio from the microphone."""
+    
     audio = PyAudio()
     stream_input = audio.open(
         format=paInt16,
@@ -23,7 +25,16 @@ def get_audio():
 
 
 def pcm_to_wav(input_pcm):
+    """
+    Converts PCM bytes to WAV bytes so that the HuggingFace pipeline receives
+    bytes that ffmpeg could interpret.
 
+    Args:
+        input_pcm (bytes): PCM bytes from pyaudio
+
+    Returns:
+        wav_data (bytes): WAV bytes
+    """
     with io.BytesIO() as wav_file:
         wav_writer = wave.open(wav_file, "wb")
 
@@ -42,6 +53,17 @@ def pcm_to_wav(input_pcm):
 
 
 def run_listener(child_pipe, start_event, model_event):
+    """
+    Runs the key listener based on the OS.
+
+    Args:
+        child_pipe (multiprocessing.Pipe): Pipe for communication with the child process
+        start_event (multiprocessing.Event): Event to tell the child process that the model is loaded
+        model_event (multiprocessing.Event): Event to tell the child process that the model is loaded
+
+    Returns:
+        None
+    """
     # Differentiate between windows and linux
     if system() == "Windows":
         from src.key_listener_win import Listener
@@ -53,6 +75,19 @@ def run_listener(child_pipe, start_event, model_event):
 
 
 def find_gpu_config(logger):
+    """
+    Finds the GPU config and returns the device, device name and torch_dtype
+    based on GPU platform and availability.
+
+    Args:
+        logger (logging.Logger): Logger instance to log messages onto model.log (for Windows)
+
+    Returns:
+        device (str): Device type, either cuda:0, cpu, or ...
+        device_name (str): Device name
+        torch_dtype (torch.dtype): Data type for torch, float16 for GPU, float32 for CPU
+
+    """
     from torch import cuda
     from torch import float16, float32
 
