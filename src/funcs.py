@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def get_audio():
     """Creates the audio stream for recording audio from the microphone."""
-    
+
     audio = PyAudio()
     stream_input = audio.open(
         format=paInt16,
@@ -22,6 +22,17 @@ def get_audio():
     )
 
     return audio, stream_input
+
+
+def create_sound_file(file_name="tmp.wav"):
+    """Creates a sound file for writing"""
+    # Copying soundbyte for debugging purposes
+    sound_file = wave.open(file_name, "wb")
+    sound_file.setnchannels(1)
+    sound_file.setsampwidth(2)  # 2 bytes = 16 bits p
+    sound_file.setframerate(44100)
+
+    return sound_file
 
 
 def pcm_to_wav(input_pcm):
