@@ -1,16 +1,20 @@
 from time import sleep, time
 from pyautogui import typewrite
 from os.path import join
-from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
+from transformers.pipelines import pipeline
+from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
+# from optimum.nvidia.pipelines import pipeline
+
 import logging
 from sys import exit
 
 from src.funcs import find_gpu_config
 
-# MODEL_ID = "openai/whisper-tiny"  # ~400 MiB of GPU memory
+# MODEL_ID = "openai/whisper-tiny.en"  # ~400 MiB of GPU memory
 MODEL_ID = "distil-whisper/distil-medium.en"  # ~900-1500 MiB of GPU memory
 # MODEL_ID = "distil-whisper/distil-large-v2"  # ~1700-2000 MiB of GPU memory
 # MODEL_ID = "openai/whisper-large-v3"  # ~4000 MiB of GPU memory
+# MODEL_ID = "optimum/whisper-tiny.en"  # ~400 MiB of GPU memory
 
 def service(pipe, event):
     # Configure the logging settings
