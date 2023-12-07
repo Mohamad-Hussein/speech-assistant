@@ -1,7 +1,10 @@
-from pyaudio import PyAudio, paInt16
+import io
+import wave
 import logging
 from platform import system
+import traceback
 
+from pyaudio import PyAudio, paInt16
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +20,25 @@ def get_audio():
     )
 
     return audio, stream_input
+
+
+def pcm_to_wav(input_pcm):
+
+    with io.BytesIO() as wav_file:
+        wav_writer = wave.open(wav_file, "wb")
+
+        try:
+            wav_writer.setframerate(44100)
+            wav_writer.setsampwidth(2)
+            wav_writer.setnchannels(1)
+            wav_writer.writeframes(input_pcm)
+            wav_data = wav_file.getvalue()
+        except Exception:
+            logger.error(f"Exception on pcm_to_wav: {traceback.format_exc()}")
+        finally:
+            wav_writer.close()
+
+    return wav_data
 
 
 def run_listener(child_pipe, start_event, model_event):
