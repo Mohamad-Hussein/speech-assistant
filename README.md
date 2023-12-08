@@ -24,7 +24,7 @@ Here is a quick [demo](https://youtu.be/rF8mtyhBZiM) of speech-assistant.
 # Getting Started
 ![Linux](https://img.shields.io/badge/Linux-F2F2F2) ![Windows](https://img.shields.io/badge/Windows-17b3d2)
 
-You can get started on any operating system you would like. The program was tested in Pop-Os (Ubuntu22.04), Windows 10 and 11. Here is Anaconda's installation [instructions](https://docs.anaconda.com/free/anaconda/install/). If you are on Windows make sure to have access to the conda command using the Anaconda **cmd** terminal, or to source it directly (time-consuming). Nvidia and AMD have different packages needed to run Pytorch, please follow accordingly to ensure smooth compatibility.
+You can get started on any operating system you would like. The program was tested in Pop-Os (Ubuntu22.04), Windows 10 and 11. Here is Anaconda's installation [instructions](https://docs.anaconda.com/free/anaconda/install/). If you are on Windows make sure to have access to the conda command using the Anaconda **cmd** terminal, or to source it directly. Nvidia and AMD have different packages needed to run Pytorch, please follow accordingly to ensure smooth compatibility.
 
 ## Nvidia GPU
 1. Create a running environment from env-cuda.yml, this will take ~5-15 minutes depending on your internet connection
@@ -67,10 +67,10 @@ conda activate speech-assistant
 python main.py
 ```
 # Notes and Considerations
+- Users with dedicated graphics cards will have a better experience running the big models.
 - Make sure to locate your primary sound input device!
 - There is a problem with using PowerShell, use cmd, and activate the conda environment.
 - Installing with requirement.txt, package ffmpeg will be missing on model inference. This module can be downloaded with anaconda with ```conda install ffmpeg -c pytorch.```
-- Users with dedicated graphics cards will have a better experience running the big models.
 - For transcribing on Windows you can use its built-in dictation service with left windows + h. However, the whisper models can be useful for formatting expressive punctuation, and the implementation allows for private and quick dictation.
 ## Configurations
 
@@ -79,18 +79,21 @@ python main.py
 | [whisper-large-v2](https://huggingface.co/openai/whisper-large-v2)         | 1550       | 1.0          | **9.1**        | 11.7          |
 | [distil-large-v2](https://huggingface.co/distil-whisper/distil-large-v2)   | 756        | 5.8          | 10.1           | **11.6**      |
 | [distil-medium.en](https://huggingface.co/distil-whisper/distil-medium.en) | **394**    | **6.8**      | 11.1           | 12.4          |
-
+| [whisper-large-v3](https://huggingface.co/openai/whisper-large-v3)         | 1550       |           |         |           |
+| [whisper-tiny.en](https://huggingface.co/openai/whisper-tiny.en)         | 39       |          | [~15](https://arxiv.org/abs/2212.04356)        | [~15](https://arxiv.org/abs/2212.04356)          |
 
 # Future contributions
 ## Needed features
 - Add optimizations suggested by HuggingFace
 - Add the option to use whatever key bind of the user's choosing (GUI)
 - Add GUI
+- 
 - Make Dockerfile for containers
 
 ## Future features
 - Add sequential inference, for transcription as you talk
-
+- Add choice of direct connection to ChatGPT API, local LLM, or AutoGPT
+  
 ## Issues to solve
 - Current pressed values save capital letters (somewhat fixed, current pressed down var cleared once pressing hotkey)(key_listener.py)
 - Fix this warning:

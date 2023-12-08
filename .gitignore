@@ -5,9 +5,11 @@ test*.py
 # Cache files
 model
 __pycache__
+.vscode
 speech-assistant.log
 
 logs
+
 .vscode
 *.txt
 *.ipynb

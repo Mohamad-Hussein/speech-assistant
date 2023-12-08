@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from src.parent import main
 from os.path import exists, join
 from os import makedirs, system
