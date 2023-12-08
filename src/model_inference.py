@@ -17,7 +17,7 @@ MODEL_ID = "distil-whisper/distil-medium.en"  # ~900-1500 MiB of GPU memory
 # MODEL_ID = "openai/whisper-large-v3"  # ~4000 MiB of GPU memory
 # MODEL_ID = "optimum/whisper-tiny.en"  # ~400 MiB of GPU memory
 
-def service(pipe, event):
+def service(queue, event):
     # Configure the logging settings
     logging.basicConfig(
         level=logging.DEBUG,
@@ -81,7 +81,12 @@ def service(pipe, event):
         while 1:
             event.wait()
             t0 = time()
-            result = model_pipe(file_path)
+
+            audio_bytes = queue.get()
+            
+            logger.debug(f"Type: {type(audio_bytes)}")
+            result = model_pipe(audio_bytes)
+
             logger.info(f"Time for inference: {time() - t0:.4f} seconds")
             typewrite(result["text"])
             speech_to_text_time = time() - t0

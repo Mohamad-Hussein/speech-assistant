@@ -1,14 +1,16 @@
+from time import time, sleep
 from os.path import join
 import logging
+import traceback
 from shutil import copy
-
-from time import time, sleep
-from src.funcs import get_audio, run_listener
-from src.model_inference import service
-from wave import open
-
-from multiprocessing import Process, Event, Pipe
+from multiprocessing import Process, Event, Pipe, Queue
 from threading import Thread
+
+from src.model_inference import service
+from src.funcs import run_listener
+from src.funcs import get_audio, create_sound_file, pcm_to_wav
+
+
 
 from pyaudio import paInt16
 from playsound import playsound
@@ -27,23 +29,20 @@ stream_input.stop_stream()
 
 
 # -------------------------
-def create_sound_file():
-    # Copying soundbyte for debugging purposes
-    sound_file = open("tmp.wav", "wb")
-    sound_file.setnchannels(1)
-    sound_file.setsampwidth(audio.get_sample_size(paInt16))
-    sound_file.setframerate(44100)
-    return sound_file
 
 
-def start_recording(start_event, model_event, sound_file):
+def start_recording(start_event, model_event, sound_file, queue):
     logger.info("sound-high played")
     t0 = time()
 
     # This line to wake device from sleep state
     # Huge performance gain from Threading and playsound
-    sound1 = Thread(target=playsound, args=(join('effects', 'button-high.wav'),), name='play-sound1')
-    sound2 = Thread(target=playsound, args=(join('effects', 'button-low.wav'),), name='play-sound2')
+    sound1 = Thread(
+        target=playsound, args=(join("effects", "button-high.wav"),), name="play-sound1"
+    )
+    sound2 = Thread(
+        target=playsound, args=(join("effects", "button-low.wav"),), name="play-sound2"
+    )
 
     # Start stream
     stream_input.start_stream()
@@ -56,15 +55,33 @@ def start_recording(start_event, model_event, sound_file):
     # Capturing audio
     frames = []
     try:
+        # Playing start sound
         sound1.start()
         logger.info(f"From start to capture: {time() - t0:.2f}s")
 
+        # Capturing audio
         print("Capture STARTED")
         while start_event.is_set():
             data = stream_input.read(1024)
             frames.append(data)
         print("Capture FINISHED")
 
+        # Converting to wav
+        sound_byte = b"".join(frames)
+        sound_byte_wav = pcm_to_wav(sound_byte)
+
+        # Sending sound to model for inference
+        queue.put(sound_byte_wav)
+
+        # Checking extreme case
+        if model_event.is_set():
+            print("!!Already doing inference!!")
+            logger.error("Already doing inference, too quick")
+            return
+        # Start model to be quicker
+        model_event.set()
+
+        # Playing end sound
         sound2.start()
         logger.info("sound-low played")
 
@@ -81,17 +98,8 @@ def start_recording(start_event, model_event, sound_file):
     # Stop stream
     stream_input.stop_stream()
 
-    # Checking extreme case
-    if model_event.is_set():
-        print("!!Already doing inference!!")
-        logger.error("Already doing inference, too quick")
-        return
-    
     # Writing to file
     sound_file.writeframes(b"".join(frames))
-
-    # Start model to be quicker
-    model_event.set()
 
     # Logging
     logger.debug(f"Sound file tell: {sound_file.tell()}")
@@ -102,7 +110,9 @@ def start_recording(start_event, model_event, sound_file):
     # Sound file saving and copying
     sound_file.close()
     print("Saved audio")
-    copy("tmp.wav", "recording.wav")
+
+    # copy("tmp.wav", "recording.wav")
+    return
 
 
 def main():
@@ -117,16 +127,25 @@ def main():
         f"Input device detected: \033[94m{audio.get_default_input_device_info()['name']} \033[0m"
     )
 
-    # Creating pipes just in case
-    parent_pipe, child_pipe = Pipe(duplex=False)
+    # Creating pipes for sending audio bytes
+    parent_pipe, child_pipe = Pipe()
+    # model_recv_pipe, model_send_pipe = Pipe() # duplex=True is faster than False
+
+    # Slower than Pipe however it could handle more data
+    sound_data_queue = Queue()
 
     # Events for synchronization
     start_event = Event()
     model_event = Event()
 
-    # Creating processe for model as it takes the longest to load
+    # Creating process for model as it takes the longest to load
     model_process = Process(
-        target=service, args=(child_pipe, model_event), name="WhisperModel"
+        target=service,
+        args=(
+            sound_data_queue,
+            model_event,
+        ),
+        name="WhisperModel",
     )
     model_process.start()
 
@@ -137,7 +156,9 @@ def main():
 
     # Creating process for Key listener
     userinput_process = Process(
-        target=run_listener, args=(child_pipe, start_event, model_event), name="SA-KeyListener"
+        target=run_listener,
+        args=(child_pipe, start_event, model_event),
+        name="SA-KeyListener",
     )
     userinput_process.start()
 
@@ -156,13 +177,12 @@ def main():
             # Starting to Record
             print("Recording...\n")
             if start_event.is_set():
-                start_recording(start_event, model_event, sound_file)
+                start_recording(start_event, model_event, sound_file, sound_data_queue)
             else:
                 print("Did not record properly")
                 continue
 
-            # Inference
-            print("\n--Starting inference--")
+            # Waiting for inference to complete
             while model_event.is_set():
                 pass
 
@@ -174,12 +194,13 @@ def main():
 
             # Clearing events
             start_event.clear()
+
     except KeyboardInterrupt:
         print("\n\033[92m\033[4mparent.py\033[0m \033[92mprocess ended\033[0m")
-    except Exception as e:
-        logger.error(f"Exception on parent: {e}")
-        print("\n\033[91m\033[4mparent.py\033[0m \033[91mprocess ended\033[0m")
 
+    except Exception as e:
+        logger.error(f"Exception on parent: {traceback.format_exc()}")
+        print("\n\033[91m\033[4mparent.py\033[0m \033[91mprocess ended\033[0m")
 
     finally:
         # Processes
@@ -192,4 +213,3 @@ def main():
         sound_file.close()
         # Logging
         logger.info("Program End")
-
