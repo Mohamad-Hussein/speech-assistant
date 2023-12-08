@@ -9,6 +9,7 @@ import logging
 from sys import exit
 
 from src.funcs import find_gpu_config
+src.per
 
 # MODEL_ID = "openai/whisper-tiny.en"  # ~400 MiB of GPU memory
 MODEL_ID = "distil-whisper/distil-medium.en"  # ~900-1500 MiB of GPU memory
@@ -83,9 +84,16 @@ def service(pipe, event):
             result = model_pipe(file_path)
             logger.info(f"Time for inference: {time() - t0:.4f} seconds")
             typewrite(result["text"])
+            speech_to_text_time = time() - t0
             print(
-                f"\nPrinted text: {result['text']}\nSpeech-to-text time: {time() - t0:.3f}s\n"
+                f"\nPrinted text: {result['text']}\nSpeech-to-text time: {speech_to_text_time:.3f}s\n"
             )
+
+            # Get the duration of the audio
+            duration = get_sound_duration_from_bytes(audio_bytes)
+            # Append the information to the CSV file
+            append_to_csv(output_csv_path, [inference_time, speech_to_text_time, speech_to_text_time - inference_time, duration, result['text']])
+
             logger.debug(f"Result: {result}")
             event.clear()
     except KeyboardInterrupt:
