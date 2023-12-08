@@ -1,15 +1,18 @@
-*.wav
-!effects/*.wav
-test*.py
-
 # Cache files
-model
+.vscode
 __pycache__
-.vscode
+model
 speech-assistant.log
+!effects/*.wav
 
+# Testing
+test*.py
 logs
+performance_testing.py
+model_performance.py
 
-.vscode
+# File types
+*.wav
 *.txt
+*.csv
 *.ipynb
