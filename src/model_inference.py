@@ -1,21 +1,25 @@
-from time import sleep, time
-from pyautogui import typewrite
+from sys import exit
 from os.path import join
+from time import sleep, time
+import logging
+
+from src.funcs import find_gpu_config
+
+from pyautogui import typewrite
 from transformers.pipelines import pipeline
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
 # from optimum.nvidia.pipelines import pipeline
 
-import logging
-from sys import exit
 
-from src.funcs import find_gpu_config
-src.per
+
+
 
 # MODEL_ID = "openai/whisper-tiny.en"  # ~400 MiB of GPU memory
 MODEL_ID = "distil-whisper/distil-medium.en"  # ~900-1500 MiB of GPU memory
 # MODEL_ID = "distil-whisper/distil-large-v2"  # ~1700-2000 MiB of GPU memory
 # MODEL_ID = "openai/whisper-large-v3"  # ~4000 MiB of GPU memory
 # MODEL_ID = "optimum/whisper-tiny.en"  # ~400 MiB of GPU memory
+
 
 def service(queue, event):
     # Configure the logging settings
@@ -27,7 +31,6 @@ def service(queue, event):
     )
     logger = logging.getLogger(__name__)
 
-    
     # Checking for GPU
     device, device_name, torch_dtype = find_gpu_config(logger)
 
@@ -63,9 +66,10 @@ def service(queue, event):
     if device_name:
         print(f"\nModel loaded to {device_name}\n\n")
     else:
-        print(f"\nModel loaded to physical memory and CPU is used.\n"+
-              "WARNING: Unfortunatly these models are not optimal to be computed on CPU!\n\n")
-
+        print(
+            f"\nModel loaded to physical memory and CPU is used.\n"
+            + "WARNING: Unfortunatly these models are not optimal to be computed on CPU!\n\n"
+        )
     del device, torch_dtype, local_cache_dir, processor
 
     # Telling parent that model is loaded
@@ -73,34 +77,33 @@ def service(queue, event):
     # To make sure event is cleared before model inference
     sleep(1)
 
-    # Waits in standy for inference
-    file_path = "tmp.wav"
-
     # Make sure event is cleared before then
     try:
         while 1:
+            # Waits in standy for inference
             event.wait()
             t0 = time()
 
+            # Get audio bytes from queue
             audio_bytes = queue.get()
-            
-            logger.debug(f"Type: {type(audio_bytes)}")
-            result = model_pipe(audio_bytes)
 
+            # Transcribing.
+            result = model_pipe(audio_bytes)
             logger.info(f"Time for inference: {time() - t0:.4f} seconds")
+
+            # Write text to screen
             typewrite(result["text"])
+
+            # Action report
             speech_to_text_time = time() - t0
             print(
                 f"\nPrinted text: {result['text']}\nSpeech-to-text time: {speech_to_text_time:.3f}s\n"
             )
 
-            # Get the duration of the audio
-            duration = get_sound_duration_from_bytes(audio_bytes)
-            # Append the information to the CSV file
-            append_to_csv(output_csv_path, [inference_time, speech_to_text_time, speech_to_text_time - inference_time, duration, result['text']])
-
+            # Resetting
             logger.debug(f"Result: {result}")
             event.clear()
+
     except KeyboardInterrupt:
         print("\n\033[92m\033[4mmodel_inference.py\033[0m \033[92mprocess ended\033[0m")
     except Exception as e:
