@@ -76,18 +76,18 @@ python main.py
 
 | Model                                                                      | Params / M | Rel. Latency | Short-Form WER | Long-Form WER |
 |----------------------------------------------------------------------------|------------|--------------|----------------|---------------|
-| [whisper-large-v2](https://huggingface.co/openai/whisper-large-v2)         | 1550       | 1.0          | **9.1**        | 11.7          |
-| [distil-large-v2](https://huggingface.co/distil-whisper/distil-large-v2)   | 756        | 5.8          | 10.1           | **11.6**      |
-| [distil-medium.en](https://huggingface.co/distil-whisper/distil-medium.en) | **394**    | **6.8**      | 11.1           | 12.4          |
-| [whisper-large-v3](https://huggingface.co/openai/whisper-large-v3)         | 1550       |           |         |           |
 | [whisper-tiny.en](https://huggingface.co/openai/whisper-tiny.en)         | 39       |          | [~15](https://arxiv.org/abs/2212.04356)        | [~15](https://arxiv.org/abs/2212.04356)          |
+| [distil-small.en](https://huggingface.co/distil-whisper/distil-small.en)   | **166**    | 5.6          | 12.1           | 12.8          |
+| [distil-medium.en](https://huggingface.co/distil-whisper/distil-medium.en) | 394    | **6.8**      | 11.1           | 12.4          |
+| [distil-large-v2](https://huggingface.co/distil-whisper/distil-large-v2)   | 756        | 5.8          | 10.1           | **11.6**      |
+| [whisper-large-v2](https://huggingface.co/openai/whisper-large-v2)         | 1550       | 1.0          | **9.1**        | 11.7          |
+| [whisper-large-v3](https://huggingface.co/openai/whisper-large-v3)         | 1550       |           |         |           |
 
 # Future contributions
 ## Needed features
 - Add optimizations suggested by HuggingFace
 - Add the option to use whatever key bind of the user's choosing (GUI)
 - Add GUI
-- 
 - Make Dockerfile for containers
 
 ## Future features
