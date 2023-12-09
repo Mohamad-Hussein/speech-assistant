@@ -161,3 +161,21 @@ def find_gpu_config(logger):
         f"GPU config -- device: {device}, device name: {device_name}, torch_dtype: {torch_dtype}"
     )
     return device, device_name, torch_dtype
+
+def process_text(text : str):
+    """
+    Processes the text to not type dictation
+    in which the user has not said anything
+
+    Args:
+        text (str): The text to be processed
+
+    Returns:
+        text (str): The processed text
+    """
+    processed = text
+
+    if text.strip().lower() in "you're not.":
+        processed = ""
+
+    return processed

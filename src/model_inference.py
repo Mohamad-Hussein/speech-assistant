@@ -3,15 +3,12 @@ from os.path import join
 from time import sleep, time
 import logging
 
-from src.funcs import find_gpu_config
+from src.funcs import find_gpu_config, process_text
 
 from pyautogui import typewrite
 from transformers.pipelines import pipeline
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
 # from optimum.nvidia.pipelines import pipeline
-
-
-
 
 
 # MODEL_ID = "openai/whisper-tiny.en"  # ~400 MiB of GPU memory
@@ -92,8 +89,11 @@ def service(queue, event):
             result = model_pipe(audio_bytes)
             logger.info(f"Time for inference: {time() - t0:.4f} seconds")
 
+            # Process text
+            processed_text = process_text(result["text"])
+
             # Write text to screen
-            typewrite(result["text"])
+            typewrite(processed_text)
 
             # Action report
             speech_to_text_time = time() - t0
