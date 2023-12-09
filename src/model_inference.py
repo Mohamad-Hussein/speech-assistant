@@ -15,7 +15,8 @@ from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
 
 
 # MODEL_ID = "openai/whisper-tiny.en"  # ~400 MiB of GPU memory
-MODEL_ID = "distil-whisper/distil-medium.en"  # ~900-1500 MiB of GPU memory
+MODEL_ID = "distil-whisper/distil-small.en"  # ~500-700 MiB of GPU memory
+# MODEL_ID = "distil-whisper/distil-medium.en"  # ~900-1500 MiB of GPU memory
 # MODEL_ID = "distil-whisper/distil-large-v2"  # ~1700-2000 MiB of GPU memory
 # MODEL_ID = "openai/whisper-large-v3"  # ~4000 MiB of GPU memory
 # MODEL_ID = "optimum/whisper-tiny.en"  # ~400 MiB of GPU memory
@@ -80,12 +81,12 @@ def service(queue, event):
     # Make sure event is cleared before then
     try:
         while 1:
-            # Waits in standy for inference
-            event.wait()
-            t0 = time()
+            # Waits in standy for inference, no need for this.
+            # event.wait()
 
             # Get audio bytes from queue
-            audio_bytes = queue.get()
+            audio_bytes = queue.get(block=True)
+            t0 = time()
 
             # Transcribing.
             result = model_pipe(audio_bytes)

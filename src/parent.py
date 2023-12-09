@@ -67,8 +67,7 @@ def start_recording(start_event, model_event, sound_file, queue):
         print("Capture FINISHED")
 
         # Converting to wav
-        sound_byte = b"".join(frames)
-        sound_byte_wav = pcm_to_wav(sound_byte)
+        sound_byte_wav = pcm_to_wav(b"".join(frames))
 
         # Sending sound to model for inference
         queue.put(sound_byte_wav)
