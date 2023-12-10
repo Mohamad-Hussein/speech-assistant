@@ -11,6 +11,7 @@ dependencies:
   - pip:
       - torch-directml
       - accelerate==0.24.1
+      - optimum==1.15.0
       - pyaudio==0.2.14
       - playsound==1.2.2
       - pyautogui==0.9.54
