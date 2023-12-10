@@ -8,6 +8,7 @@ from src.funcs import find_gpu_config, process_text
 from pyautogui import typewrite
 from transformers.pipelines import pipeline
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
+from optimum.bettertransformer import BetterTransformer
 # from optimum.nvidia.pipelines import pipeline
 
 
@@ -44,6 +45,10 @@ def service(queue, event):
         cache_dir=local_cache_dir,
     )
     model.to(device)
+
+    # Makes inference faster for transformers
+    if "cuda" in device:
+        model = BetterTransformer(model)
 
     # Making pipeline for inference
     processor = AutoProcessor.from_pretrained(MODEL_ID, cache_dir=local_cache_dir)
