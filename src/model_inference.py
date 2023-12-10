@@ -47,7 +47,7 @@ def service(queue, event):
     model.to(device)
 
     # Makes inference faster for transformers
-    if "cuda" in device.type:
+    if "cuda" in device.type or "cpu" in device.type:
         from optimum.bettertransformer import BetterTransformer
 
         model = BetterTransformer.transform(model)
