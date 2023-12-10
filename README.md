@@ -85,8 +85,8 @@ python main.py
 
 # Future contributions
 ## Future features
-- Add sequential inference, for transcription as you talk
 - Add choice of direct connection to ChatGPT API, local LLM, or AutoGPT
+- Add sequential inference, for transcription as you talk
   
 ## Needed features
 - Add optimizations suggested by HuggingFace (added BetterTransformer)
