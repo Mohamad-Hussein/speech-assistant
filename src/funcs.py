@@ -112,9 +112,8 @@ def find_gpu_config(logger):
 
     # CUDA
     if cuda.is_available():
-        device = "cuda:0"
+        # Debugging made easier
         device_name = cuda.get_device_name()
-
         logger.debug("GPU detected from cuda")
         logger.info(f"Device: {device}")
         logger.info(f"Device name: {cuda.get_device_name()}")
@@ -163,7 +162,8 @@ def find_gpu_config(logger):
     )
     return device, device_name, torch_dtype
 
-def process_text(text : str):
+
+def process_text(text: str):
     """
     Processes the text to not type dictation
     in which the user has not said anything
