@@ -32,7 +32,7 @@ You can get started on any operating system you would like. The program was test
 conda env create -f env-cuda.yml -y
 conda activate speech-assistant
 ```
-2. Start running the program. The program will download the distil-whisper/distil-medium.en model by default and cache it locally in a folder named 'model'.  It is ~800 MB and you can choose the bigger models if you would like, however, the smaller model is very accurate and the quickest. The different choices are in this [configuration](#configurations). You can change this in [model_inference.py](https://github.com/Mohamad-Hussein/speech-assistant/blob/main/src/model_inference.py).
+2. Start running the program. The program will download the distil-whisper/distil-small.en model by default and cache it locally in a folder named 'model'.  It is ~600 MB and you can choose the bigger models if you would like, however, the smaller model is very accurate and the quickest. The different choices are in this [configuration](#configurations). You can change this in [model_inference.py](https://github.com/Mohamad-Hussein/speech-assistant/blob/main/src/model_inference.py).
 ```
 python main.py
 ```
@@ -84,15 +84,15 @@ python main.py
 | [whisper-large-v3](https://huggingface.co/openai/whisper-large-v3)         | 1550       |           |         |           |
 
 # Future contributions
+## Future features
+- Add choice of direct connection to ChatGPT API, local LLM, or AutoGPT
+- Add sequential inference, for transcription as you talk
+  
 ## Needed features
-- Add optimizations suggested by HuggingFace
+- Add optimizations suggested by HuggingFace (added BetterTransformer)
 - Add the option to use whatever key bind of the user's choosing (GUI)
 - Add GUI
 - Make Dockerfile for containers
-
-## Future features
-- Add sequential inference, for transcription as you talk
-- Add choice of direct connection to ChatGPT API, local LLM, or AutoGPT
   
 ## Issues to solve
 - Current pressed values save capital letters (somewhat fixed, current pressed down var cleared once pressing hotkey)(key_listener.py)
