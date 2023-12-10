@@ -84,15 +84,15 @@ python main.py
 | [whisper-large-v3](https://huggingface.co/openai/whisper-large-v3)         | 1550       |           |         |           |
 
 # Future contributions
-## Needed features
-- Add optimizations suggested by HuggingFace
-- Add the option to use whatever key bind of the user's choosing (GUI)
-- Add GUI
-- Make Dockerfile for containers
-
 ## Future features
 - Add sequential inference, for transcription as you talk
 - Add choice of direct connection to ChatGPT API, local LLM, or AutoGPT
+  
+## Needed features
+- Add optimizations suggested by HuggingFace (added BetterTransformer)
+- Add the option to use whatever key bind of the user's choosing (GUI)
+- Add GUI
+- Make Dockerfile for containers
   
 ## Issues to solve
 - Current pressed values save capital letters (somewhat fixed, current pressed down var cleared once pressing hotkey)(key_listener.py)
