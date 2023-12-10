@@ -47,7 +47,7 @@ def service(queue, event):
     model.to(device)
 
     # Makes inference faster for transformers
-    if "cuda" in device:
+    if "cuda" in device.type:
         model = BetterTransformer(model)
 
     # Making pipeline for inference

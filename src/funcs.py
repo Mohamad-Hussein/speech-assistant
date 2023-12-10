@@ -99,13 +99,14 @@ def find_gpu_config(logger):
         torch_dtype (torch.dtype): Data type for torch, float16 for GPU, float32 for CPU
 
     """
+    import torch
     from torch import cuda
     from torch import float16, float32
 
     logger.debug("Checking for GPU config")
 
     # Assume, then check
-    device = "cuda:0" if cuda.is_available() else "cpu"
+    device = torch.device("cuda:0" if cuda.is_available() else "cpu")
     torch_dtype = float16 if cuda.is_available() else float32
     device_name = ""
 
