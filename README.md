@@ -19,7 +19,13 @@ This is a project to implement a working desktop application on both Linux and W
 
 The speech-to-text assistant writes down spoken words directly to the keyboard cursor. To use it is easy, hold down a hotkey combination of Windows key (Super) and Shift to begin, and let go to end the recording. Your speech will be transcribed in real time and the transcription is going to be typed in for you at the keyboard cursor. I made this program to enhance efficiency and add quality of life to the experience of PC users. Additionally, there isn't a reliable speech-to-text model used for transcription on Linux, however, do check out [nerd-dictation](https://github.com/ideasman42/nerd-dictation) for the implementation of speech-to-text for the vosk models.
 
-Here is a quick [demo](https://youtu.be/rF8mtyhBZiM) of speech-assistant.
+
+
+https://github.com/Mohamad-Hussein/speech-assistant/assets/115669425/57975e07-af13-4582-95df-ae8c8e049bfe
+
+
+
+Here is a longer [demo](https://youtu.be/rF8mtyhBZiM) of speech-assistant of a previous and slower version of the program.
 
 # Getting Started
 ![Linux](https://img.shields.io/badge/Linux-F2F2F2) ![Windows](https://img.shields.io/badge/Windows-17b3d2)
