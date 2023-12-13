@@ -4,8 +4,8 @@ from time import sleep, time
 import logging
 
 from src.funcs import find_gpu_config, process_text
+from src.funcs import type_writing, copy_writing
 
-from pyautogui import typewrite
 from transformers.pipelines import pipeline
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
 # from optimum.onnxruntime import ORTModelForSpeechSeq2Seq
@@ -19,6 +19,8 @@ MODEL_ID = "distil-whisper/distil-small.en"  # ~500-700 MiB of GPU memory
 # MODEL_ID = "openai/whisper-large-v3"  # ~4000 MiB of GPU memory
 # MODEL_ID = "optimum/whisper-tiny.en"  # ~400 MiB of GPU memory
 
+# Choosing which way to write text.
+WRITE = type_writing
 
 def service(queue, event):
     # Configure the logging settings
@@ -99,8 +101,8 @@ def service(queue, event):
             # Process text
             processed_text = process_text(result["text"])
 
-            # Write text to screen
-            typewrite(processed_text)
+            # Write text
+            WRITE(processed_text)
 
             # Action report
             speech_to_text_time = time() - t0
