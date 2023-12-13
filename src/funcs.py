@@ -4,9 +4,41 @@ import logging
 from platform import system
 import traceback
 
+from pyclip import copy
+from pyautogui import typewrite, hotkey
 from pyaudio import PyAudio, paInt16
 
 logger = logging.getLogger(__name__)
+
+
+def type_writing(text):
+    """
+    Types the text onto the screen.
+    Downside is that it is slow and activates
+    other hotkeys if you hold windows
+    due to it being real keystrokes.
+
+    Args:
+        text (str): The text to be typed
+
+    Returns:
+        None
+    """
+    typewrite(text)
+
+
+def copy_writing(text):
+    """
+    Copies the text to the clipboard and writes it.
+
+    Args:
+        text (str): The text to be copied and written
+
+    Returns:
+        None
+    """
+    copy(text)
+    hotkey("ctrl", "v")
 
 
 def get_audio():
