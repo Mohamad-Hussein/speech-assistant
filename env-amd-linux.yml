@@ -17,6 +17,7 @@ dependencies:
       - pyaudio==0.2.14
       - playsound==1.2.2
       - pyautogui==0.9.54
+      - pyclip==0.7.0
       - python-xlib==0.33
       - python3-xlib==0.15
       - transformers==4.35.2
