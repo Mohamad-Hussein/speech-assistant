@@ -71,10 +71,10 @@ def service(queue, event):
 
     # Checking if GPU or CPU used
     if device_name:
-        print(f"\nModel loaded to {device_name}\n\n")
+        print(f"\n\n\033[1m{MODEL_ID}\033[0m loaded to {device_name}\n\n")
     else:
         print(
-            f"\nModel loaded to physical memory and CPU is used.\n"
+            f"\n\033[1m{MODEL_ID}\033[0m loaded to physical memory and CPU is used.\n"
             + "WARNING: Unfortunatly these models are not optimal to be computed on CPU!\n\n"
         )
     del device, torch_dtype, local_cache_dir, processor
