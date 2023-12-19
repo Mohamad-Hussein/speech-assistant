@@ -47,7 +47,7 @@ Here is a longer [demo](https://youtu.be/rF8mtyhBZiM) of speech-assistant of a p
 You can get started on any operating system you would like. The program was tested in Pop-os (Ubuntu 22.04), Windows 10 and 11. Here is Anaconda's installation [instructions](https://docs.anaconda.com/free/anaconda/install/). If you are on Windows make sure to have access to the conda command using the Anaconda **cmd** terminal, or to source it directly. Nvidia and AMD have different packages needed to run Pytorch, please follow accordingly to ensure smooth compatibility.
 
 ## Nvidia GPU
-1. Navigate to the speech-assistant repo (using the Anaconda CMD on windows).
+1. Navigate to the speech-assistant repo using the terminal (using the Anaconda CMD on windows).
 1. Create a running environment from env-cuda.yml, this will take ~5-15 minutes depending on your internet connection. (Type ```y``` and press enter when asked to download packages)
 ```bash
 conda env create -f env-cuda.yml
