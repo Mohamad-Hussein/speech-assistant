@@ -10,13 +10,13 @@ from src.model_inference import service
 from src.funcs import run_listener
 from src.funcs import get_audio, create_sound_file, pcm_to_wav
 
-
-
-from pyaudio import paInt16
 from playsound import playsound
 
 # Global variables
 # -------------------------
+
+# Change to true if you want to save audio to file called recording.wav
+SAVE_AUDIO = False
 
 # Create a logger instance
 logger = logging.getLogger(__name__)
@@ -27,11 +27,10 @@ audio, stream_input = get_audio()
 # No audio being recorded
 stream_input.stop_stream()
 
-
 # -------------------------
 
 
-def start_recording(start_event, model_event, sound_file, queue):
+def start_recording(start_event, model_event, queue):
     logger.info("sound-high played")
     t0 = time()
 
@@ -97,18 +96,22 @@ def start_recording(start_event, model_event, sound_file, queue):
     # Stop stream
     stream_input.stop_stream()
 
-    # Writing to file
-    sound_file.writeframes(b"".join(frames))
+    # Saving audio
+    if SAVE_AUDIO:
+        # This wav file is for resetting the audio byte
+        sound_file = create_sound_file('recording.wav')
 
-    # Logging
-    logger.debug(f"Sound file tell: {sound_file.tell()}")
-    logger.debug(
-        f"Sound file size: {sound_file.getnframes() / sound_file.getframerate():.2f}s"
-    )
+        # Writing to file
+        sound_file.writeframes(b"".join(frames))
 
-    # Sound file saving and copying
-    sound_file.close()
-    print("Saved audio")
+        # Logging
+        logger.debug(f"Sound file tell: {sound_file.tell()}")
+        logger.debug(
+            f"Sound file size: {sound_file.getnframes() / sound_file.getframerate():.2f}s"
+        )
+
+        sound_file.close()
+        print("Saved audio")
 
     return
 
@@ -172,14 +175,11 @@ def main():
             # Waiting for Start event
             print("Waiting for hotkey")
             start_event.wait()
-
-            # This wav file is for saving the audio byte
-            sound_file = create_sound_file('recording.wav')
-
+    
             # Starting to Record
             print("Recording...\n")
             if start_event.is_set():
-                start_recording(start_event, model_event, sound_file, sound_data_queue)
+                start_recording(start_event, model_event, sound_data_queue)
             else:
                 print("Did not record properly")
                 continue
@@ -206,6 +206,5 @@ def main():
         stream_input.stop_stream()
         stream_input.close()
         audio.terminate()
-        sound_file.close()
         # Logging
         logger.info("Program End")
