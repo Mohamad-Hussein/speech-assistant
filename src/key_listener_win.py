@@ -26,16 +26,14 @@ class Listener:
         self.logger.info("Key listener started")
 
     def down(self):
-        print(f"\nHOTKEY PRESSED")
         if not self.hotkey_held and not self.start_event.is_set():
             print(f"{self.hotkey} is held")
             self.start_event.set()
             self.hotkey_held = True
 
     def up(self, e=None):
-        # print(f"Key {e.name}")
         if self.hotkey_held and self.start_event.is_set():
-            # print(f"{self.hotkey} is released")
+            print(f"{self.hotkey} is released")
             self.start_event.clear()
             self.hotkey_held = False
 
@@ -55,7 +53,8 @@ class Listener:
                 self.down()
                 # Wait until it is not pressed anymore
                 while is_pressed(self.hotkey):
-                    pass
+                    # If pass is here instead, then this while loop will run slower
+                    sleep(0.05)
                 self.up()
 
                 # To make sure inference happens first
