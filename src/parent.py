@@ -110,7 +110,6 @@ def start_recording(start_event, model_event, sound_file, queue):
     sound_file.close()
     print("Saved audio")
 
-    # copy("tmp.wav", "recording.wav")
     return
 
 
@@ -167,11 +166,15 @@ def main():
 
     ## Main loop ##
     try:
-        sound_file = create_sound_file()
+        # Init
         while 1:
+
             # Waiting for Start event
             print("Waiting for hotkey")
             start_event.wait()
+
+            # This wav file is for saving the audio byte
+            sound_file = create_sound_file('recording.wav')
 
             # Starting to Record
             print("Recording...\n")
@@ -183,13 +186,7 @@ def main():
 
             # Waiting for inference to complete
             while model_event.is_set():
-                pass
-
-            # Copying soundbyte for debugging purposes
-            copy("tmp.wav", "recording.wav")
-
-            # To reset sound file, remove to continuously add more sound bytes
-            sound_file = create_sound_file()
+                sleep(0.01)
 
             # Clearing events
             start_event.clear()
