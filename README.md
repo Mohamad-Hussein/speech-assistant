@@ -46,45 +46,33 @@ Here is a longer [demo](https://youtu.be/rF8mtyhBZiM) of speech-assistant of a p
 
 You can get started on any operating system you would like. The program was tested in Pop-os (Ubuntu 22.04), Windows 10 and 11. Here is Anaconda's installation [instructions](https://docs.anaconda.com/free/anaconda/install/). If you are on Windows make sure to have access to the conda command using the Anaconda **cmd** terminal, or to source it directly. Nvidia and AMD have different packages needed to run Pytorch, please follow accordingly to ensure smooth compatibility.
 
-## Nvidia GPU
+## Steps
 1. Navigate to the speech-assistant repo using the terminal (using the Anaconda CMD on windows).
-1. Create a running environment from env-cuda.yml, this will take ~5-15 minutes depending on your internet connection. (Type ```y``` and press enter when asked to download packages)
-```bash
-conda env create -f env-cuda.yml
-conda activate speech-assistant
-```
-3. Start running the program.
-```bash
-python main.py
-```
-4. And voila! The program is now ready to use!
 
-## AMD GPU
-Different steps are depending on your operating system.
+2. Download required dependancies. Please use the command for your corresponding GPU brand and operating system. This will take ~5-15 minutes depending on your internet connection (Type ```y``` and press enter when asked to download packages).
+   - **Nvidia GPU:**
+     ```bash
+     conda env create -f env-cuda.yml
+     ```
+   - **AMD GPU on Windows:**
+     ```powershell
+     conda env create -f env-amd-win.yml
+     ```
 
-### Windows
-We will be using the [torch-directml](https://learn.microsoft.com/en-us/windows/ai/directml/dml-intro) API from Microsoft instead of CUDA.
-1. Create a conda environment from env-amd-win.yml and activate it.
-```bash
-conda env create -f env-amd-win.yml -y
-conda activate speech-assistant
-```
-2. Change [line](https://github.com/Mohamad-Hussein/speech-assistant/blob/main/src/funcs.py#L58) from ```elif 0:``` to ```elif 1:```
-3. Start program.
-```bash
-python main.py
-```
-### Linux
-To use AMD GPUs for PyTorch, we need to download the ROCm platform version of PyTorch.
-1. Create a conda environment from env-amd-linux.yml and activate it.
-```bash
-conda env create -f env-amd-linux.yml -y
-conda activate speech-assistant
-```
-2. Start the program
-```bash
-python main.py
-```
+   - **AMD GPU on Linux:**
+     ```bash
+     conda env create -f env-amd-linux.yml
+     ```
+3. Activate the conda environment.
+    ```bash
+    conda activate speech-assistant
+    ```
+4. Start running the program.
+    ```bash
+    python main.py
+    ```
+5. The program is now ready to use!
+
 # Configurations
 The program will download the ```distil-whisper/distil-small.en``` model by default and cache it locally in a folder named 'model'. The model consumes ~600 MB of GPU memory, and to improve accuracy, you could choose a bigger model. Currently, you could change models [model_inference.py](https://github.com/Mohamad-Hussein/speech-assistant/blob/main/src/model_inference.py) by adjusting the MODEL_ID variable (GUI will be implemented later on). The available model choices are shown below. Please note that the listed models are English only, except for ```whisper-large```, which supports transcription capabilities of multiple languages.
 | Model                                                                      | Params / M | Rel. Latency | Short-Form WER | Long-Form WER |
