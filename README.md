@@ -100,26 +100,7 @@ The program will download the ```distil-whisper/distil-small.en``` model by defa
 - Add the option to use whatever key bind of the user's choosing (GUI)
 - Add GUI
 - Make Dockerfile for containers
-  
-## Issues to solve
-- Current pressed values save capital letters (somewhat fixed, current pressed down var cleared once pressing hotkey)(key_listener.py)
-- Fix this warning:
-```
-/home/mohamadhussein/anaconda3/envs/pytorch/lib/python3.11/site-packages/transformers/pipelines/base.py:1101: UserWarning: You seem to be using the pipelines sequentially on GPU. To maximize efficiency please use a dataset
-  warnings.warn()
-```
 
-# Problems faced along the way
-## Could not build wheels for PyGOObject
-```bash
-sudo apt install libgirepository1.0-dev
-```
-## If PyAudio doesn't work for your Linux installation
-```bash
-sudo apt-get install python3.11-dev
-sudo apt install portaudio19-dev
-python3 -m  pip install PyAudio
-```
 # Acknowledgements
 
 Distil-whisper paper:
