@@ -93,6 +93,7 @@ The program will download the ```distil-whisper/distil-small.en``` model by defa
 # Future contributions
 ## Future features
 - Add choice of direct connection to ChatGPT API, local LLM, or AutoGPT
+- Add text-to-speech capability for the assistant
 - Add sequential inference, for transcription as you talk
   
 ## Needed features
