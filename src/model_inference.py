@@ -20,7 +20,7 @@ MODEL_ID = "distil-whisper/distil-small.en"  # ~500-700 MiB of GPU memory
 # MODEL_ID = "optimum/whisper-tiny.en"  # ~400 MiB of GPU memory
 
 # Choosing which way to write text.
-WRITE = type_writing
+WRITE = copy_writing
 
 def service(queue, event):
     # Configure the logging settings
