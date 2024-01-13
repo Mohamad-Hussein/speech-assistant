@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-from src.parent import main
 from os.path import exists, join
 from os import makedirs, system
 import logging
+
+from src.gui import SpeechDetectionGUI
 
 title = """
        _____                                _          
@@ -61,7 +62,11 @@ if __name__ == "__main__":
     logger.info("Program started")
 
     try:
-        main()
+        gui = SpeechDetectionGUI()
+
+        gui.run()
+
+        print("GUI closed")
     except KeyboardInterrupt:
         pass
     except Exception as e:
