@@ -2,6 +2,7 @@ from sys import exit
 from os.path import join
 from time import sleep, time
 import logging
+import traceback
 
 from src.funcs import find_gpu_config, process_text
 from src.funcs import type_writing, copy_writing
@@ -94,6 +95,10 @@ def service(queue, event):
             audio_bytes = queue.get(block=True)
             t0 = time()
 
+            # This is for process to terminate
+            if audio_bytes is None:
+                raise KeyboardInterrupt
+
             # Transcribing.
             result = model_pipe(audio_bytes)
             logger.info(f"Time for inference: {time() - t0:.4f} seconds")
@@ -118,6 +123,7 @@ def service(queue, event):
         print("\n\033[92m\033[4mmodel_inference.py\033[0m \033[92mprocess ended\033[0m")
     except Exception as e:
         logger.error(f"Exception hit: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         print("\n\033[91m\033[4mmodel_inference.py\033[0m \033[91mprocess ended\033[0m")
         exit(1)
     finally:
