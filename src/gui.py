@@ -1,12 +1,10 @@
-from tkinter import *
 from multiprocessing import Event, Queue, Process, Pipe
+from tkinter import Tk, Button, DISABLED, NORMAL
 from threading import Thread
 
-from src.parent import main_loop, logger
+from src.parent import main_loop
 from src.funcs import run_listener
-
 from src.model_inference import service
-
 
 
 class SpeechDetectionGUI:
@@ -24,14 +22,28 @@ class SpeechDetectionGUI:
         self.parent_pipe = None
         self.child_pipe = None
 
+        # GUI parameters
         self.root = Tk()
-        self.root.title("Speech Detection GUI")
+        self.root.title("Speech-Assistant")
+        self.root.geometry("300x200")
+        self.root.resizable(False, False)
 
-        self.start_button = Button(self.root, text="Start Speech Detection", command=self.start_detection)
+        # Start button
+        self.start_button = Button(
+            self.root, text="Start Speech Detection", command=self.start_detection
+        )
         self.start_button.pack(pady=10)
-
-        self.stop_button = Button(self.root, text="Stop Speech Detection", command=self.stop_detection, state=DISABLED)
+        # Stop button
+        self.stop_button = Button(
+            self.root,
+            text="Stop Speech Detection",
+            command=self.stop_detection,
+            state=DISABLED,
+        )
         self.stop_button.pack(pady=10)
+
+        # GUI protocols
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
     def init_system(self):
         """
@@ -70,7 +82,12 @@ class SpeechDetectionGUI:
         # Creating process for Key listener
         self.key_listener_thread = Thread(
             target=run_listener,
-            args=(self.child_pipe, self.start_event, self.model_event, self.terminate_event),
+            args=(
+                self.child_pipe,
+                self.start_event,
+                self.model_event,
+                self.terminate_event,
+            ),
             name="SA-KeyListener",
         )
         self.key_listener_thread.start()
@@ -80,14 +97,17 @@ class SpeechDetectionGUI:
         self.start_event.clear()
 
     def start_detection(self):
+        """Starts the speech detection process"""
+        # Button state change
         self.start_button.config(state=DISABLED)
 
+        # Initializing system
         self.init_system()
+
+        # Creating process for parent
         self.parent_process = Process(
             target=main_loop,
             args=(
-                self.model_process,
-                self.key_listener_thread,
                 self.start_event,
                 self.model_event,
                 self.terminate_event,
@@ -97,14 +117,13 @@ class SpeechDetectionGUI:
         )
         self.parent_process.start()
 
+        # Button state change
         self.stop_button.config(state=NORMAL)
 
-        
     def stop_detection(self):
-        # self.key_listener_thread.
         # For model process to terminate
         self.sound_data_queue.put(None)
-        
+
         # For parent process to terminate
         self.terminate_event.set()
         self.start_event.set()
@@ -112,24 +131,20 @@ class SpeechDetectionGUI:
         self.parent_process.join()
         self.model_process.join()
 
+        # Button state change
         self.start_button.config(state=NORMAL)
         self.stop_button.config(state=DISABLED)
 
+    def on_close(self):
+        # Terminates all processes before closing
+        if self.stop_button["state"] == NORMAL:
+            self.stop_detection()
+
+        # Destroys the GUI
+        self.root.destroy()
 
     def run(self):
         self.root.mainloop()
         self.parent_process.join()
         self.model_process.join()
         self.key_listener_thread.join()
-
-
-if __name__ == "__main__":
-    start_event = Event()
-    model_event = Event()
-    sound_data_queue = Queue()
-
-    gui = SpeechDetectionGUI(start_event, model_event, sound_data_queue)
-
-    gui.run()
-
-    print("GUI closed")
