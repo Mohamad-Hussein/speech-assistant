@@ -160,6 +160,7 @@ def main_loop(
             start_event.clear()
 
     except KeyboardInterrupt:
+        logger.info("Keyboard Interrupt from parent")
         print("\n\033[92m\033[4mparent.py\033[0m \033[92mprocess ended\033[0m")
 
     except Exception as e:
