@@ -1,5 +1,8 @@
+from time import sleep
 from multiprocessing import Event, Queue, Process, Pipe
-from tkinter import Tk, Button, DISABLED, NORMAL
+from tkinter import Tk, Menu, Button, Label, StringVar, DISABLED, NORMAL
+
+from tkinter.ttk import Combobox
 from threading import Thread
 
 from src.parent import main_loop
@@ -8,7 +11,16 @@ from src.model_inference import service
 
 
 # Choosing which way to write text.
-WRITE = type_writing
+WRITE = copy_writing
+
+SPEECH_MODELS = [
+    "openai/whisper-tiny.en",
+    "distil-whisper/distil-small.en",
+    "distil-whisper/distil-medium.en",
+    "distil-whisper/distil-large-v2",
+    "openai/whisper-large-v3",
+    # "optimum/whisper-tiny.en",
+]
 
 
 class SpeechDetectionGUI:
@@ -36,20 +48,75 @@ class SpeechDetectionGUI:
         self.root.title("Speech-Assistant")
         self.root.geometry("300x200")
         self.root.resizable(False, False)
+        self.is_running = True
+        self.max_text_length = 30
 
+        ## Menu
+        self.menu = Menu(self.root, bg="white", font=("Consolas", 8))
+        self.root.config(menu=self.menu)
+
+        # File menu
+        self.file_menu = Menu(self.menu, tearoff=0, bg="white", font=("Consolas", 8))
+        self.menu.add_cascade(label="File", menu=self.file_menu)
+        self.file_menu.add_command(label="Options", command=open_options)
+        self.file_menu.add_command(label="Exit", command=self.on_close)
+
+        # Adjust padding for menu items
+        # self.menu.config(padx=5, pady=5)
+        # self.file_menu.config(padx=5, pady=5)
+        # self.option_menu.config(padx=5, pady=5)
+
+        # Add command to File menu
+
+        # Text box
+        self.text_var = Label(self.root, text="Press start to begin speech detection.")
+        self.text_var.pack(pady=10)
         # Start button
         self.start_button = Button(
-            self.root, text="Start Speech Detection", command=self.start_detection
+            self.root, text="Start", command=self.start_detection
         )
-        self.start_button.pack(pady=10)
+        # self.start_button.pack(side='top', padx=5, pady=10)
+        self.start_button.place(x=100, y=50, anchor="center")
+
         # Stop button
         self.stop_button = Button(
             self.root,
-            text="Stop Speech Detection",
+            text="Stop",
             command=self.stop_detection,
             state=DISABLED,
         )
-        self.stop_button.pack(pady=10)
+        # self.stop_button.pack(side='top', padx=5, pady=10)
+        self.stop_button.place(x=200, y=50, anchor="center")
+
+        ## Model selection for Speech-to-Text
+        self.speech_model_var = StringVar()
+        self.speech_model_label = Label(self.root, text="Select Speech-To-Text Model:")
+        self.speech_model_label.pack(pady=(50, 5))
+        self.speech_model_combobox = Combobox(
+            self.root,
+            textvariable=self.speech_model_var,
+            width=40,
+            justify="center",
+            state="readonly",
+        )
+        self.speech_model_combobox["values"] = SPEECH_MODELS
+        self.speech_model_combobox.current(1)
+        self.speech_model_combobox.pack(pady=5)
+
+        ## Model selection Combobox
+        self.model_var = StringVar()
+        self.model_label = Label(self.root, text="Select Model:")
+        self.model_label.pack(pady=5)
+        self.model_combobox = Combobox(
+            self.root,
+            textvariable=self.model_var,
+            width=40,
+            justify="center",
+            state="readonly",
+        )
+        self.model_combobox["values"] = ["ChatGPT-3.5 API"]  # Add your model names here
+        self.model_combobox.current(0)  # Set default model selection
+        self.model_combobox.pack(pady=5)
 
         # GUI protocols
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -59,7 +126,13 @@ class SpeechDetectionGUI:
         ## Creating process for model as it takes the longest to load
         self.model_process = Process(
             target=service,
-            args=(self.sound_data_queue, self.model_event, WRITE),
+            args=(
+                self.sound_data_queue,
+                self.child_pipe,
+                self.model_event,
+                self.start_event,
+                WRITE,
+            ),
             name="WhisperModel",
         )
         self.model_process.start()
@@ -148,6 +221,9 @@ class SpeechDetectionGUI:
         self.start_button.config(state=NORMAL)
         self.stop_button.config(state=DISABLED)
 
+        # Removes speech text
+        self.text_var.config(text="Press start to begin speech detection.")
+
     def on_close(self):
         """Terminates all processes before closing"""
 
@@ -171,5 +247,38 @@ class SpeechDetectionGUI:
         # Destroys the GUI
         self.root.destroy()
 
+        # Stops the main loop
+        self.is_running = False
+
     def run(self):
-        self.root.mainloop()
+        """Runs the GUI"""
+        while self.is_running:
+
+            # Updates text
+            if self.parent_pipe.poll():
+                text = self.parent_pipe.recv()
+
+                # Shortening text if too long
+                if len(text) > self.max_text_length:
+                    text = text[: self.max_text_length] + "..."
+
+                self.text_var.config(text=text)
+
+            self.root.update()
+            sleep(0.1)
+
+
+def open_options():
+    # Create a new Tkinter window
+    options_window = Tk()
+    options_window.title("Settings")
+    options_window.geometry("300x200")
+    options_window.resizable(False, False)
+
+    # Add your settings UI elements here
+    # For example:
+    label = Label(options_window, text="Settings will go here")
+    label.pack()
+
+    # Run the Tkinter event loop for the new window
+    options_window.mainloop()
