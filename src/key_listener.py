@@ -106,7 +106,6 @@ class Listener:
 
                 ## Hotkey
                 if self.hotkey.issubset(self.keys_down) and not self.hotkey_held:
-                    self.pipe.send("Start")
                     print(f"\nHOTKEY PRESSED")
                     self.start_event.set()
                     self.hotkey_held = True
@@ -118,7 +117,6 @@ class Listener:
                     self.hotkey.issubset(self.keys_down) == False
                     and self.hotkey_held == True
                 ):
-                    self.pipe.send("Stop")
                     self.hotkey_held = False
                     self.start_event.clear()
                     # To remove sticky keys to not interfere with hotkey
