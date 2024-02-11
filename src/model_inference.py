@@ -4,9 +4,9 @@ import gc
 from time import sleep, time
 import logging
 import traceback
-import Xlib.threaded
 
-from src.funcs import find_gpu_config, process_text
+from src.funcs import find_gpu_config
+from src.assistant.processing import process_text
 
 from transformers.pipelines import pipeline
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
@@ -22,8 +22,7 @@ MODEL_ID = "distil-whisper/distil-small.en"  # ~500-700 MiB of GPU memory
 # MODEL_ID = "openai/whisper-large-v3"  # ~4000 MiB of GPU memory
 # MODEL_ID = "optimum/whisper-tiny.en"  # ~400 MiB of GPU memory
 
-
-def load_model(queue, model_event, write_method, logger):
+def load_model(model_event, logger):
     # Checking for GPU
     device, device_name, torch_dtype = find_gpu_config(logger)
 
@@ -80,6 +79,15 @@ def load_model(queue, model_event, write_method, logger):
     # Make sure event is cleared before then
     model_event.clear()
 
+    return model_pipe
+
+def run_model(queue, gui_pipe, model_event, start_event, write_method, logger):
+    """This is to run the model"""
+    # Load the model
+    model_pipe = load_model(model_event, logger)
+
+    previous_text = ""
+
     while 1:
 
         # Get audio bytes from queue
@@ -99,16 +107,18 @@ def load_model(queue, model_event, write_method, logger):
         logger.info(f"Time for inference: {time() - t0:.4f} seconds")
 
         # Process text
-        processed_text = process_text(result["text"])
+        processed_text = process_text(result["text"], start_event, previous_text)
 
         # Write text
         write_method(processed_text)
-
+        gui_pipe.send(processed_text)
+        
         # Action report
         speech_to_text_time = time() - t0
         print(
             f"\nPrinted text: {result['text']}\nSpeech-to-text time: {speech_to_text_time:.3f}s\n"
         )
+        previous_text = result["text"]
 
         # Resetting
         logger.debug(f"Result: {result}")
@@ -119,7 +129,7 @@ def load_model(queue, model_event, write_method, logger):
 
     # Clearing model from memory
     logger.info("Removing model from memory")
-    del model_pipe, model
+    del model_pipe
 
     # FIXME Clear as much memory as possible (not all memory is cleared)
     gc.collect()
@@ -128,7 +138,7 @@ def load_model(queue, model_event, write_method, logger):
         torch.cuda.empty_cache()
 
 
-def service(queue, model_event, write_method):
+def service(queue, gui_pipe, model_event, start_event, write_method):
     """This is to start the model service"""
     # Configure the logging settings
     logging.basicConfig(
@@ -143,7 +153,7 @@ def service(queue, model_event, write_method):
         while True:
 
             # Load the ASR model
-            load_model(queue, model_event, write_method, logger)
+            run_model(queue, gui_pipe, model_event, start_event, write_method, logger)
 
             # Signal to load model after stop
             queue.get(block=True)
