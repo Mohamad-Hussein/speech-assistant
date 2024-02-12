@@ -1,26 +1,16 @@
 from time import sleep
-from multiprocessing import Event, Queue, Process, Pipe
+from multiprocessing import Event, Queue, Process, Pipe, Value
 from tkinter import Tk, Menu, Button, Label, StringVar, DISABLED, NORMAL
-
 from tkinter.ttk import Combobox
 from threading import Thread
 
 from src.parent import main_loop
 from src.funcs import run_listener, type_writing, copy_writing
-from src.model_inference import service
+from src.model_inference import service, SPEECH_MODELS, MODEL_ID
 
 
 # Choosing which way to write text.
 WRITE = copy_writing
-
-SPEECH_MODELS = [
-    "openai/whisper-tiny.en",
-    "distil-whisper/distil-small.en",
-    "distil-whisper/distil-medium.en",
-    "distil-whisper/distil-large-v2",
-    "openai/whisper-large-v3",
-    # "optimum/whisper-tiny.en",
-]
 
 
 class SpeechDetectionGUI:
@@ -42,7 +32,11 @@ class SpeechDetectionGUI:
         # Pipes for communication (not used yet)
         self.parent_pipe, self.child_pipe = Pipe()
 
+        self.model_id = MODEL_ID
+
         ## GUI ##
+        self.option_window_open: bool = False
+
         # GUI parameters
         self.root = Tk()
         self.root.title("Speech-Assistant")
@@ -58,27 +52,20 @@ class SpeechDetectionGUI:
         # File menu
         self.file_menu = Menu(self.menu, tearoff=0, bg="white", font=("Consolas", 8))
         self.menu.add_cascade(label="File", menu=self.file_menu)
-        self.file_menu.add_command(label="Options", command=open_options)
+        self.file_menu.add_command(label="Options", command=self.open_options)
         self.file_menu.add_command(label="Exit", command=self.on_close)
 
-        # Adjust padding for menu items
-        # self.menu.config(padx=5, pady=5)
-        # self.file_menu.config(padx=5, pady=5)
-        # self.option_menu.config(padx=5, pady=5)
-
-        # Add command to File menu
-
-        # Text box
+        ## Text box
         self.text_var = Label(self.root, text="Press start to begin speech detection.")
         self.text_var.pack(pady=10)
-        # Start button
+        ## Start button
         self.start_button = Button(
             self.root, text="Start", command=self.start_detection
         )
         # self.start_button.pack(side='top', padx=5, pady=10)
         self.start_button.place(x=100, y=50, anchor="center")
 
-        # Stop button
+        ## Stop button
         self.stop_button = Button(
             self.root,
             text="Stop",
@@ -88,40 +75,10 @@ class SpeechDetectionGUI:
         # self.stop_button.pack(side='top', padx=5, pady=10)
         self.stop_button.place(x=200, y=50, anchor="center")
 
-        ## Model selection for Speech-to-Text
-        self.speech_model_var = StringVar()
-        self.speech_model_label = Label(self.root, text="Select Speech-To-Text Model:")
-        self.speech_model_label.pack(pady=(50, 5))
-        self.speech_model_combobox = Combobox(
-            self.root,
-            textvariable=self.speech_model_var,
-            width=40,
-            justify="center",
-            state="readonly",
-        )
-        self.speech_model_combobox["values"] = SPEECH_MODELS
-        self.speech_model_combobox.current(1)
-        self.speech_model_combobox.pack(pady=5)
-
-        ## Model selection Combobox
-        self.model_var = StringVar()
-        self.model_label = Label(self.root, text="Select Model:")
-        self.model_label.pack(pady=5)
-        self.model_combobox = Combobox(
-            self.root,
-            textvariable=self.model_var,
-            width=40,
-            justify="center",
-            state="readonly",
-        )
-        self.model_combobox["values"] = ["ChatGPT-3.5 API"]  # Add your model names here
-        self.model_combobox.current(0)  # Set default model selection
-        self.model_combobox.pack(pady=5)
-
-        # GUI protocols
+        ## GUI protocols
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
-    def load_model(self):
+    def start_model_service(self):
         """Loads the ASR model and starts the model service."""
         ## Creating process for model as it takes the longest to load
         self.model_process = Process(
@@ -132,6 +89,7 @@ class SpeechDetectionGUI:
                 self.model_event,
                 self.start_event,
                 WRITE,
+                self.model_id,
             ),
             name="WhisperModel",
         )
@@ -155,7 +113,7 @@ class SpeechDetectionGUI:
 
         ## Loading model depending on the case
         if not self.model_process:
-            self.load_model()
+            self.start_model_service()
         else:
             self.sound_data_queue.put("Load model")
 
@@ -244,6 +202,9 @@ class SpeechDetectionGUI:
         if self.key_listener_thread:
             self.key_listener_thread.join()
 
+        # Destroys all GUIs
+        if self.option_window_open:
+            self.options_window.destroy()
         # Destroys the GUI
         self.root.destroy()
 
@@ -267,18 +228,71 @@ class SpeechDetectionGUI:
             self.root.update()
             sleep(0.1)
 
+    def open_options(self):
+        """Opens the options window"""
 
-def open_options():
-    # Create a new Tkinter window
-    options_window = Tk()
-    options_window.title("Settings")
-    options_window.geometry("300x200")
-    options_window.resizable(False, False)
+        if self.option_window_open:
+            self.options_window.focus_force()
+            return
+        
+        self.option_window_open = True
+        
+        # Create a new Tkinter window
+        self.options_window = Tk()
+        self.options_window.title("Settings")
+        self.options_window.geometry("300x200")
+        self.options_window.resizable(False, False)
 
-    # Add your settings UI elements here
-    # For example:
-    label = Label(options_window, text="Settings will go here")
-    label.pack()
+        # Add your settings UI elements here
+        # For example:
+        label = Label(self.options_window, text="Settings will go here")
+        label.pack()
 
-    # Run the Tkinter event loop for the new window
-    options_window.mainloop()
+        ## Model selection for Speech-to-Text
+        speech_model_var = StringVar()
+        speech_model_label = Label(self.options_window, text="Select Speech-To-Text Model:")
+        speech_model_label.pack(pady=(50, 5))
+        speech_model_combobox = Combobox(
+            self.options_window,
+            textvariable=speech_model_var,
+            width=40,
+            justify="center",
+            state="readonly",
+        )
+        speech_model_combobox["values"] = SPEECH_MODELS
+        speech_model_combobox.current(1)
+        speech_model_combobox.pack(pady=5)
+
+        def on_model_select(event):
+            selected_model = speech_model_combobox.get()
+            self.parent_pipe.send(selected_model)
+
+            print(f"\nASR model changed to {selected_model}\n")
+
+        # Bind the on_model_select function to the <<ComboboxSelected>> event
+        speech_model_combobox.bind("<<ComboboxSelected>>", on_model_select)
+
+        ## Model selection Combobox
+        model_var = StringVar()
+        model_label = Label(self.options_window, text="Select Model:")
+        model_label.pack(pady=5)
+        model_combobox = Combobox(
+            self.options_window,
+            textvariable=model_var,
+            width=40,
+            justify="center",
+            state="readonly",
+        )
+        model_combobox["values"] = ["ChatGPT-3.5 API"]  # Add your model names here
+        model_combobox.current(0)  # Set default model selection
+        model_combobox.pack(pady=5)
+
+        self.options_window.protocol("WM_DELETE_WINDOW", self.close_options)
+
+        # Run the Tkinter event loop for the new window
+        self.options_window.mainloop()
+
+    def close_options(self):
+        self.option_window_open = False
+        self.root.focus_set()
+        self.options_window.destroy()
