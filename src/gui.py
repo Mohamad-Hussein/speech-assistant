@@ -243,9 +243,11 @@ class SpeechDetectionGUI:
         self.options_window.geometry("300x200")
         self.options_window.resizable(False, False)
 
-        # Add your settings UI elements here
-        # For example:
-        label = Label(self.options_window, text="Settings will go here")
+        # Label for settings
+        label = Label(
+            self.options_window,
+            text="Change the speech model used \nand the assistant model.",
+        )
         label.pack()
 
         ## Model selection for Speech-to-Text
@@ -253,7 +255,7 @@ class SpeechDetectionGUI:
         speech_model_label = Label(
             self.options_window, text="Select Speech-To-Text Model:"
         )
-        speech_model_label.pack(pady=(50, 5))
+        speech_model_label.pack(pady=(20, 5))
         speech_model_combobox = Combobox(
             self.options_window,
             textvariable=speech_model_var,
@@ -276,7 +278,7 @@ class SpeechDetectionGUI:
 
         ## Model selection Combobox
         model_var = StringVar()
-        model_label = Label(self.options_window, text="Select Model:")
+        model_label = Label(self.options_window, text="Select Assistant Model:")
         model_label.pack(pady=5)
         model_combobox = Combobox(
             self.options_window,
@@ -285,8 +287,16 @@ class SpeechDetectionGUI:
             justify="center",
             state="readonly",
         )
-        model_combobox["values"] = ["ChatGPT-3.5 API"]  # Add your model names here
-        model_combobox.current(0)  # Set default model selection
+        model_combobox["values"] = [
+            "None",
+            # "ChatGPT-3.5 API",
+            # "Phi-2",
+            # "Mixtral",
+            # "Falcon",
+            # "mistral",
+
+        ]
+        model_combobox.current(0)
         model_combobox.pack(pady=5)
 
         self.options_window.protocol("WM_DELETE_WINDOW", self.close_options)
