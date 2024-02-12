@@ -45,7 +45,16 @@ class Listener:
 
         try:
             while 1:
-                wait(self.hotkey)
+
+                # Wait until hotkey is pressed
+                while not is_pressed(self.hotkey):
+                    # Check for termination
+                    if self.terminate_event.is_set():
+                        self.logger.info(
+                            "Terminate event is set on key_listener_win.py"
+                        )
+                        raise KeyboardInterrupt
+
                 # So model can finish its inference first before continuing
                 if self.model_event.is_set():
                     self.logger.warn("Hotkey pressed while inference is happening")
