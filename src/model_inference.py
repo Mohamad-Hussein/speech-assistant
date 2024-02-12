@@ -15,23 +15,32 @@ import torch
 # from optimum.onnxruntime import ORTModelForSpeechSeq2Seq
 # from optimum.nvidia.pipelines import pipeline
 
-# MODEL_ID = "openai/whisper-tiny.en"  # ~400 MiB of GPU memory
-MODEL_ID = "distil-whisper/distil-small.en"  # ~500-700 MiB of GPU memory
-# MODEL_ID = "distil-whisper/distil-medium.en"  # ~900-1500 MiB of GPU memory
-# MODEL_ID = "distil-whisper/distil-large-v2"  # ~1700-2000 MiB of GPU memory
-# MODEL_ID = "openai/whisper-large-v3"  # ~4000 MiB of GPU memory
-# MODEL_ID = "optimum/whisper-tiny.en"  # ~400 MiB of GPU memory
+SPEECH_MODELS = [
+    "openai/whisper-tiny.en",  # ~400 MiB of GPU memory
+    "distil-whisper/distil-small.en",  # ~500-700 MiB of GPU memory
+    "distil-whisper/distil-medium.en",  # ~900-1500 MiB of GPU memory
+    "distil-whisper/distil-large-v2",  # ~1700-2000 MiB of GPU memory
+    "openai/whisper-large-v3",  # ~4000 MiB of GPU memory
+    # "optimum/whisper-tiny.en",  # ~400 MiB of GPU memory
+]
 
-def load_model(model_event, logger):
+# Choosing default model
+MODEL_ID = SPEECH_MODELS[1]
+
+
+def load_model(model_event, model_index_value, logger):
     # Checking for GPU
     device, device_name, torch_dtype = find_gpu_config(logger)
 
     # Setting cache dir
     local_cache_dir = join(".", "model")
 
+    # Getting model id
+    model_id = SPEECH_MODELS[model_index_value.value]
+    
     # Creating model
     model = AutoModelForSpeechSeq2Seq.from_pretrained(
-        MODEL_ID,
+        model_id,
         torch_dtype=torch_dtype,
         low_cpu_mem_usage=True,
         use_safetensors=True,
@@ -46,7 +55,7 @@ def load_model(model_event, logger):
         model = BetterTransformer.transform(model)
 
     # Making pipeline for inference
-    processor = AutoProcessor.from_pretrained(MODEL_ID, cache_dir=local_cache_dir)
+    processor = AutoProcessor.from_pretrained(model_id, cache_dir=local_cache_dir)
 
     model_pipe = pipeline(
         "automatic-speech-recognition",
@@ -62,10 +71,10 @@ def load_model(model_event, logger):
 
     # Checking if GPU or CPU used
     if device_name:
-        print(f"\n\n\033[1m{MODEL_ID}\033[0m loaded to {device_name}\n\n")
+        print(f"\n\n\033[1m{model_id}\033[0m loaded to {device_name}\n\n")
     else:
         print(
-            f"\n\033[1m{MODEL_ID}\033[0m loaded to physical memory and CPU is used.\n"
+            f"\n\033[1m{model_id}\033[0m loaded to physical memory and CPU is used.\n"
             + "WARNING: Unfortunatly these models are not optimal to be computed on CPU!\n\n"
         )
     del device, torch_dtype, local_cache_dir, processor
@@ -81,10 +90,13 @@ def load_model(model_event, logger):
 
     return model_pipe
 
-def run_model(queue, gui_pipe, model_event, start_event, write_method, logger):
+
+def run_model(
+    queue, gui_pipe, model_event, start_event, write_method, model_id_value, logger
+):
     """This is to run the model"""
     # Load the model
-    model_pipe = load_model(model_event, logger)
+    model_pipe = load_model(model_event, model_id_value, logger)
 
     previous_text = ""
 
@@ -112,7 +124,7 @@ def run_model(queue, gui_pipe, model_event, start_event, write_method, logger):
         # Write text
         write_method(processed_text)
         gui_pipe.send(processed_text)
-        
+
         # Action report
         speech_to_text_time = time() - t0
         print(
@@ -138,7 +150,7 @@ def run_model(queue, gui_pipe, model_event, start_event, write_method, logger):
         torch.cuda.empty_cache()
 
 
-def service(queue, gui_pipe, model_event, start_event, write_method):
+def service(queue, gui_pipe, model_event, start_event, write_method, model_index_value):
     """This is to start the model service"""
     # Configure the logging settings
     logging.basicConfig(
@@ -153,7 +165,15 @@ def service(queue, gui_pipe, model_event, start_event, write_method):
         while True:
 
             # Load the ASR model
-            run_model(queue, gui_pipe, model_event, start_event, write_method, logger)
+            run_model(
+                queue,
+                gui_pipe,
+                model_event,
+                start_event,
+                write_method,
+                model_index_value,
+                logger,
+            )
 
             # Signal to load model after stop
             queue.get(block=True)

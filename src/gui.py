@@ -31,8 +31,8 @@ class SpeechDetectionGUI:
 
         # Pipes for communication (not used yet)
         self.parent_pipe, self.child_pipe = Pipe()
-
-        self.model_id = MODEL_ID
+        # This is for choosing speech model
+        self.model_index_value = Value("i", SPEECH_MODELS.index(MODEL_ID))
 
         ## GUI ##
         self.option_window_open: bool = False
@@ -89,7 +89,7 @@ class SpeechDetectionGUI:
                 self.model_event,
                 self.start_event,
                 WRITE,
-                self.model_id,
+                self.model_index_value,
             ),
             name="WhisperModel",
         )
@@ -234,9 +234,9 @@ class SpeechDetectionGUI:
         if self.option_window_open:
             self.options_window.focus_force()
             return
-        
+
         self.option_window_open = True
-        
+
         # Create a new Tkinter window
         self.options_window = Tk()
         self.options_window.title("Settings")
@@ -250,7 +250,9 @@ class SpeechDetectionGUI:
 
         ## Model selection for Speech-to-Text
         speech_model_var = StringVar()
-        speech_model_label = Label(self.options_window, text="Select Speech-To-Text Model:")
+        speech_model_label = Label(
+            self.options_window, text="Select Speech-To-Text Model:"
+        )
         speech_model_label.pack(pady=(50, 5))
         speech_model_combobox = Combobox(
             self.options_window,
@@ -265,7 +267,7 @@ class SpeechDetectionGUI:
 
         def on_model_select(event):
             selected_model = speech_model_combobox.get()
-            self.parent_pipe.send(selected_model)
+            self.model_index_value.value = SPEECH_MODELS.index(selected_model)
 
             print(f"\nASR model changed to {selected_model}\n")
 
