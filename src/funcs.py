@@ -95,7 +95,7 @@ def pcm_to_wav(input_pcm):
     return wav_data
 
 
-def run_listener(child_pipe, start_event, model_event):
+def run_listener(child_pipe, start_event, model_event, terminate_event):
     """
     Runs the key listener based on the OS.
 
@@ -103,6 +103,7 @@ def run_listener(child_pipe, start_event, model_event):
         child_pipe (multiprocessing.Pipe): Pipe for communication with the child process
         start_event (multiprocessing.Event): Event to tell the child process that the model is loaded
         model_event (multiprocessing.Event): Event to tell the child process that the model is loaded
+        terminate_event (multiprocessing.Event): Event to tell the child process to terminate
 
     Returns:
         None
@@ -113,7 +114,7 @@ def run_listener(child_pipe, start_event, model_event):
     else:
         from src.key_listener import Listener
 
-    a = Listener(child_pipe, start_event, model_event)
+    a = Listener(child_pipe, start_event, model_event, terminate_event)
     a.run()
 
 
@@ -158,7 +159,7 @@ def find_gpu_config(logger):
     else:
         try:
             import torch_directml as dml
-            
+
             if dml.is_available():
                 torch_dtype = float16
                 device = dml.device()
@@ -193,22 +194,3 @@ def find_gpu_config(logger):
         f"GPU config -- device: {device}, device name: {device_name}, torch_dtype: {torch_dtype}"
     )
     return device, device_name, torch_dtype
-
-
-def process_text(text: str):
-    """
-    Processes the text to not type dictation
-    in which the user has not said anything
-
-    Args:
-        text (str): The text to be processed
-
-    Returns:
-        text (str): The processed text
-    """
-    processed = text
-
-    if text.strip().lower() in "you're not.":
-        processed = ""
-
-    return processed

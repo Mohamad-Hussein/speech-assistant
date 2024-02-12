@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-from src.parent import main
 from os.path import exists, join
 from os import makedirs, system
 import logging
+import traceback
+
+from src.gui import SpeechDetectionGUI
 
 title = """
        _____                                _          
@@ -61,11 +63,15 @@ if __name__ == "__main__":
     logger.info("Program started")
 
     try:
-        main()
+        gui = SpeechDetectionGUI()
+
+        gui.run()
+
+        print("GUI closed")
     except KeyboardInterrupt:
         pass
     except Exception as e:
-        logger.error(f"Exception hit: {e}")
+        logger.error(f"Exception hit: {traceback.format_exc()}\n{e}")
         pass
     finally:
         print("\n\n\033[30;47m Thank you for using speech-assistant! \033[0m")

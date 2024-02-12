@@ -3,11 +3,8 @@ from os.path import join
 import logging
 import traceback
 from shutil import copy
-from multiprocessing import Process, Event, Pipe, Queue
 from threading import Thread
 
-from src.model_inference import service
-from src.funcs import run_listener
 from src.funcs import get_audio, create_sound_file, pcm_to_wav
 
 from playsound import playsound
@@ -20,12 +17,6 @@ SAVE_AUDIO = False
 
 # Create a logger instance
 logger = logging.getLogger(__name__)
-
-# Getting audio inputs
-audio, stream_input = get_audio()
-
-# No audio being recorded
-stream_input.stop_stream()
 
 # -------------------------
 
@@ -99,7 +90,7 @@ def start_recording(start_event, model_event, queue):
     # Saving audio
     if SAVE_AUDIO:
         # This wav file is for resetting the audio byte
-        sound_file = create_sound_file('recording.wav')
+        sound_file = create_sound_file("recording.wav")
 
         # Writing to file
         sound_file.writeframes(b"".join(frames))
@@ -116,8 +107,21 @@ def start_recording(start_event, model_event, queue):
     return
 
 
-def main():
+def main_loop(
+    start_event,
+    model_event,
+    terminate_event,
+    sound_data_queue,
+):
     ## Initial processes ##
+
+    # Getting audio inputs
+    global audio, stream_input
+    audio, stream_input = get_audio()
+
+    # No audio being recorded
+    stream_input.stop_stream()
+
     logger.info(f"Audio: Default input info: {audio.get_default_input_device_info()}")
     logger.info(f"Audio: Default output info: {audio.get_default_output_device_info()}")
     logger.info(f"Audio: Device count: {audio.get_device_count()}")
@@ -128,54 +132,18 @@ def main():
         f"Input device detected: \033[94m{audio.get_default_input_device_info()['name']} \033[0m"
     )
 
-    # Creating pipes for sending audio bytes
-    parent_pipe, child_pipe = Pipe()
-    # model_recv_pipe, model_send_pipe = Pipe() # duplex=True is faster than False
-
-    # Slower than Pipe however it could handle more data
-    sound_data_queue = Queue()
-
-    # Events for synchronization
-    start_event = Event()
-    model_event = Event()
-
-    # Creating process for model as it takes the longest to load
-    model_process = Process(
-        target=service,
-        args=(
-            sound_data_queue,
-            model_event,
-        ),
-        name="WhisperModel",
-    )
-    model_process.start()
-
-    # Waiting for model to load
-    print(f"Waiting for model to load\n\nModel message: ", end="")
-    model_event.wait()
-    model_event.clear()
-
-    # Creating process for Key listener
-    userinput_process = Process(
-        target=run_listener,
-        args=(child_pipe, start_event, model_event),
-        name="SA-KeyListener",
-    )
-    userinput_process.start()
-
-    # Waiting for key listener to start
-    start_event.wait()
-    start_event.clear()
-
     ## Main loop ##
     try:
         # Init
         while 1:
-
             # Waiting for Start event
             print("Waiting for hotkey")
             start_event.wait()
-    
+
+            # To terminate process
+            if terminate_event.is_set():
+                raise KeyboardInterrupt
+
             # Starting to Record
             print("Recording...\n")
             if start_event.is_set():
@@ -192,6 +160,7 @@ def main():
             start_event.clear()
 
     except KeyboardInterrupt:
+        logger.info("Keyboard Interrupt from parent")
         print("\n\033[92m\033[4mparent.py\033[0m \033[92mprocess ended\033[0m")
 
     except Exception as e:
@@ -199,9 +168,6 @@ def main():
         print("\n\033[91m\033[4mparent.py\033[0m \033[91mprocess ended\033[0m")
 
     finally:
-        # Processes
-        model_process.join()
-        userinput_process.join()
         # Audio
         stream_input.stop_stream()
         stream_input.close()

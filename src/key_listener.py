@@ -14,12 +14,13 @@ from Xlib.protocol import rq
 
 
 class Listener:
-    def __init__(self, pipe, start_event, model_event):
+    def __init__(self, pipe, start_event, model_event, terminate_event):
         self.disp = None
         self.keys_down = set()
         self.pipe = pipe
         self.start_event = start_event
         self.model_event = model_event
+        self.terminate_event = terminate_event
         self.hotkey_held = False
 
         # -- Hotkey --
@@ -90,6 +91,10 @@ class Listener:
         print("Currently pressed:", ", ".join(keys))
 
     def event_handler(self, reply):
+        # To terminate the process or thread
+        if self.terminate_event.is_set():
+            raise KeyboardInterrupt
+
         data = reply.data
         while data:
             event, data = rq.EventField(None).parse_binary_value(
@@ -101,7 +106,6 @@ class Listener:
 
                 ## Hotkey
                 if self.hotkey.issubset(self.keys_down) and not self.hotkey_held:
-                    self.pipe.send("Start")
                     print(f"\nHOTKEY PRESSED")
                     self.start_event.set()
                     self.hotkey_held = True
@@ -113,7 +117,6 @@ class Listener:
                     self.hotkey.issubset(self.keys_down) == False
                     and self.hotkey_held == True
                 ):
-                    self.pipe.send("Stop")
                     self.hotkey_held = False
                     self.start_event.clear()
                     # To remove sticky keys to not interfere with hotkey
@@ -169,7 +172,6 @@ class Listener:
             )
         finally:
             self.disp.close()
-            
 
 
 if __name__ == "__main__":

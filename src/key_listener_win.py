@@ -5,10 +5,11 @@ import logging
 
 
 class Listener:
-    def __init__(self, pipe, start_event, model_event):
+    def __init__(self, pipe, start_event, model_event, terminate_event):
         self.pipe = pipe
         self.start_event = start_event
         self.model_event = model_event
+        self.terminate_event = terminate_event
         self.hotkey_held = False
 
         # -- Hotkey --
