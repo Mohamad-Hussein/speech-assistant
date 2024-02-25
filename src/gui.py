@@ -264,7 +264,7 @@ class SpeechDetectionGUI:
             state="readonly",
         )
         speech_model_combobox["values"] = SPEECH_MODELS
-        speech_model_combobox.current(1)
+        speech_model_combobox.current(self.model_index_value.value)
         speech_model_combobox.pack(pady=5)
 
         def on_model_select(event):
