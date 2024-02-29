@@ -1,8 +1,11 @@
+import os
+import json
 import io
 import wave
 import logging
 from platform import system
 import traceback
+from datetime import datetime
 
 from pyclip import copy
 from pyautogui import typewrite, hotkey
@@ -194,3 +197,59 @@ def find_gpu_config(logger):
         f"GPU config -- device: {device}, device name: {device_name}, torch_dtype: {torch_dtype}"
     )
     return device, device_name, torch_dtype
+
+
+def get_from_config(filename="config.json", default_value=1):
+    """
+    Gets the model index from the config file.
+
+    Returns:
+        model_id_idx (int): The index of the model in the config file
+    """
+
+    # Looks for config file
+    if os.path.exists(filename):
+        # If the file exists, load its contents
+        with open(filename, "r") as file:
+            data = json.load(file)
+        # Extract the value from the loaded data
+        model_id_idx = data.get("Default Model Index", default_value)
+    else:
+        # If the file doesn't exist, set the value to the default value
+        model_id_idx = default_value
+
+    # Save the value to the JSON file
+    data = {
+        "Default Model Index": model_id_idx,
+        "Date Created": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    }
+    with open(filename, "w") as file:
+        json.dump(data, file, indent=4)
+
+    return model_id_idx
+
+
+def save_to_config(model_id_idx, filename="config.json"):
+    """
+    Saves the model index to the config file.
+
+    Args:
+        model_id_idx (int): The index of the model in the config file
+    """
+
+    # Looks for config file
+    if os.path.exists(filename):
+        # If the file exists, load its contents
+        with open(filename, "r") as file:
+            data = json.load(file)
+    else:
+        # If the file doesn't exist, create a new dictionary
+        data = {}
+
+    # Update the dictionary with the new value
+    data["Default Model Index"] = model_id_idx
+    data["Date Modified"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Save the dictionary to the JSON file
+    with open(filename, "w") as file:
+        json.dump(data, file, indent=4)

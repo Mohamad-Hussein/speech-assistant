@@ -5,7 +5,7 @@ from tkinter.ttk import Combobox
 from threading import Thread
 
 from src.parent import main_loop
-from src.funcs import run_listener, type_writing, copy_writing
+from src.funcs import run_listener, type_writing, copy_writing, save_to_config
 from src.model_inference import service, SPEECH_MODELS, MODEL_ID
 
 
@@ -271,6 +271,7 @@ class SpeechDetectionGUI:
             selected_model = speech_model_combobox.get()
             self.model_index_value.value = SPEECH_MODELS.index(selected_model)
 
+            save_to_config(self.model_index_value.value)
             print(f"\nASR model changed to {selected_model}\n")
 
         # Bind the on_model_select function to the <<ComboboxSelected>> event
@@ -294,7 +295,6 @@ class SpeechDetectionGUI:
             # "Mixtral",
             # "Falcon",
             # "mistral",
-
         ]
         model_combobox.current(0)
         model_combobox.pack(pady=5)

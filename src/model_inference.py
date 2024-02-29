@@ -5,7 +5,7 @@ from time import sleep, time
 import logging
 import traceback
 
-from src.funcs import find_gpu_config
+from src.funcs import get_from_config, find_gpu_config
 from src.assistant.processing import process_text
 
 from transformers.pipelines import pipeline
@@ -25,7 +25,8 @@ SPEECH_MODELS = [
 ]
 
 # Choosing default model
-MODEL_ID = SPEECH_MODELS[1]
+model_id_idx = get_from_config()
+MODEL_ID = SPEECH_MODELS[model_id_idx]
 
 
 def load_model(model_event, model_index_value, logger):
@@ -37,7 +38,7 @@ def load_model(model_event, model_index_value, logger):
 
     # Getting model id
     model_id = SPEECH_MODELS[model_index_value.value]
-    
+
     # Creating model
     model = AutoModelForSpeechSeq2Seq.from_pretrained(
         model_id,
