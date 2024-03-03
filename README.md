@@ -73,7 +73,8 @@ You can get started on any operating system you would like. The program was test
 5. **The program is now ready to use!**
 
 # Configurations
-The program will download the ```distil-whisper/distil-small.en``` model by default and cache it locally in a folder named 'model'. The model consumes ~600 MB of GPU memory, and to improve accuracy, you could choose a bigger model. Currently, you could change models [model_inference.py](https://github.com/Mohamad-Hussein/speech-assistant/blob/main/src/model_inference.py) by adjusting the MODEL_ID variable (GUI will be implemented later on). The available model choices are shown below. Please note that the listed models are English only, except for ```whisper-large```, which supports transcription capabilities of multiple languages.
+The program will download the ```distil-whisper/distil-small.en``` model by default and cache it locally in a folder named 'model'. The model consumes ~600 MB of GPU memory, and to improve accuracy, you could choose a bigger model. You could change models in the `Options` menu. The available model choices are shown below. 
+
 | Model                                                                      | Params / M | Rel. Latency | Short-Form WER | Long-Form WER |
 |----------------------------------------------------------------------------|------------|--------------|----------------|---------------|
 | [whisper-tiny.en](https://huggingface.co/openai/whisper-tiny.en)         | 39       |          | [~15](https://arxiv.org/abs/2212.04356)        | [~15](https://arxiv.org/abs/2212.04356)          |
@@ -82,6 +83,8 @@ The program will download the ```distil-whisper/distil-small.en``` model by defa
 | [distil-large-v2](https://huggingface.co/distil-whisper/distil-large-v2)   | 756        | 5.8          | 10.1           | **11.6**      |
 | [whisper-large-v2](https://huggingface.co/openai/whisper-large-v2)         | 1550       | 1.0          | **9.1**        | 11.7          |
 | [whisper-large-v3](https://huggingface.co/openai/whisper-large-v3)         | 1550       |           |         |           |
+
+*Please note that the distil models are currently English only, except for ```whisper-large```, which supports transcription capabilities of multiple languages.*
 
 # Notes and Considerations
 - You can translate your speech to English in real-time using Whisper-Large by going to `options` and checking `Translate to English`
