@@ -2,18 +2,15 @@ from time import time, sleep
 from os.path import join
 import logging
 import traceback
-from shutil import copy
 from threading import Thread
 
-from src.funcs import get_audio, create_sound_file, pcm_to_wav
+from src.config import SAVE_AUDIO
+from src.utils.funcs import get_audio, create_sound_file, pcm_to_wav
 
 from playsound import playsound
 
 # Global variables
 # -------------------------
-
-# Change to true if you want to save audio to file called recording.wav
-SAVE_AUDIO = False
 
 # Create a logger instance
 logger = logging.getLogger(__name__)
