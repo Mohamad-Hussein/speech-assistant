@@ -5,8 +5,9 @@ from time import sleep, time
 import logging
 import traceback
 
-from src.config import SPEECH_MODELS, TASK, MODEL_ID
-from src.utils.funcs import get_from_config, find_gpu_config
+from src.config import SPEECH_MODELS, TASK, TASKS, MODEL_ID
+import src.config as config
+from src.utils.funcs import find_gpu_config
 from src.assistant.processing import perform_request
 
 from transformers.pipelines import pipeline
@@ -17,7 +18,7 @@ import torch
 # from optimum.nvidia.pipelines import pipeline
 
 
-def load_model(gui_pipe, model_event, model_index_value, logger):
+def load_model(gui_pipe, model_event, model_index_value, task_value, logger):
     """Loads the ASR model using HuggingFace's Transformers library.
 
     Args:
@@ -66,7 +67,8 @@ def load_model(gui_pipe, model_event, model_index_value, logger):
     processor = AutoProcessor.from_pretrained(model_id, cache_dir=local_cache_dir)
 
     # Setting task
-    generate_kwargs = {"task": TASK} if "-large" in model_id else {}
+    generate_kwargs = {"task": TASKS[task_value.value]} if "-large" in model_id else {}
+    logger.info(f"Setting task as {task_value.value}")
 
     model_pipe = pipeline(
         "automatic-speech-recognition",
@@ -103,16 +105,30 @@ def load_model(gui_pipe, model_event, model_index_value, logger):
     return model_pipe
 
 
-def run_model(
-    queue, gui_pipe, model_event, start_event, write_method, model_id_value, logger
-):
-    """This is to run the model"""
+def run_model(synch_dict, write_method, logger):
+    """This is to run the model
+
+    Args:
+        synch_dict (dict): Dictionary containing all the synchronization variables
+        write_method (str): Method to write the output of model
+        logger (logging.Logger): Logger object to write logs
+
+    """
+    # Extracting synchronization variables from dictionary
+    queue = synch_dict["Audio Queue"]
+    gui_pipe = synch_dict["Model-GUI Pipe"]
+    start_event = synch_dict["Start Event"]
+    model_event = synch_dict["Model Event"]
+    terminate_event = synch_dict["Terminate Event"]
+    model_id_value = synch_dict["Model Index"]
+    task_value = synch_dict["Task Bool"]
+
     # Load the model
-    model_pipe = load_model(gui_pipe, model_event, model_id_value, logger)
+    model_pipe = load_model(gui_pipe, model_event, model_id_value, task_value, logger)
     gui_pipe.send("Model loaded. Hold hotkey to start")
     previous_text = ""
 
-    while 1:
+    while not terminate_event.is_set():
 
         # Get audio bytes from queue
         audio_bytes = queue.get(block=True)
@@ -161,7 +177,7 @@ def run_model(
         torch.cuda.empty_cache()
 
 
-def audio_processing_service(queue, gui_pipe, model_event, start_event, write_method, model_index_value):
+def audio_processing_service(synch_dict, write_method):
     """This is to start the model service"""
     # Configure the logging settings
     logging.basicConfig(
@@ -172,17 +188,16 @@ def audio_processing_service(queue, gui_pipe, model_event, start_event, write_me
     )
     logger = logging.getLogger(__name__)
 
+    # Extracting synchronization variables
+    queue = synch_dict["Audio Queue"]
+
     try:
         while True:
 
             # Load the ASR model
             run_model(
-                queue,
-                gui_pipe,
-                model_event,
-                start_event,
+                synch_dict,
                 write_method,
-                model_index_value,
                 logger,
             )
 
