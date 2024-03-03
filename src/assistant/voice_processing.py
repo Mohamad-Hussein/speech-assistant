@@ -1,12 +1,13 @@
 from sys import exit
-from os.path import join
+from os.path import join, basename
 import gc
 from time import sleep, time
 import logging
 import traceback
 
-from src.funcs import get_from_config, find_gpu_config
-from src.assistant.processing import process_text
+from src.config import SPEECH_MODELS, TASK, MODEL_ID
+from src.utils.funcs import get_from_config, find_gpu_config
+from src.assistant.processing import perform_request
 
 from transformers.pipelines import pipeline
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
@@ -15,21 +16,20 @@ import torch
 # from optimum.onnxruntime import ORTModelForSpeechSeq2Seq
 # from optimum.nvidia.pipelines import pipeline
 
-SPEECH_MODELS = [
-    "openai/whisper-tiny.en",  # ~400 MiB of GPU memory
-    "distil-whisper/distil-small.en",  # ~500-700 MiB of GPU memory
-    "distil-whisper/distil-medium.en",  # ~900-1500 MiB of GPU memory
-    "distil-whisper/distil-large-v2",  # ~1700-2000 MiB of GPU memory
-    "openai/whisper-large-v3",  # ~4000 MiB of GPU memory
-    # "optimum/whisper-tiny.en",  # ~400 MiB of GPU memory
-]
 
-# Choosing default model
-model_id_idx = get_from_config()
-MODEL_ID = SPEECH_MODELS[model_id_idx]
+def load_model(gui_pipe, model_event, model_index_value, logger):
+    """Loads the ASR model using HuggingFace's Transformers library.
 
+    Args:
+        gui_pipe (Pipe): A Pipe object for communicating with the GUI process.
+        model_event (threading.Event): An event to signal when the model is loaded.
+        model_id_value (int): The ID of the model to load.
+        logger (logging.Logger): A logger to log information about the loading process.
 
-def load_model(model_event, model_index_value, logger):
+    Returns:
+        ModelPipeline: The ASR model as a Transformers pipeline.
+    """
+
     # Checking for GPU
     device, device_name, torch_dtype = find_gpu_config(logger)
 
@@ -39,13 +39,20 @@ def load_model(model_event, model_index_value, logger):
     # Getting model id
     model_id = SPEECH_MODELS[model_index_value.value]
 
-    # Creating model
+    # Downloading the model from HuggingFace Hub
+    gui_pipe.send(f"Downloading {basename(model_id)}...")
+
     model = AutoModelForSpeechSeq2Seq.from_pretrained(
         model_id,
         torch_dtype=torch_dtype,
         low_cpu_mem_usage=True,
         use_safetensors=True,
         cache_dir=local_cache_dir,
+    )
+
+    # Loading the model to device
+    gui_pipe.send(
+        f"Loading {basename(model_id)} to {device_name if device_name else 'CPU'}..."
     )
     model.to(device)
 
@@ -58,6 +65,9 @@ def load_model(model_event, model_index_value, logger):
     # Making pipeline for inference
     processor = AutoProcessor.from_pretrained(model_id, cache_dir=local_cache_dir)
 
+    # Setting task
+    generate_kwargs = {"task": TASK} if "-large" in model_id else {}
+
     model_pipe = pipeline(
         "automatic-speech-recognition",
         model=model,
@@ -68,6 +78,7 @@ def load_model(model_event, model_index_value, logger):
         batch_size=16,
         torch_dtype=torch_dtype,
         device=device,
+        generate_kwargs=generate_kwargs,
     )
 
     # Checking if GPU or CPU used
@@ -97,8 +108,8 @@ def run_model(
 ):
     """This is to run the model"""
     # Load the model
-    model_pipe = load_model(model_event, model_id_value, logger)
-
+    model_pipe = load_model(gui_pipe, model_event, model_id_value, logger)
+    gui_pipe.send("Model loaded. Hold hotkey to start")
     previous_text = ""
 
     while 1:
@@ -120,10 +131,9 @@ def run_model(
         logger.info(f"Time for inference: {time() - t0:.4f} seconds")
 
         # Process text
-        processed_text = process_text(result["text"], start_event, previous_text)
-
-        # Write text
-        write_method(processed_text)
+        processed_text = perform_request(
+            result["text"], start_event, previous_text, write_method
+        )
         gui_pipe.send(processed_text)
 
         # Action report
@@ -151,7 +161,7 @@ def run_model(
         torch.cuda.empty_cache()
 
 
-def service(queue, gui_pipe, model_event, start_event, write_method, model_index_value):
+def audio_processing_service(queue, gui_pipe, model_event, start_event, write_method, model_index_value):
     """This is to start the model service"""
     # Configure the logging settings
     logging.basicConfig(
