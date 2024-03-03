@@ -113,9 +113,9 @@ def run_listener(child_pipe, start_event, model_event, terminate_event):
     """
     # Differentiate between windows and linux
     if system() == "Windows":
-        from src.key_listener_win import Listener
+        from src.key_listener.key_listener_win import Listener
     else:
-        from src.key_listener import Listener
+        from src.key_listener.key_listener import Listener
 
     a = Listener(child_pipe, start_event, model_event, terminate_event)
     a.run()
