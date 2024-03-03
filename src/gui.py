@@ -1,13 +1,28 @@
 from time import sleep
 from multiprocessing import Event, Queue, Process, Pipe, Value
-from tkinter import Tk, Menu, Button, Label, StringVar, DISABLED, NORMAL
-from tkinter.ttk import Combobox
 from threading import Thread
+from tkinter.ttk import Combobox
+from tkinter import (
+    Tk,
+    Frame,
+    Menu,
+    Button,
+    Label,
+    StringVar,
+    DISABLED,
+    NORMAL,
+    LEFT,
+    RIGHT,
+    BooleanVar,
+    Checkbutton,
+)
 
 from src.utils.voice_capturing import main_loop
 from src.assistant.voice_processing import audio_processing_service
-from src.config import WRITE, SAVE_AUDIO, HOTKEY, TASK, SPEECH_MODELS, MODEL_ID
-from src.utils.funcs import run_listener, save_to_config
+from src.config import update_config
+from src.config import WRITE, SAVE_AUDIO, HOTKEY, TASK, TASKS, SPEECH_MODELS, MODEL_ID
+import src.config as config
+from src.utils.funcs import run_listener
 
 
 class SpeechDetectionGUI:
@@ -30,6 +45,18 @@ class SpeechDetectionGUI:
         self.parent_pipe, self.child_pipe = Pipe()
         # This is for choosing speech model
         self.model_index_value = Value("i", SPEECH_MODELS.index(MODEL_ID))
+        self.task_bool_value = Value("b", TASKS.index(TASK))
+
+        # Dictionary for synchronization to pass in process
+        self.synch_dict = {
+            "Audio Queue": self.sound_data_queue,
+            "Model-GUI Pipe": self.child_pipe,
+            "Start Event": self.start_event,
+            "Model Event": self.model_event,
+            "Terminate Event": self.terminate_event,
+            "Model Index": self.model_index_value,
+            "Task Bool": self.task_bool_value,
+        }
 
         ## GUI ##
         self.option_window_open: bool = False
@@ -81,12 +108,8 @@ class SpeechDetectionGUI:
         self.model_process = Process(
             target=audio_processing_service,
             args=(
-                self.sound_data_queue,
-                self.child_pipe,
-                self.model_event,
-                self.start_event,
+                self.synch_dict,
                 WRITE,
-                self.model_index_value,
             ),
             name="WhisperModel",
         )
@@ -294,7 +317,7 @@ class SpeechDetectionGUI:
             selected_model = speech_model_combobox.get()
             self.model_index_value.value = SPEECH_MODELS.index(selected_model)
 
-            save_to_config(self.model_index_value.value)
+            update_config("Default Model Index", self.model_index_value.value)
             print(f"\nASR model changed to {selected_model}\n")
 
         # Bind the on_model_select function to the <<ComboboxSelected>> event
@@ -321,6 +344,37 @@ class SpeechDetectionGUI:
         ]
         model_combobox.current(0)
         model_combobox.pack(pady=5)
+
+        ## Translate Speech Checkbox
+        frame = Frame(self.options_window)
+        frame.pack()
+
+        # Create the text label
+        text_label = Label(frame, text="Translate to English")
+        text_label.pack(side=RIGHT)
+
+        def on_checked():
+
+            print(translate_speech.get())
+
+            translate_speech.set(not translate_speech.get())
+
+            # Update the task
+            self.task_bool_value.value = translate_speech.get()
+
+            # Update the config file
+            update_config("Translate Speech", translate_speech.get())
+
+            print(self.task_bool_value.value)
+
+        # Create the checkbox
+        translate_speech = BooleanVar(value=self.task_bool_value.value)
+        check_button = Checkbutton(frame, variable=translate_speech, command=on_checked)
+        check_button.select() if translate_speech.get() else check_button.deselect()
+        check_button.pack(side=LEFT)
+
+        info_label = Label(self.options_window, text="(applicable to Whisper-Large)")
+        info_label.pack()
 
         self.options_window.protocol("WM_DELETE_WINDOW", self.close_options)
 
