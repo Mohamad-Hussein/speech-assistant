@@ -40,7 +40,7 @@ class SpeechDetectionGUI:
         self.root.geometry("300x200")
         self.root.resizable(False, False)
         self.is_running = True
-        self.max_text_length = 30
+        self.max_text_length = 35
 
         ## Menu
         self.menu = Menu(self.root, bg="white", font=("Consolas", 8))
@@ -49,7 +49,7 @@ class SpeechDetectionGUI:
         # File menu
         self.file_menu = Menu(self.menu, tearoff=0, bg="white", font=("Consolas", 8))
         self.menu.add_cascade(label="File", menu=self.file_menu)
-        self.file_menu.add_command(label="Options", command=self.open_options)
+        self.menu.add_command(label="Settings", command=self.open_options)
         self.file_menu.add_command(label="Exit", command=self.on_close)
 
         ## Text box
@@ -79,7 +79,7 @@ class SpeechDetectionGUI:
         """Loads the ASR model and starts the model service."""
         ## Creating process for model as it takes the longest to load
         self.model_process = Process(
-            target=service,
+            target=audio_processing_service,
             args=(
                 self.sound_data_queue,
                 self.child_pipe,
@@ -94,7 +94,9 @@ class SpeechDetectionGUI:
 
         # Waiting for model to load
         print(f"Waiting for model to load\n\nModel message: ", end="")
-        self.model_event.wait()
+        while self.model_event.is_set():
+            self.force_update()
+            sleep(0.1)
         self.model_event.clear()
 
     def init_system(self):
@@ -148,11 +150,16 @@ class SpeechDetectionGUI:
         """Starts the speech detection process"""
         # Button state change
         self.start_button.config(state=DISABLED)
+        self.child_pipe.send("Starting speech recognition processes...")
+        self.force_update()
 
         # Initializing system
         self.init_system()
 
-        # Button state change
+        # Button state change when model is loaded
+        while self.model_event.is_set():
+            self.force_update()
+            sleep(0.1)
         self.stop_button.config(state=NORMAL)
 
     def stop_detection(self):
@@ -169,8 +176,11 @@ class SpeechDetectionGUI:
         self.start_event.set()
 
         # Making sure processes are joined
-        self.parent_process.join()
-        self.key_listener_thread.join()
+        self.parent_process.join(timeout=10)
+        self.key_listener_thread.join(timeout=10)
+        # Checking if processes are still running
+        if self.parent_process.is_alive() or self.key_listener_thread.is_alive():
+            self.text_var.config(text="Processes not ended, please restart program!")
 
         # Button state change
         self.start_button.config(state=NORMAL)
@@ -211,6 +221,7 @@ class SpeechDetectionGUI:
     def run(self):
         """Runs the GUI"""
         while self.is_running:
+            self.root.update()
 
             # Updates text
             if self.parent_pipe.poll():
@@ -224,6 +235,21 @@ class SpeechDetectionGUI:
 
             self.root.update()
             sleep(0.1)
+
+    def force_update(self):
+        """Updates GUI when frozen"""
+        # Updates text
+        if self.parent_pipe.poll():
+            print("Received")
+            text = self.parent_pipe.recv()
+
+            # Shortening text if too long
+            if len(text) > self.max_text_length:
+                text = text[: self.max_text_length] + "..."
+
+            self.text_var.config(text=text)
+
+        self.root.update()
 
     def open_options(self):
         """Opens the options window"""
@@ -297,9 +323,6 @@ class SpeechDetectionGUI:
         model_combobox.pack(pady=5)
 
         self.options_window.protocol("WM_DELETE_WINDOW", self.close_options)
-
-        # Run the Tkinter event loop for the new window
-        self.options_window.mainloop()
 
     def close_options(self):
         self.option_window_open = False
