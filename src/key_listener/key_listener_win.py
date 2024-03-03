@@ -1,7 +1,10 @@
 from os.path import join
-from keyboard import wait, is_pressed
 from time import sleep
 import logging
+
+from keyboard import wait, is_pressed
+
+from src.config import HOTKEY
 
 
 class Listener:
@@ -13,7 +16,8 @@ class Listener:
         self.hotkey_held = False
 
         # -- Hotkey --
-        self.hotkey = "left windows + shift"
+        self.hotkey = " + ".join(HOTKEY)
+        self.hotkey = self.hotkey.replace("Super", "left windows")
         # ------------
 
         # Configure the logging settings

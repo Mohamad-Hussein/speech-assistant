@@ -12,6 +12,8 @@ from Xlib import X, XK
 from Xlib.ext import record
 from Xlib.protocol import rq
 
+from src.config import HOTKEY
+
 
 class Listener:
     def __init__(self, pipe, start_event, model_event, terminate_event):
@@ -24,7 +26,7 @@ class Listener:
         self.hotkey_held = False
 
         # -- Hotkey --
-        self.hotkey = {"Super", "Shift"}
+        self.hotkey = HOTKEY
         # ------------
 
         # Configure the logging settings

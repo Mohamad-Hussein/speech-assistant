@@ -4,13 +4,10 @@ from tkinter import Tk, Menu, Button, Label, StringVar, DISABLED, NORMAL
 from tkinter.ttk import Combobox
 from threading import Thread
 
-from src.parent import main_loop
-from src.funcs import run_listener, type_writing, copy_writing, save_to_config
-from src.model_inference import service, SPEECH_MODELS, MODEL_ID
-
-
-# Choosing which way to write text.
-WRITE = copy_writing
+from src.utils.voice_capturing import main_loop
+from src.assistant.voice_processing import audio_processing_service
+from src.config import WRITE, SAVE_AUDIO, HOTKEY, TASK, SPEECH_MODELS, MODEL_ID
+from src.utils.funcs import run_listener, save_to_config
 
 
 class SpeechDetectionGUI:
