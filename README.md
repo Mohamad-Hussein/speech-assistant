@@ -30,7 +30,7 @@
 
 This is a project to implement a working desktop application on both Linux and Windows that provides a real-time, offline speech-to-text dictation program. It uses the distil-whisper models from HuggingFace which offers an accurate transcription of speech that is fully structured, complete with proper punctuation and syntax. Distil-whisper is based on OpenAI's Whisper model that is **6 times faster**, 49% smaller, and performs **within 1% word error rate** on speech it has never seen before. The research is based on this [repo](https://github.com/huggingface/distil-whisper).
 
-The speech-to-text assistant writes down spoken words directly to the keyboard cursor. To use it is easy, hold down a hotkey combination of Windows key (Super) and Shift to begin, and let go to end the recording. Your speech will be transcribed in real time and the transcription is going to be typed in for you at the keyboard cursor. I made this program to enhance efficiency and add quality of life to the experience of PC users. Additionally, there isn't a reliable speech-to-text model used for transcription on Linux, however, do check out [nerd-dictation](https://github.com/ideasman42/nerd-dictation) for the implementation of speech-to-text for the vosk models.
+The speech-to-text assistant writes down spoken words directly to the keyboard cursor. To use it is easy, hold down a hotkey combination of Windows key (Super) and Shift to begin, and let go to end the recording. Your speech will be transcribed (or translated) in real time and the transcription will be typed in for you at the keyboard cursor. I made this program to enhance efficiency and add quality of life to the experience of PC users. Additionally, there isn't an accurate speech-to-text model used for transcription on Linux, however, do check out [nerd-dictation](https://github.com/ideasman42/nerd-dictation) for the implementation of speech-to-text for the vosk models.
 
 
 
@@ -43,12 +43,12 @@ Here is a longer [demo](https://youtu.be/rF8mtyhBZiM) of speech-assistant of a p
 # How to Use
 ![Linux](https://img.shields.io/badge/Linux-F2F2F2) ![Windows](https://img.shields.io/badge/Windows-17b3d2)
 
-You can get started on any operating system you would like. The program was tested in Pop-os (Ubuntu 22.04), Windows 10 and 11. Here is Anaconda's installation [instructions](https://docs.anaconda.com/free/anaconda/install/). If you are on Windows make sure to have access to the conda command using the Anaconda **cmd** terminal, or to source it directly. Nvidia and AMD have different packages needed to run Pytorch, please follow accordingly to ensure smooth compatibility.
+You can get started on any operating system you would like. The program was tested in Pop-os (Ubuntu 22.04), Windows 10 and 11. Here is Anaconda's installation [instructions](https://docs.anaconda.com/free/anaconda/install/). If you are on Windows make sure to have access to the conda command using the Anaconda **cmd** terminal, or to source it directly. Nvidia and AMD have different packages needed to run Pytorch, please follow as appropriate to ensure smooth compatibility.
 
 ## Steps
 1. **Navigate to the speech-assistant repo** using the terminal (using the Anaconda CMD on Windows).
 
-2. **Install dependancies.** Please use the command for your corresponding GPU brand and operating system. This will take ~5-15 minutes depending on your internet connection (Type ```y``` and press enter when asked to download packages).
+2. **Install dependencies.** Please use the command for your corresponding GPU brand and operating system. Depending on your internet connection, this will take ~5-15 minutes (Type ```y``` and press enter when asked to download packages).
    - **Nvidia GPU:**
      ```bash
      conda env create -f env-cuda.yml
@@ -84,10 +84,11 @@ The program will download the ```distil-whisper/distil-small.en``` model by defa
 | [whisper-large-v3](https://huggingface.co/openai/whisper-large-v3)         | 1550       |           |         |           |
 
 # Notes and Considerations
+- You can translate your speech to English in real-time using Whisper-Large by going to `options` and checking `Translate to English`
 - Users with dedicated graphics cards will have a better experience running the big models.
 - Make sure to locate your primary sound input device!
 - There is a problem with using PowerShell, use cmd, and activate the conda environment.
-- Installing with requirement.txt, package ffmpeg will be missing on model inference. This module can be downloaded with anaconda with ```conda install ffmpeg -c pytorch.```
+- Installing with requirement.txt, package ffmpeg will be missing on model inference. This module can be downloaded with Anaconda with ```conda install ffmpeg -c pytorch.```
 - For transcribing on Windows you can use its built-in dictation service with left windows + h. However, the whisper models can be useful for formatting expressive punctuation, and the implementation allows for private and quick dictation.
 
 # Future contributions
