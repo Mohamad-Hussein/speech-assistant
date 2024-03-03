@@ -17,3 +17,4 @@ model_performance.py
 *.csv
 *.ipynb
 *.json
+*.log
