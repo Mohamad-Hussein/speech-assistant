@@ -64,7 +64,18 @@ class SpeechDetectionGUI:
         # GUI parameters
         self.root = Tk()
         self.root.title("Speech-Assistant")
-        self.root.geometry("300x200")
+        # Calculate screen width and height
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+
+        # Set window size based on screen resolution
+        window_width = int(screen_width * 0.6)
+        window_height = int(screen_height * 0.4)
+        window_position_x = (screen_width - window_width) // 2
+        window_position_y = (screen_height - window_height) // 2
+        self.window_size = f"{window_position_x}x{window_position_y}"
+        
+        self.root.geometry(self.window_size)
         self.root.resizable(False, False)
         self.is_running = True
         self.max_text_length = 35
@@ -80,24 +91,27 @@ class SpeechDetectionGUI:
         self.file_menu.add_command(label="Exit", command=self.on_close)
 
         ## Text box
-        self.text_var = Label(self.root, text="Press start to begin speech detection.")
+        text_frame = Frame(self.root)
+        text_frame.pack()
+
+        self.text_var = Label(text_frame, text="Press start to begin speech detection.")
         self.text_var.pack(pady=10)
         ## Start button
         self.start_button = Button(
-            self.root, text="Start", command=self.start_detection
+            text_frame, text="Start", command=self.start_detection
         )
-        # self.start_button.pack(side='top', padx=5, pady=10)
-        self.start_button.place(x=100, y=50, anchor="center")
+        self.start_button.pack(side='left', padx=5, pady=10)
+        # self.start_button.place(x=100, y=50, anchor="center")
 
         ## Stop button
         self.stop_button = Button(
-            self.root,
+            text_frame,
             text="Stop",
             command=self.stop_detection,
             state=DISABLED,
         )
-        # self.stop_button.pack(side='top', padx=5, pady=10)
-        self.stop_button.place(x=200, y=50, anchor="center")
+        self.stop_button.pack(side='right', padx=5, pady=10)
+        # self.stop_button.place(x=200, y=50, anchor="center")
 
         ## GUI protocols
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -286,7 +300,7 @@ class SpeechDetectionGUI:
         # Create a new Tkinter window
         self.options_window = Tk()
         self.options_window.title("Settings")
-        self.options_window.geometry("300x200")
+        self.options_window.geometry(self.window_size)
         self.options_window.resizable(False, False)
 
         # Label for settings
