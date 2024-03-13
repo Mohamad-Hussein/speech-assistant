@@ -53,9 +53,9 @@ You can get started on any operating system you would like. The program was test
      ```bash
      conda env create -f env-cuda.yml
      ```
-   - **AMD GPU on Windows:**
+   - **AMD GPU or any CPU Integrated Graphics on Windows:**
      ```powershell
-     conda env create -f env-amd-win.yml
+     conda env create -f env-general-win.yml
      ```
 
    - **AMD GPU on Linux:**
