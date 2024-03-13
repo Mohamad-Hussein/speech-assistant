@@ -21,7 +21,6 @@ from src.utils.voice_capturing import main_loop
 from src.assistant.voice_processing import audio_processing_service
 from src.config import update_config
 from src.config import WRITE, SAVE_AUDIO, HOTKEY, TASK, TASKS, SPEECH_MODELS, MODEL_ID
-import src.config as config
 from src.utils.funcs import run_listener
 
 
