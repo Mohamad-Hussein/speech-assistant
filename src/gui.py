@@ -1,12 +1,11 @@
 from time import sleep
 from multiprocessing import Event, Queue, Process, Pipe, Value
 from threading import Thread
-from tkinter.ttk import Combobox
+from tkinter.ttk import Combobox, Button
 from tkinter import (
     Tk,
     Frame,
     Menu,
-    Button,
     Label,
     StringVar,
     DISABLED,
@@ -21,7 +20,6 @@ from src.utils.voice_capturing import main_loop
 from src.assistant.voice_processing import audio_processing_service
 from src.config import update_config
 from src.config import WRITE, SAVE_AUDIO, HOTKEY, TASK, TASKS, SPEECH_MODELS, MODEL_ID
-import src.config as config
 from src.utils.funcs import run_listener
 
 
@@ -64,8 +62,22 @@ class SpeechDetectionGUI:
         # GUI parameters
         self.root = Tk()
         self.root.title("Speech-Assistant")
-        self.root.geometry("300x200")
-        self.root.resizable(False, False)
+        # Calculate screen width and height
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+
+        # Set window size based on screen resolution
+        window_width = int(screen_width * 0.15)
+        window_height = int(screen_height * 0.15)
+        # Center the window
+        window_position_x = (screen_width - window_width) // 2
+        window_position_y = (screen_height - window_height) // 2
+
+        self.window_size = f"{window_width}x{window_height}"
+        self.root.geometry(f"{self.window_size}+{window_position_x}+{window_position_y}")
+
+        # self.root.geometry(self.window_size)
+        self.root.resizable(True, True)
         self.is_running = True
         self.max_text_length = 35
 
@@ -80,24 +92,29 @@ class SpeechDetectionGUI:
         self.file_menu.add_command(label="Exit", command=self.on_close)
 
         ## Text box
-        self.text_var = Label(self.root, text="Press start to begin speech detection.")
-        self.text_var.pack(pady=10)
+        self.text_info = Label(
+            self.root, text="Press start to begin speech detection."
+        )
+        self.text_info.pack(pady=10)
+
+        buttons_frame = Frame(self.root)
+        buttons_frame.pack()
+
         ## Start button
         self.start_button = Button(
-            self.root, text="Start", command=self.start_detection
+            buttons_frame, text="Start", command=self.start_detection
         )
-        # self.start_button.pack(side='top', padx=5, pady=10)
-        self.start_button.place(x=100, y=50, anchor="center")
+        self.start_button.pack(side="left", padx=5, pady=10)
 
         ## Stop button
         self.stop_button = Button(
-            self.root,
+            buttons_frame,
             text="Stop",
             command=self.stop_detection,
             state=DISABLED,
         )
-        # self.stop_button.pack(side='top', padx=5, pady=10)
-        self.stop_button.place(x=200, y=50, anchor="center")
+        self.stop_button.pack(side="right", padx=5, pady=10)
+        # self.stop_button.place(x=200, y=50, anchor="center")
 
         ## GUI protocols
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -203,14 +220,14 @@ class SpeechDetectionGUI:
         self.key_listener_thread.join(timeout=10)
         # Checking if processes are still running
         if self.parent_process.is_alive() or self.key_listener_thread.is_alive():
-            self.text_var.config(text="Processes not ended, please restart program!")
+            self.text_info.config(text="Processes not ended, please restart program!")
 
         # Button state change
         self.start_button.config(state=NORMAL)
         self.stop_button.config(state=DISABLED)
 
         # Removes speech text
-        self.text_var.config(text="Press start to begin speech detection.")
+        self.text_info.config(text="Press start to begin speech detection.")
 
     def on_close(self):
         """Terminates all processes before closing"""
@@ -254,7 +271,7 @@ class SpeechDetectionGUI:
                 if len(text) > self.max_text_length:
                     text = text[: self.max_text_length] + "..."
 
-                self.text_var.config(text=text)
+                self.text_info.config(text=text)
 
             self.root.update()
             sleep(0.1)
@@ -270,7 +287,7 @@ class SpeechDetectionGUI:
             if len(text) > self.max_text_length:
                 text = text[: self.max_text_length] + "..."
 
-            self.text_var.config(text=text)
+            self.text_info.config(text=text)
 
         self.root.update()
 
@@ -286,7 +303,7 @@ class SpeechDetectionGUI:
         # Create a new Tkinter window
         self.options_window = Tk()
         self.options_window.title("Settings")
-        self.options_window.geometry("300x200")
+        self.options_window.geometry(self.window_size)
         self.options_window.resizable(False, False)
 
         # Label for settings

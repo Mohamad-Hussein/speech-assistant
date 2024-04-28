@@ -6,7 +6,6 @@ import logging
 import traceback
 
 from src.config import SPEECH_MODELS, TASK, TASKS, MODEL_ID
-import src.config as config
 from src.utils.funcs import find_gpu_config
 from src.assistant.processing import perform_request
 
