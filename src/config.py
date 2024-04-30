@@ -16,7 +16,9 @@ WRITE = type_writing
 SAVE_AUDIO = False
 
 # Hotkey for the listener.
-HOTKEY = {"Super", "Shift"}
+# HOTKEY = {"Super", "Shift"}
+HOTKEY = {"Alt", "F9"}
+AGENT_TRIGGER = "assistant"
 
 # Available models for ASR
 SPEECH_MODELS = [
@@ -34,6 +36,12 @@ TASKS = ["transcribe", "translate"]
 
 DEFAULT_MODEL_ID = 1
 DEFAULT_TRANSLATE_SPEECH = False
+
+# Words to ignore when you haven't said anything
+IGNORE = ["you know.", "you're not."]
+
+# Minimum number of words to be considered a valid transcription
+MIN_WORDS = 2
 # -----------------------------------
 
 
@@ -116,6 +124,7 @@ def update_config(key: str, value, filename="config.json"):
 
     # Update the value for the specified key
     config[key] = value
+    config["Date Modified"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # Write the updated config back to the file
     with open(filename, "w") as file:

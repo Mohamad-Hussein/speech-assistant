@@ -16,5 +16,6 @@ model_performance.py
 *.txt
 *.csv
 *.ipynb
+!langchain_test.ipynb
 *.json
 *.log

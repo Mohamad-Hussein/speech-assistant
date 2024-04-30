@@ -1,4 +1,8 @@
+import asyncio
+
 from src.utils.funcs import copy_writing
+from src.config import IGNORE, MIN_WORDS, AGENT_TRIGGER
+from src.assistant.assistant import prompt_agent
 
 
 def perform_request(text: str, start_event, prev_text, write_method):
@@ -39,8 +43,8 @@ def process_text(text: str, start_event, prev_text) -> str:
         text (str): The processed text
     """
     processed = text
-    if text.strip().lower() in "you're not.":
-        return ""
+
+    # if text.strip().lower() in "you're not.":
 
     if start_event.is_set():
         index = text.find(prev_text)
@@ -51,7 +55,20 @@ def process_text(text: str, start_event, prev_text) -> str:
         else:
             processed = text.strip()
 
-    return processed
+    # Agent trigger
+    if AGENT_TRIGGER in processed.lower():
+
+        asyncio.run(prompt_agent(processed))
+
+        
+    # Decide if its a valid transcription
+    if any(
+        True for ignore_str in IGNORE if ignore_str.startswith(processed)
+    ) or MIN_WORDS > len(processed.strip().split(" ")):
+        return ""
+
+    else:
+        return processed
 
 
 def notAscii(s):
