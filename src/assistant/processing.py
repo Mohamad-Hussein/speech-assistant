@@ -1,11 +1,16 @@
 import asyncio
+import os
+import requests
+from typing import Optional
 
 from src.utils.funcs import copy_writing
 from src.config import IGNORE, MIN_WORDS, AGENT_TRIGGER
-from src.assistant.assistant import prompt_agent
+
+LLM_WEBUI_OPENED: bool = False
+SESSION_IDS: list[str] = []
 
 
-def perform_request(text: str, start_event, prev_text, write_method):
+def perform_request(text: str, write_method):
     """Performs the request of the user based on action
 
     Args:
@@ -17,15 +22,42 @@ def perform_request(text: str, start_event, prev_text, write_method):
     Returns:
         str: The processed text
     """
-    text = process_text(text, start_event, prev_text)
 
-    # If the text is not English, then copy it
-    if notAscii(text):
-        write_method = copy_writing
+    # Agent trigger
+    if AGENT_TRIGGER in text.lower() or 1 == 1 and len(text) > 0:
 
-    write_method(text)
+        webui_user_input(text, "SESSION_IDS[-1]")
+        invoke_agent(text, "SESSION_IDS[-1]")
+
+        # asyncio.run(prompt_agent(processed))
+
+    else:
+        # If the text is not English, then copy it
+        if notAscii(text):
+            write_method = copy_writing
+
+        write_method(text)
 
     return text
+
+
+def invoke_agent(user_prompt: str, id: Optional[str] = "0000"):
+    """Invokes the agent and updates the webui with the new agent status."""
+
+    json_data = {
+        "message": user_prompt,
+    }
+    response = requests.post(f"http://localhost:8000/message/{id}", json=json_data)
+
+
+def webui_user_input(user_input: str, id: Optional[str] = "0000"):
+    """Updates the webui with the new user input."""
+    
+    json_data = {
+        "message": user_input,
+    }
+
+    response = requests.post(f"http://localhost:8000/user/{id}", json=json_data)
 
 
 def process_text(text: str, start_event, prev_text) -> str:
@@ -55,12 +87,6 @@ def process_text(text: str, start_event, prev_text) -> str:
         else:
             processed = text.strip()
 
-    # Agent trigger
-    if AGENT_TRIGGER in processed.lower():
-
-        asyncio.run(prompt_agent(processed))
-
-        
     # Decide if its a valid transcription
     if any(
         True for ignore_str in IGNORE if ignore_str.startswith(processed)

@@ -1,13 +1,14 @@
 from sys import exit
-from os.path import join, basename
+from os.path import join, basename, realpath
 import gc
 from time import sleep, time
 import logging
 import traceback
+from typing import Any, Callable, Dict
 
 from src.config import SPEECH_MODELS, TASK, TASKS, MODEL_ID
 from src.utils.funcs import find_gpu_config
-from src.assistant.processing import perform_request
+from src.assistant.processing import perform_request, process_text
 
 from transformers.pipelines import pipeline
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
@@ -15,6 +16,7 @@ import torch
 
 # from optimum.onnxruntime import ORTModelForSpeechSeq2Seq
 # from optimum.nvidia.pipelines import pipeline
+timeout = 10
 
 
 def load_model(gui_pipe, model_event, model_index_value, task_value, logger):
@@ -41,6 +43,9 @@ def load_model(gui_pipe, model_event, model_index_value, task_value, logger):
 
     # Downloading the model from HuggingFace Hub
     gui_pipe.send(f"Downloading {basename(model_id)}...")
+    logger.info(
+        f"Downloading mode {basename(model_id)} into {realpath(local_cache_dir)}"
+    )
 
     model = AutoModelForSpeechSeq2Seq.from_pretrained(
         model_id,
@@ -48,6 +53,7 @@ def load_model(gui_pipe, model_event, model_index_value, task_value, logger):
         low_cpu_mem_usage=True,
         use_safetensors=True,
         cache_dir=local_cache_dir,
+        local_files_only=True,
     )
 
     # Loading the model to device
@@ -63,7 +69,9 @@ def load_model(gui_pipe, model_event, model_index_value, task_value, logger):
         model = BetterTransformer.transform(model)
 
     # Making pipeline for inference
-    processor = AutoProcessor.from_pretrained(model_id, cache_dir=local_cache_dir)
+    processor = AutoProcessor.from_pretrained(
+        model_id, cache_dir=local_cache_dir, local_files_only=True
+    )
 
     # Setting task
     generate_kwargs = {"task": TASKS[task_value.value]} if "-large" in model_id else {}
@@ -104,7 +112,7 @@ def load_model(gui_pipe, model_event, model_index_value, task_value, logger):
     return model_pipe
 
 
-def run_model(synch_dict, write_method, logger):
+def run_model(synch_dict: Dict[str, Any], write_method: Callable, logger):
     """This is to run the model
 
     Args:
@@ -146,8 +154,10 @@ def run_model(synch_dict, write_method, logger):
         logger.info(f"Time for inference: {time() - t0:.4f} seconds")
 
         # Process text
-        processed_text = perform_request(
-            result["text"], start_event, previous_text, write_method
+        processed_text = process_text(
+            result["text"],
+            start_event,
+            previous_text,
         )
         gui_pipe.send(processed_text)
 
@@ -157,6 +167,9 @@ def run_model(synch_dict, write_method, logger):
             f"\nPrinted text: {result['text']}\nSpeech-to-text time: {speech_to_text_time:.3f}s\n"
         )
         previous_text = result["text"]
+
+        # LLM inference and actions taken
+        perform_request(processed_text, write_method)
 
         # Resetting
         logger.debug(f"Result: {result}")

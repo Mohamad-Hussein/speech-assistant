@@ -55,7 +55,7 @@ if __name__ == "__main__":
     # Configure the logging settings
     logging.basicConfig(
         level=logging.DEBUG,
-        format="%(asctime)s - %(levelname)s - %(message)s",
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         filename=join("logs", "speech-assistant.log"),
         filemode="w",
     )
