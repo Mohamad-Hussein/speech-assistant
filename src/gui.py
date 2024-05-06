@@ -1,4 +1,6 @@
+import os
 from time import sleep
+import subprocess
 from multiprocessing import Event, Queue, Process, Pipe, Value
 from threading import Thread
 from tkinter.ttk import Combobox, Button
@@ -43,6 +45,7 @@ class SpeechDetectionGUI:
         self.parent_pipe, self.child_pipe = Pipe()
         # This is for choosing speech model
         self.model_index_value = Value("i", SPEECH_MODELS.index(MODEL_ID))
+        # Choosing which task to do
         self.task_bool_value = Value("b", TASKS.index(TASK))
 
         # Dictionary for synchronization to pass in process
@@ -74,7 +77,9 @@ class SpeechDetectionGUI:
         window_position_y = (screen_height - window_height) // 2
 
         self.window_size = f"{window_width}x{window_height}"
-        self.root.geometry(f"{self.window_size}+{window_position_x}+{window_position_y}")
+        self.root.geometry(
+            f"{self.window_size}+{window_position_x}+{window_position_y}"
+        )
 
         # self.root.geometry(self.window_size)
         self.root.resizable(True, True)
@@ -92,9 +97,7 @@ class SpeechDetectionGUI:
         self.file_menu.add_command(label="Exit", command=self.on_close)
 
         ## Text box
-        self.text_info = Label(
-            self.root, text="Press start to begin speech detection."
-        )
+        self.text_info = Label(self.root, text="Press start to begin speech detection.")
         self.text_info.pack(pady=10)
 
         buttons_frame = Frame(self.root)
@@ -118,6 +121,28 @@ class SpeechDetectionGUI:
 
         ## GUI protocols
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
+
+        ## Running chat UI thread
+        # from chainlit.cli import run_chainlit
+
+        # run_chainlit(__file__)
+
+        webui_path = os.path.join(
+            os.path.dirname(__file__), "assistant/assistant_ui.py"
+        )
+        self.webui_process = subprocess.Popen(
+            ["python", webui_path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=os.getcwd(),
+        )
+        from src.assistant.assistant_ui import run_app
+
+        # self.webui_process = Process(target=run_app, args=(self.webui_id_pipe,))
+        # self.webui_process.start()
+
+        # t = Thread(target=run_chainlit_command)
+        # t.start()
 
     def start_model_service(self):
         """Loads the ASR model and starts the model service."""
@@ -248,6 +273,8 @@ class SpeechDetectionGUI:
             self.parent_process.join()
         if self.key_listener_thread:
             self.key_listener_thread.join()
+        # if self.webui_process.is_alive():
+        #     self.webui_process.join(timeout=2)
 
         # Destroys all GUIs
         if self.option_window_open:
@@ -257,6 +284,8 @@ class SpeechDetectionGUI:
 
         # Stops the main loop
         self.is_running = False
+
+        # raise KeyboardInterrupt
 
     def run(self):
         """Runs the GUI"""
@@ -384,11 +413,27 @@ class SpeechDetectionGUI:
 
             print(self.task_bool_value.value)
 
-        # Create the checkbox
+        # Create the checkbox for translate speech
         translate_speech = BooleanVar(value=self.task_bool_value.value)
-        check_button = Checkbutton(frame, variable=translate_speech, command=on_checked)
-        check_button.select() if translate_speech.get() else check_button.deselect()
-        check_button.pack(side=LEFT)
+        # check_button = Checkbutton(frame, variable=translate_speech, command=on_checked)
+
+        translate_speech_command = self.update_config_command(
+            translate_speech, self.task_bool_value, "Translate Speech"
+        )
+        translate_speech_button = Checkbutton(
+            frame,
+            variable=translate_speech,
+            command=translate_speech_command,
+        )
+
+        (
+            translate_speech_button.select()
+            if translate_speech.get()
+            else translate_speech_button.deselect()
+        )
+        translate_speech_button.pack(side=LEFT)
+
+        # TODO add a check for using local_files_only
 
         info_label = Label(self.options_window, text="(applicable to Whisper-Large)")
         info_label.pack()
@@ -399,3 +444,31 @@ class SpeechDetectionGUI:
         self.option_window_open = False
         self.root.focus_set()
         self.options_window.destroy()
+
+    def update_config_command(self, bool_var, val_to_change, config_name):
+
+        command = lambda bool_var=bool_var, val_to_change=val_to_change: self.update_config_on_check(
+            bool_var, val_to_change, "Translate Speech"
+        )
+
+        return command
+
+    def update_config_on_check(self, bool_var, val_to_change, config_name):
+        """Returns a command to update command when checking a box
+
+        Args:
+            bool_var (BooleanVar): The boolean variable to check
+            val_to_change (multiprocessing.Value): The Value to change
+            config_name (str): The name of the config to change
+        """
+        print(bool_var.get())
+
+        bool_var.set(not bool_var.get())
+
+        # Update the task
+        val_to_change.value = bool_var.get()
+
+        # Update the config file
+        update_config(config_name, bool_var.get())
+
+        print(val_to_change.value)

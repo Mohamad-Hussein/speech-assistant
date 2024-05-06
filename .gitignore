@@ -4,6 +4,7 @@ __pycache__
 model
 speech-assistant.log
 !effects/*.wav
+.chainlit
 
 # Testing
 test*.py

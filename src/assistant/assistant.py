@@ -1,23 +1,21 @@
-from langchain.tools import BaseTool, Tool, tool
-from langchain.chains.conversation.memory import ConversationBufferWindowMemory
-from langgraph.graph import END, Graph
-from typing import Union
-from langgraph.prebuilt import ToolExecutor
-from langchain_core.agents import AgentAction, AgentFinish
-from langgraph.graph import END, MessageGraph
-from langchain_core.messages import ToolMessage
-from langchain_core.tools import tool, BaseTool
 import subprocess
+from typing import Union, Optional
+
+from langchain.chains import LLMChain
+from langchain.chains.conversation.memory import ConversationBufferWindowMemory
+from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.tools import BaseTool, Tool, tool
+from langchain.schema import StrOutputParser
+from langchain.schema.runnable.config import RunnableConfig
+
+from langchain_core.agents import AgentAction, AgentFinish
+from langchain_core.messages import ToolMessage, HumanMessage
+from langchain_core.tools import tool, BaseTool
+
+from langgraph.graph import END, Graph, MessageGraph
+from langgraph.prebuilt import ToolExecutor
 
 from langchain_community.llms import Ollama
-import streamlit as st
-
-
-# Load the pre-trained language model
-llm = Ollama(model="llama3:8b")
-
-# st.title("Hello, world!")
-# st.write("Hello, world! This text will be displayed on a web page.")
 
 
 class Multiply(BaseTool):
@@ -33,35 +31,41 @@ class Multiply(BaseTool):
         raise NotImplementedError("This tool does not support async")
 
 
-# Tools
 tools = [Multiply()]
-
-# Initialize the tool executor
 tool_executor = ToolExecutor(tools=tools)
 
-# initialize conversational memory
-conversational_memory = ConversationBufferWindowMemory(
-    memory_key="chat_history", k=5, return_messages=True
-)
 
+def create_agent(llm, system_message: Optional[str] = None):
 
-graph = MessageGraph()
+    # # initialize conversational memory
+    # conversational_memory = ConversationBufferWindowMemory(
+    #     memory_key="messages", k=5, return_messages=True, 
+    # )
 
-# Add nodes to the graph
-graph.add_node("agent", llm)
-graph.add_node("action", tool_executor)
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                "You are a helpful AI assistant, helping the user accomplish their task."
+                " Use the provided tools to progress towards answering the question."
+                " You have access to the following tools: {tool_names}.\n\n"
+                "Messages: \n\n{history}\n\n"
+            ),
+            # MessagesPlaceholder(variable_name="messages"),
+            # ("system", "{history}"),
+            ("user", "{user_input}"),
+        ]
+    )
+    prompt = prompt.partial(tool_names=", ".join([tool.name for tool in tools]))
 
-# Add edges to the graph
-graph.add_edge("agent", END)
-graph.
+    return prompt | llm | StrOutputParser()
+    # prompt = prompt.partial(system_message=system_message)
 
-graph.set_entry_point("agent")
+    # chain = LLMChain(
+    #     llm=llm,
+    #     prompt=prompt,
+    #     memory=conversational_memory,
+    #     output_parser=StrOutputParser(),
+    # )
 
-runnable = graph.compile()
-
-
-async def prompt_agent(message: str):
-    # subprocess.run("streamlit run app.py")
-    async for token in llm.astream(message):
-        print(token, end="", flush=True)
-
+    # return chain

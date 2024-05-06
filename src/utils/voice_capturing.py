@@ -129,6 +129,9 @@ def main_loop(
         f"Input device detected: \033[94m{audio.get_default_input_device_info()['name']} \033[0m"
     )
 
+    # Waiting for model to be loaded
+    model_event.wait()
+
     ## Main loop ##
     try:
         # Init
