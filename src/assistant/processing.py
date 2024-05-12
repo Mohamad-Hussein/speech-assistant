@@ -1,7 +1,7 @@
 import asyncio
 import os
 import requests
-from typing import Optional
+from typing import Optional, Callable
 
 from src.utils.funcs import copy_writing
 from src.config import IGNORE, MIN_WORDS, AGENT_TRIGGER
@@ -10,26 +10,22 @@ LLM_WEBUI_OPENED: bool = False
 SESSION_IDS: list[str] = []
 
 
-def perform_request(text: str, write_method):
-    """Performs the request of the user based on action
+def perform_request(text: str, write_method: Callable, use_agent: bool):
+    """Performs the request of the user based on action and if agent is enabled.
 
     Args:
         text (str): The input text for the request
-        start_event (Event): The event that triggered the request
-        prev_text (str): The previous text in the conversation, if applicable. Defaults to None.
-        write_method (Callable): A function to call with the output text, if necessary. Defaults to None.
+        write_method (Callable): A function to call to write the transcription
 
     Returns:
         str: The processed text
     """
 
     # Agent trigger
-    if AGENT_TRIGGER in text.lower() or 1 == 1 and len(text) > 0:
+    if (use_agent or AGENT_TRIGGER in text.lower()) and len(text) > 0:
 
         webui_user_input(text, "SESSION_IDS[-1]")
         invoke_agent(text, "SESSION_IDS[-1]")
-
-        # asyncio.run(prompt_agent(processed))
 
     else:
         # If the text is not English, then copy it
@@ -39,35 +35,6 @@ def perform_request(text: str, write_method):
         write_method(text)
 
     return text
-
-
-def invoke_agent(user_prompt: str, id: Optional[str] = "0000"):
-    """Invokes the agent and updates the webui with the new agent status."""
-
-    json_data = {
-        "message": user_prompt,
-    }
-    response = requests.post(f"http://localhost:8000/message/{id}", json=json_data)
-
-
-def webui_user_input(user_input: str, id: Optional[str] = "0000"):
-    """Updates the webui with the new user input."""
-
-    json_data = {
-        "message": user_input,
-    }
-
-    response = requests.post(f"http://localhost:8000/user/{id}", json=json_data)
-
-def change_agent(model_name: str,id: Optional[str] = "0000"):
-    """Updates the agent and webui name with the new agent model"""
-
-    json_data = {
-        "model": model_name,
-    }
-
-    response = requests.post(f"http://localhost:8000/model/{model_name}/{id}", json=json_data)
-
 
 
 def process_text(text: str, start_event, prev_text) -> str:
@@ -110,3 +77,34 @@ def process_text(text: str, start_event, prev_text) -> str:
 
 def notAscii(s):
     return not s.isascii()
+
+
+def invoke_agent(user_prompt: str, id: Optional[str] = "0000"):
+    """Invokes the agent and updates the webui with the new agent status."""
+
+    json_data = {
+        "message": user_prompt,
+    }
+    response = requests.post(f"http://localhost:8000/message/{id}", json=json_data)
+
+
+def webui_user_input(user_input: str, id: Optional[str] = "0000"):
+    """Updates the webui with the new user input."""
+
+    json_data = {
+        "message": user_input,
+    }
+
+    response = requests.post(f"http://localhost:8000/user/{id}", json=json_data)
+
+
+def change_agent(model_name: str, id: Optional[str] = "0000"):
+    """Updates the agent and webui name with the new agent model"""
+
+    json_data = {
+        "model": model_name,
+    }
+
+    response = requests.post(
+        f"http://localhost:8000/model/{model_name}/{id}", json=json_data
+    )

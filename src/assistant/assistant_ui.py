@@ -11,6 +11,7 @@ import logging
 import logging.config
 
 import chainlit as cl
+from chainlit.input_widget import Select
 from chainlit.server import app
 from chainlit.context import init_http_context, init_ws_context
 from chainlit.session import WebsocketSession, ws_sessions_id
@@ -19,7 +20,8 @@ from langchain.schema.runnable.config import RunnableConfig
 from langchain_community.llms import Ollama
 
 from src.assistant.assistant import create_agent
-from src.config import DEFAULT_AGENT, get_from_config
+from src.config import DEFAULT_AGENT, AGENT_MODELS, OLLAMA_HOST
+from src.config import get_from_config
 
 
 @cl.on_chat_start
@@ -39,16 +41,37 @@ async def start():
 
     # Create the agent
     agent_model = get_from_config("Default Agent Model")
-    llm = Ollama(model=agent_model)
+
+    llm = Ollama(model=agent_model, base_url=OLLAMA_HOST)
     agent = create_agent(llm)
 
     logger.info(f"Starting new session with id {session_id}, using llm {agent_model}")
 
     # Store the agent in session
     cl.user_session.set("agent", agent)
-    cl.user_session.set("user", cl.User("User"))
+    cl.user_session.set("user", "User")
     cl.user_session.set("history", [])
 
+    await cl.Avatar(
+        name="You",
+        path="icons/user-icon.png",
+        # url="https://avatars.githubusercontent.com/u/128686189?s=400&u=a1d1553023f8ea0921fba0debbe92a8c5f840dd9&v=4",
+    ).send()
+
+    # UI elements
+    settings = await cl.ChatSettings(
+        [
+            Select(
+                id="Model",
+                label="Agent Model",
+                values=AGENT_MODELS,
+                initial_index=AGENT_MODELS.index(agent_model),
+                description="Select the agent model you want to use.",
+            )
+        ]
+    ).send()
+
+    value = settings["Model"]
     print(cl.User("User").identifier)
 
     print("Session id: ", cl.user_session.get("id"))
@@ -67,8 +90,37 @@ async def start():
 
 @cl.author_rename
 def rename(orig_author: str):
-    rename_dict = {"You": "User"}
+    # rename_dict = {"You": "User"}
+    rename_dict = {}
     return rename_dict.get(orig_author, orig_author)
+
+
+@cl.on_settings_update
+async def setup_agent(settings):
+    """This is to update the agent model through web ui"""
+    print("on_settings_update", settings)
+
+    # Updating the agent
+    model = settings["Model"]
+    llm = Ollama(model=model)
+    agent = create_agent(llm)
+    cl.user_session.set("agent", agent)
+
+
+@cl.set_chat_profiles
+async def chat_profile():
+    return [
+        cl.ChatProfile(
+            name="Agent Inference",
+            markdown_description="For llm inference",
+            icon="https://picsum.photos/200",
+        ),
+        # cl.ChatProfile(
+        #     name="Agent Actions",
+        #     markdown_description="Agent actions",
+        #     icon="https://picsum.photos/200",
+        # ),
+    ]
 
 
 @cl.on_message
@@ -76,8 +128,15 @@ async def message(message: cl.Message):
     """This is when user types his message on the ui and sends it."""
     # Getting the agent
     agent = cl.user_session.get("agent")
+    if agent.name == "None":
+        await cl.Message(
+            f"No agent is selected. Please select an agent in the options tab in the GUI.",
+            author="System",
+        ).send()
+        return
+
     history = cl.user_session.get("history")
-    # llm.
+
     # Formatting history
     history_log = format_history(history)
 
@@ -154,7 +213,7 @@ async def update_user_message(
     user_input = data.get("message")
     print("Received message from user:", user_input)
 
-    res = await cl.Message(content=user_input, author="User").send()
+    res = await cl.Message(content=user_input, author="You").send()
 
     return {
         "status": 200,
@@ -179,6 +238,9 @@ async def update_agent(
     llm = Ollama(model=model)
     agent = create_agent(llm)
     cl.user_session.set("agent", agent)
+
+    # Give response to the user
+    await cl.Message(f"Agent {model} is selected", author="System").send()
 
     return {
         "status": 200,

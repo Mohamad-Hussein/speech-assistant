@@ -20,6 +20,7 @@ from tkinter import (
 
 from src.utils.funcs import run_listener
 from src.utils.voice_capturing import main_loop
+from src.assistant.processing import change_agent
 from src.assistant.voice_processing import audio_processing_service
 from src.config import get_from_config, update_config
 from src.config import (
@@ -31,6 +32,7 @@ from src.config import (
     SPEECH_MODELS,
     MODEL_ID,
     AGENT_MODELS,
+    DEFAULT_AGENT,
 )
 
 
@@ -56,6 +58,8 @@ class SpeechDetectionGUI:
         self.model_index_value = Value("i", SPEECH_MODELS.index(MODEL_ID))
         # Choosing which task to do
         self.task_bool_value = Value("b", TASKS.index(TASK))
+        # Choosing if agent should be used or not
+        self.agent_bool_value = Value("b", DEFAULT_AGENT != "None")
 
         # Dictionary for synchronization to pass in process
         self.synch_dict = {
@@ -66,6 +70,7 @@ class SpeechDetectionGUI:
             "Terminate Event": self.terminate_event,
             "Model Index": self.model_index_value,
             "Task Bool": self.task_bool_value,
+            "Agent Bool": self.agent_bool_value,
         }
 
         ## GUI ##
@@ -385,10 +390,14 @@ class SpeechDetectionGUI:
         def on_agent_select(event):
             selected_agent = model_combobox.get()
 
+            # Update if agent should be used
+            self.agent_bool_value.value = selected_agent != "None"
+            # Update config for web ui
             update_config("Default Agent Model", selected_agent)
-            from src.assistant.processing import change_agent
 
-            change_agent(selected_agent)
+            # Change agent
+            if selected_agent != "None":
+                change_agent(selected_agent)
 
             print(f"\nAgent model changed to {selected_agent}\n")
 
