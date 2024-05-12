@@ -18,11 +18,20 @@ from tkinter import (
     Checkbutton,
 )
 
+from src.utils.funcs import run_listener
 from src.utils.voice_capturing import main_loop
 from src.assistant.voice_processing import audio_processing_service
-from src.config import update_config
-from src.config import WRITE, SAVE_AUDIO, HOTKEY, TASK, TASKS, SPEECH_MODELS, MODEL_ID
-from src.utils.funcs import run_listener
+from src.config import get_from_config, update_config
+from src.config import (
+    WRITE,
+    SAVE_AUDIO,
+    HOTKEY,
+    TASK,
+    TASKS,
+    SPEECH_MODELS,
+    MODEL_ID,
+    AGENT_MODELS,
+)
 
 
 class SpeechDetectionGUI:
@@ -117,16 +126,11 @@ class SpeechDetectionGUI:
             state=DISABLED,
         )
         self.stop_button.pack(side="right", padx=5, pady=10)
-        # self.stop_button.place(x=200, y=50, anchor="center")
 
         ## GUI protocols
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
-        ## Running chat UI thread
-        # from chainlit.cli import run_chainlit
-
-        # run_chainlit(__file__)
-
+        # Start the web server for the web interface
         webui_path = os.path.join(
             os.path.dirname(__file__), "assistant/assistant_ui.py"
         )
@@ -136,13 +140,6 @@ class SpeechDetectionGUI:
             stderr=subprocess.PIPE,
             cwd=os.getcwd(),
         )
-        from src.assistant.assistant_ui import run_app
-
-        # self.webui_process = Process(target=run_app, args=(self.webui_id_pipe,))
-        # self.webui_process.start()
-
-        # t = Thread(target=run_chainlit_command)
-        # t.start()
 
     def start_model_service(self):
         """Loads the ASR model and starts the model service."""
@@ -273,8 +270,8 @@ class SpeechDetectionGUI:
             self.parent_process.join()
         if self.key_listener_thread:
             self.key_listener_thread.join()
-        # if self.webui_process.is_alive():
-        #     self.webui_process.join(timeout=2)
+        if self.webui_process:
+            self.webui_process.terminate()
 
         # Destroys all GUIs
         if self.option_window_open:
@@ -380,16 +377,23 @@ class SpeechDetectionGUI:
             justify="center",
             state="readonly",
         )
-        model_combobox["values"] = [
-            "None",
-            # "ChatGPT-3.5 API",
-            # "Phi-2",
-            # "Mixtral",
-            # "Falcon",
-            # "mistral",
-        ]
-        model_combobox.current(0)
+        model_combobox["values"] = AGENT_MODELS
+        current_agent = get_from_config("Default Agent Model")
+
+        model_combobox.current(AGENT_MODELS.index(current_agent))
         model_combobox.pack(pady=5)
+
+        def on_agent_select(event):
+            selected_agent = model_combobox.get()
+
+            update_config("Default Agent Model", selected_agent)
+            from src.assistant.processing import change_agent
+
+            change_agent(selected_agent)
+
+            print(f"\nAgent model changed to {selected_agent}\n")
+
+        model_combobox.bind("<<ComboboxSelected>>", on_agent_select)
 
         ## Translate Speech Checkbox
         frame = Frame(self.options_window)
@@ -446,14 +450,6 @@ class SpeechDetectionGUI:
         self.options_window.destroy()
 
     def update_config_command(self, bool_var, val_to_change, config_name):
-
-        command = lambda bool_var=bool_var, val_to_change=val_to_change: self.update_config_on_check(
-            bool_var, val_to_change, "Translate Speech"
-        )
-
-        return command
-
-    def update_config_on_check(self, bool_var, val_to_change, config_name):
         """Returns a command to update command when checking a box
 
         Args:
@@ -461,6 +457,14 @@ class SpeechDetectionGUI:
             val_to_change (multiprocessing.Value): The Value to change
             config_name (str): The name of the config to change
         """
+        command = lambda bool_var=bool_var, val_to_change=val_to_change: self.update_config_on_check(
+            bool_var, val_to_change, config_name
+        )
+
+        return command
+
+    def update_config_on_check(self, bool_var, val_to_change, config_name):
+
         print(bool_var.get())
 
         bool_var.set(not bool_var.get())

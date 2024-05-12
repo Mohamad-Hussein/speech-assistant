@@ -52,12 +52,22 @@ def invoke_agent(user_prompt: str, id: Optional[str] = "0000"):
 
 def webui_user_input(user_input: str, id: Optional[str] = "0000"):
     """Updates the webui with the new user input."""
-    
+
     json_data = {
         "message": user_input,
     }
 
     response = requests.post(f"http://localhost:8000/user/{id}", json=json_data)
+
+def change_agent(model_name: str,id: Optional[str] = "0000"):
+    """Updates the agent and webui name with the new agent model"""
+
+    json_data = {
+        "model": model_name,
+    }
+
+    response = requests.post(f"http://localhost:8000/model/{model_name}/{id}", json=json_data)
+
 
 
 def process_text(text: str, start_event, prev_text) -> str:
@@ -74,18 +84,19 @@ def process_text(text: str, start_event, prev_text) -> str:
     Returns:
         text (str): The processed text
     """
-    processed = text
+    processed = text.strip()
 
     # if text.strip().lower() in "you're not.":
 
-    if start_event.is_set():
-        index = text.find(prev_text)
+    # NOTE this is for sequential voice transcription
+    # if start_event.is_set():
+    #     index = text.find(prev_text)
 
-        # Remove the common sequence (if found) and any leading/trailing whitespace
-        if index != -1:
-            processed = text[index + len(prev_text) :].strip()
-        else:
-            processed = text.strip()
+    #     # Remove the common sequence (if found) and any leading/trailing whitespace
+    #     if index != -1:
+    #         processed = text[index + len(prev_text) :].strip()
+    #     else:
+    #         processed = text.strip()
 
     # Decide if its a valid transcription
     if any(

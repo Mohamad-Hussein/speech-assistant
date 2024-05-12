@@ -10,33 +10,41 @@ from fastapi.responses import (
 import logging
 import logging.config
 
-logger = logging.getLogger(__name__)
-# formatter = logging.Formatter(
-#     fmt="%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-# )
-# logger.
-
-
 import chainlit as cl
 from chainlit.server import app
 from chainlit.context import init_http_context, init_ws_context
 from chainlit.session import WebsocketSession, ws_sessions_id
 
+from langchain.schema.runnable.config import RunnableConfig
 from langchain_community.llms import Ollama
 
 from src.assistant.assistant import create_agent
-from langchain.schema.runnable.config import RunnableConfig
+from src.config import DEFAULT_AGENT, get_from_config
 
 
 @cl.on_chat_start
 async def start():
+    """This is done everytime a new sessions starts"""
+
     session_id = cl.user_session.get("id")
 
-    # Load the pre-trained language model
-    llm = Ollama(model="llama3:8b")
+    # Logging
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        filename=os.path.join("logs", "llm-ui.log"),
+        filemode="w",
+    )
+    logger = logging.getLogger(__name__)
 
     # Create the agent
+    agent_model = get_from_config("Default Agent Model")
+    llm = Ollama(model=agent_model)
     agent = create_agent(llm)
+
+    logger.info(f"Starting new session with id {session_id}, using llm {agent_model}")
+
+    # Store the agent in session
     cl.user_session.set("agent", agent)
     cl.user_session.set("user", cl.User("User"))
     cl.user_session.set("history", [])
@@ -52,7 +60,7 @@ async def start():
     print("SESSION_ID: ", session_id)
 
     app_user = cl.user_session.get("user")
-    await cl.Message(f"Hello {app_user}", author="llama3:8b").send()
+    await cl.Message(f"Hello {app_user}. How can I help you?", author=agent.name).send()
     # cl.Avatar(name="User")
     # cl.Avatar(name="llama3:8b")
 
@@ -65,18 +73,18 @@ def rename(orig_author: str):
 
 @cl.on_message
 async def message(message: cl.Message):
-
+    """This is when user types his message on the ui and sends it."""
     # Getting the agent
     agent = cl.user_session.get("agent")
     history = cl.user_session.get("history")
-
+    # llm.
     # Formatting history
     history_log = format_history(history)
-    
+
     print("History:\n", history_log)
 
     # Writing agent message
-    msg = cl.Message(content="", author="llama3:8b")
+    msg = cl.Message(content="", author=agent.name)
 
     await msg.send()
 
@@ -132,10 +140,11 @@ async def id(
 
 ## Websocket endpoints for sending messages and posting user messages ##
 @app.post("/user/{session_id}")
-async def user(
+async def update_user_message(
     request: Request,
     session_id: str,
 ):
+    """This is to update user message when transcription request is complete."""
     session_id = list(ws_sessions_id.keys())[-1]
 
     ws_session = WebsocketSession.get_by_id(session_id=session_id)
@@ -154,9 +163,33 @@ async def user(
     }
 
 
+@app.post("/model/{model}/{session_id}")
+async def update_agent(
+    request: Request,
+    model: str,
+    session_id: str,
+):
+    """This is to change the agent model to the user request"""
+    # Getting the last session
+    session_id = list(ws_sessions_id.keys())[-1]
+    ws_session = WebsocketSession.get_by_id(session_id=session_id)
+    init_ws_context(ws_session)
+
+    # Updating the agent
+    llm = Ollama(model=model)
+    agent = create_agent(llm)
+    cl.user_session.set("agent", agent)
+
+    return {
+        "status": 200,
+        "model": f"Agent model set to {model}",
+        "session_id": session_id,
+    }
+
+
 @app.post("/message/{session_id}")
 async def receive_message(request: Request, session_id: str):
-
+    """This is for llm inference once the transcription pipeline request is complete"""
     # Getting the websocket session
     session_id = list(ws_sessions_id.keys())[-1]
     ws_session = WebsocketSession.get_by_id(session_id=session_id)
@@ -174,17 +207,17 @@ async def receive_message(request: Request, session_id: str):
 
     # Formatting history
     history_log = format_history(history)
-    
-    print("History:\n", history_log)
 
     # Process the incoming message
-    msg = cl.Message(content="", author="llama3:8b")
+    msg = cl.Message(content="", author=agent.name)
     await msg.send()
 
+    llm_response = []
     async for chunk in agent.astream(
         {"history": history_log, "user_input": message},
         config=RunnableConfig(callbacks=[cl.LangchainCallbackHandler()]),
     ):
+        llm_response.append(chunk)
         await msg.stream_token(chunk)
 
     await msg.send()
@@ -192,23 +225,13 @@ async def receive_message(request: Request, session_id: str):
     # Saving history
     history.append({"Human": message})
     history.append({"AI": msg.content})
-    print("History:", history)
-
-    # Send the message to the llm
-    # llm_response = []
-    # async for token in agent.astream(user_message):
-    #     print(token)
-    #     await msg.stream_token(token)
-    #     llm_response.append(token)
-
-    # await msg.update()
 
     return {
         "status": 200,
-        # "response": "".join(llm_response),
-        "response": "".join("change llmreponse back"),
+        "response": "".join(llm_response),
         "session_id": session_id,
     }
+
 
 def format_history(history):
     history_log = ""
