@@ -306,7 +306,6 @@ class SpeechDetectionGUI:
         """Updates GUI when frozen"""
         # Updates text
         if self.parent_pipe.poll():
-            print("Received")
             text = self.parent_pipe.recv()
 
             # Shortening text if too long
@@ -403,20 +402,6 @@ class SpeechDetectionGUI:
         text_label = Label(frame, text="Translate to English")
         text_label.pack(side=RIGHT)
 
-        def on_checked():
-
-            print(translate_speech.get())
-
-            translate_speech.set(not translate_speech.get())
-
-            # Update the task
-            self.task_bool_value.value = translate_speech.get()
-
-            # Update the config file
-            update_config("Translate Speech", translate_speech.get())
-
-            print(self.task_bool_value.value)
-
         # Create the checkbox for translate speech
         translate_speech = BooleanVar(value=self.task_bool_value.value)
         # check_button = Checkbutton(frame, variable=translate_speech, command=on_checked)
@@ -464,9 +449,7 @@ class SpeechDetectionGUI:
         return command
 
     def update_config_on_check(self, bool_var, val_to_change, config_name):
-
-        print(bool_var.get())
-
+        """Update a boolean variable on check event"""
         bool_var.set(not bool_var.get())
 
         # Update the task
@@ -474,5 +457,3 @@ class SpeechDetectionGUI:
 
         # Update the config file
         update_config(config_name, bool_var.get())
-
-        print(val_to_change.value)

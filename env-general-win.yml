@@ -20,3 +20,9 @@ dependencies:
       - python3-xlib==0.15
       - transformers==4.35.2
       - keyboard==0.13.5
+      - langchain
+      - langchain-core
+      - langchain-community
+      - langchain-experimental
+      - langgraph
+      - chainlit==1.0.506
