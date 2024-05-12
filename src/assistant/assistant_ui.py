@@ -71,9 +71,7 @@ async def start():
         ]
     ).send()
 
-    value = settings["Model"]
     print(cl.User("User").identifier)
-
     print("Session id: ", cl.user_session.get("id"))
     print("Environment: ", cl.user_session.get("env"))
     print("Chat settings: ", cl.user_session.get("chat_settings"))
@@ -82,10 +80,7 @@ async def start():
     print("Languages: ", cl.user_session.get("languages"))
     print("SESSION_ID: ", session_id)
 
-    app_user = cl.user_session.get("user")
-    await cl.Message(f"Hello {app_user}. How can I help you?", author=agent.name).send()
-    # cl.Avatar(name="User")
-    # cl.Avatar(name="llama3:8b")
+    await cl.Message(f"Hello! How can I help you?", author=agent.name).send()
 
 
 @cl.author_rename
@@ -124,7 +119,7 @@ async def chat_profile():
 
 
 @cl.on_message
-async def message(message: cl.Message):
+async def on_message(message: cl.Message):
     """This is when user types his message on the ui and sends it."""
     # Getting the agent
     agent = cl.user_session.get("agent")
@@ -171,7 +166,7 @@ async def message(message: cl.Message):
 
 
 @cl.on_logout
-def main(request: Request, response: Response):
+def logout(request: Request, response: Response):
     response.delete_cookie("my_cookie")
 
 
