@@ -116,3 +116,5 @@ Distil-whisper paper:
 - **Link:** [ArXiv](https://arxiv.org/abs/2311.00430)
 
 Sound effect: [soundsforyou](https://pixabay.com/users/soundsforyou-4861230/) on pixabay
+
+User icon: [iconpacks](https://www.iconpacks.net/free-icon/user-3296.html)

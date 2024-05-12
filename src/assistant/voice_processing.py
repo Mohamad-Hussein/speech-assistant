@@ -53,7 +53,7 @@ def load_model(gui_pipe, model_event, model_index_value, task_value, logger):
         low_cpu_mem_usage=True,
         use_safetensors=True,
         cache_dir=local_cache_dir,
-        local_files_only=True,
+        # local_files_only=True,
     )
 
     # Loading the model to device
@@ -64,7 +64,9 @@ def load_model(gui_pipe, model_event, model_index_value, task_value, logger):
 
     # Making pipeline for inference
     processor = AutoProcessor.from_pretrained(
-        model_id, cache_dir=local_cache_dir, local_files_only=True
+        model_id,
+        cache_dir=local_cache_dir,
+        # local_files_only=True
     )
 
     # Setting task
