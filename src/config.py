@@ -30,6 +30,17 @@ SPEECH_MODELS = [
     "openai/whisper-large-v3",  # ~4000 MiB of GPU memory
     # "optimum/whisper-tiny.en",  # ~400 MiB of GPU memory
 ]
+AGENT_MODELS = [
+    "None",
+    "llama3:8b",
+    "phi3"
+    # "ChatGPT-3.5 API",
+    # "Phi-2",
+    # "Mixtral",
+    # "Falcon",
+    # "mistral",
+]
+DEFAULT_AGENT_IDX = 1
 
 # Available tasks for ASR
 TASKS = ["transcribe", "translate"]
@@ -63,6 +74,18 @@ def get_from_config(key: str, filename="config.json"):
 
         return value
 
+    data = save_to_config()
+
+    return data[key]
+
+
+def save_to_config(filename="config.json"):
+    """
+    Saves config if it doesn't exist
+
+    Args:
+        model_id_idx (int): The index of the model in the config file
+    """
     # If the file doesn't exist, set the value to the default value
     model_id_idx = DEFAULT_MODEL_ID
     translate_speech = DEFAULT_TRANSLATE_SPEECH
@@ -70,41 +93,15 @@ def get_from_config(key: str, filename="config.json"):
     # Save the value to the JSON file
     data = {
         "Default Model Index": model_id_idx,
+        "Default Agent Model": AGENT_MODELS[DEFAULT_AGENT_IDX],
         "Date Created": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "Translate Speech": translate_speech,
     }
 
     with open(filename, "w") as file:
         json.dump(data, file, indent=4)
-
-    return data[key]
-
-
-def save_to_config(model_id_idx: int, translate_speech: bool, filename="config.json"):
-    """
-    Saves the model index to the config file.
-
-    Args:
-        model_id_idx (int): The index of the model in the config file
-    """
-
-    # Looks for config file
-    if os.path.exists(filename):
-        # If the file exists, load its contents
-        with open(filename, "r") as file:
-            data = json.load(file)
-    else:
-        # If the file doesn't exist, create a new dictionary
-        data = {}
-
-    # Update the dictionary with the new value
-    data["Default Model Index"] = model_id_idx
-    data["Translate Speech"] = translate_speech
-    data["Date Modified"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    # Save the dictionary to the JSON file
-    with open(filename, "w") as file:
-        json.dump(data, file, indent=4)
+    
+    return data
 
 
 def update_config(key: str, value, filename="config.json"):
@@ -138,3 +135,5 @@ MODEL_ID = SPEECH_MODELS[model_id_idx]
 # Tasks available
 translate_speech = get_from_config("Translate Speech")
 TASK = TASKS[translate_speech]
+
+DEFAULT_AGENT = get_from_config("Default Agent Model")

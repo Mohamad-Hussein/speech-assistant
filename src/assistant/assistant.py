@@ -58,14 +58,7 @@ def create_agent(llm, system_message: Optional[str] = None):
     )
     prompt = prompt.partial(tool_names=", ".join([tool.name for tool in tools]))
 
-    return prompt | llm | StrOutputParser()
-    # prompt = prompt.partial(system_message=system_message)
-
-    # chain = LLMChain(
-    #     llm=llm,
-    #     prompt=prompt,
-    #     memory=conversational_memory,
-    #     output_parser=StrOutputParser(),
-    # )
-
-    # return chain
+    chain = prompt | llm | StrOutputParser()
+    chain.name = llm.model
+    
+    return chain
