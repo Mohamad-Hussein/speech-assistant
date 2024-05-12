@@ -62,12 +62,6 @@ def load_model(gui_pipe, model_event, model_index_value, task_value, logger):
     )
     model.to(device)
 
-    # Makes inference faster for transformers
-    if "cuda" in device.type or "cpu" in device.type:
-        from optimum.bettertransformer import BetterTransformer
-
-        model = BetterTransformer.transform(model)
-
     # Making pipeline for inference
     processor = AutoProcessor.from_pretrained(
         model_id, cache_dir=local_cache_dir, local_files_only=True
