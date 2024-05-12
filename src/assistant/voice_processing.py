@@ -123,6 +123,7 @@ def run_model(synch_dict: Dict[str, Any], write_method: Callable, logger):
     terminate_event = synch_dict["Terminate Event"]
     model_id_value = synch_dict["Model Index"]
     task_value = synch_dict["Task Bool"]
+    use_agent_value = synch_dict["Agent Bool"]
 
     # Load the model
     model_pipe = load_model(gui_pipe, model_event, model_id_value, task_value, logger)
@@ -163,7 +164,7 @@ def run_model(synch_dict: Dict[str, Any], write_method: Callable, logger):
         previous_text = result["text"]
 
         # LLM inference and actions taken
-        perform_request(processed_text, write_method)
+        perform_request(processed_text, write_method, use_agent_value.value)
 
         # Resetting
         logger.debug(f"Result: {result}")

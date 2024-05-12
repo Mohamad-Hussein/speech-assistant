@@ -33,7 +33,7 @@ SPEECH_MODELS = [
 AGENT_MODELS = [
     "None",
     "llama3:8b",
-    "phi3"
+    "phi3",
     # "ChatGPT-3.5 API",
     # "Phi-2",
     # "Mixtral",
@@ -41,6 +41,7 @@ AGENT_MODELS = [
     # "mistral",
 ]
 DEFAULT_AGENT_IDX = 1
+OLLAMA_HOST = "http://localhost:11434"
 
 # Available tasks for ASR
 TASKS = ["transcribe", "translate"]
@@ -100,7 +101,7 @@ def save_to_config(filename="config.json"):
 
     with open(filename, "w") as file:
         json.dump(data, file, indent=4)
-    
+
     return data
 
 
