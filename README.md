@@ -5,7 +5,7 @@
 [![License badge](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/license/mit/)               
 
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?style=flat&logo=python&logoColor=white)
-[![pytorch](https://img.shields.io/badge/PyTorch-2.1.1-EE4C2C.svg?style=flat&logo=pytorch)](https://pytorch.org)
+[![pytorch](https://img.shields.io/badge/PyTorch-2.3.0-EE4C2C.svg?style=flat&logo=pytorch)](https://pytorch.org)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 
@@ -28,17 +28,16 @@
 # Welcome
 **Welcome to Speech-Assistant!**
 
-This is a project to implement a working desktop application on both Linux and Windows that provides a real-time, offline speech-to-text dictation program. It uses the distil-whisper models from HuggingFace which offers an accurate transcription of speech that is fully structured, complete with proper punctuation and syntax. Distil-whisper is based on OpenAI's Whisper model that is **6 times faster**, 49% smaller, and performs **within 1% word error rate** on speech it has never seen before. The research is based on this [repo](https://github.com/huggingface/distil-whisper).
+This is a project to implement an offline Personal PC assistant that combines AI-powered speech-to-text dictation and conversational voice interactions with Large Language Models.
 
-The speech-to-text assistant writes down spoken words directly to the keyboard cursor. To use it is easy, hold down a hotkey combination of Windows key (Super) and Shift to begin, and let go to end the recording. Your speech will be transcribed (or translated) in real time and the transcription will be typed in for you at the keyboard cursor. I made this program to enhance efficiency and add quality of life to the experience of PC users. Additionally, there isn't an accurate speech-to-text model used for transcription on Linux, however, do check out [nerd-dictation](https://github.com/ideasman42/nerd-dictation) for the implementation of speech-to-text for the vosk models.
+This is a desktop application working on both Linux and Windows that provides GUI interfaces for both communicating with the assistant, and controlling speech detection. It also includes the functionality of a real-time, offline speech-to-text dictation (or translation) program. It uses the distil-whisper models from HuggingFace which offers an accurate transcription of speech that is fully structured, complete with proper punctuation and syntax. Distil-whisper is based on OpenAI's Whisper model that is **6 times faster**, 49% smaller, and performs **within 1% word error rate** on speech it has never seen before. The research is based on this [repo](https://github.com/huggingface/distil-whisper).
+
+The speech-to-text assistant writes down spoken words directly to the keyboard cursor. To use it, hold down a hotkey combination of Windows key (Super) and Shift to begin, and let go to end the recording. Your speech will be transcribed (or translated) in real time and the transcription will be typed in for you at the keyboard cursor. The Whisper models are most effective transcribing a full sequence of speech rather than word-by-word, however, do check out [nerd-dictation](https://github.com/ideasman42/nerd-dictation) for the implementation of speech-to-text for the vosk models, also [WhisperLive](https://github.com/collabora/WhisperLive).
 
 
 
 https://github.com/Mohamad-Hussein/speech-assistant/assets/115669425/57975e07-af13-4582-95df-ae8c8e049bfe
 
-
-
-Here is a longer [demo](https://youtu.be/rF8mtyhBZiM) of speech-assistant of a previous and slower version of the program.
 
 # How to Use
 ![Linux](https://img.shields.io/badge/Linux-F2F2F2) ![Windows](https://img.shields.io/badge/Windows-17b3d2)
@@ -46,9 +45,10 @@ Here is a longer [demo](https://youtu.be/rF8mtyhBZiM) of speech-assistant of a p
 You can get started on any operating system you would like. The program was tested in Pop-os (Ubuntu 22.04), Windows 10 and 11. Here is Anaconda's installation [instructions](https://docs.anaconda.com/free/anaconda/install/). If you are on Windows make sure to have access to the conda command using the Anaconda **cmd** terminal, or to source it directly. Nvidia and AMD have different packages needed to run Pytorch, please follow as appropriate to ensure smooth compatibility.
 
 ## Steps
-1. **Navigate to the speech-assistant repo** using the terminal (using the Anaconda CMD on Windows).
+1. **Install Ollama to your system** from [here](https://ollama.com/download)
+2. **Navigate to the speech-assistant repo** using the terminal (using the Anaconda CMD on Windows).
 
-2. **Install dependencies.** Please use the command for your corresponding GPU brand and operating system. Depending on your internet connection, this will take ~5-15 minutes (Type ```y``` and press enter when asked to download packages).
+3. **Install dependencies.** Please use the command for your corresponding GPU brand and operating system. Depending on your internet connection, this will take ~5-15 minutes (Type ```y``` and press enter when asked to download packages).
    - **Nvidia GPU:**
      ```bash
      conda env create -f env-cuda.yml
@@ -62,17 +62,21 @@ You can get started on any operating system you would like. The program was test
      ```bash
      conda env create -f env-amd-linux.yml
      ```
-3. **Activate the conda environment.**
+4. **Activate the conda environment.**
     ```bash
     conda activate speech-assistant
     ```
-4. **Start running the program.**
+5. **Start running the program.**
     ```bash
     python main.py
     ```
-5. **The program is now ready to use!**
+6. **The program is now ready to use!**
 
-# Configurations
+7. **(Optional) Pull the assistant model of your choice** to use assistant capabilities, *llama3 is recommended*
+    ```bash
+    ollama pull llama3:8b
+    ```
+# Speech-to-text Configurations
 The program will download the ```distil-whisper/distil-small.en``` model by default and cache it locally in a folder named 'model'. The model consumes ~600 MB of GPU memory, and to improve accuracy, you could choose a bigger model. You could change models in the `Options` menu. The available model choices are shown below. 
 
 | Model                                                                      | Params / M | Rel. Latency | Short-Form WER | Long-Form WER |
@@ -96,14 +100,10 @@ The program will download the ```distil-whisper/distil-small.en``` model by defa
 
 # Future contributions
 ## Future features
-- Add choice of direct connection to ChatGPT API, local LLM, or AutoGPT
-- Add text-to-speech capability for the assistant
 - Add sequential inference, for transcription as you talk
   
 ## Needed features
-- Add optimizations suggested by HuggingFace (added BetterTransformer)
 - Add the option to use whatever key bind of the user's choosing (GUI)
-- Add GUI
 - Make Dockerfile for containers
 
 # Acknowledgements
