@@ -88,7 +88,7 @@ The program will download the ```distil-whisper/distil-small.en``` model by defa
 | [whisper-large-v2](https://huggingface.co/openai/whisper-large-v2)         | 1550       | 1.0          | **9.1**        | 11.7          |
 | [whisper-large-v3](https://huggingface.co/openai/whisper-large-v3)         | 1550       |           |         |           |
 
-*Please note that the distil models are currently English only, except for ```whisper-large```, which supports transcription capabilities of multiple languages.*
+*Please note that the distil models are currently English only, except for `whisper-large`, which supports transcription and translation capabilities of multiple languages.*
 
 # Notes and Considerations
 - You can translate your speech to English in real-time using Whisper-Large by going to `options` and checking `Translate to English`
@@ -100,7 +100,8 @@ The program will download the ```distil-whisper/distil-small.en``` model by defa
 
 # Future contributions
 ## Future features
-- Add sequential inference, for transcription as you talk
+- Adding tools for agent
+- Add sequential inference, for transcription as you talk (WhisperLive)
   
 ## Needed features
 - Add the option to use whatever key bind of the user's choosing (GUI)
