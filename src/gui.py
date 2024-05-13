@@ -381,7 +381,11 @@ class SpeechDetectionGUI:
             justify="center",
             state="readonly",
         )
-        model_combobox["values"] = AGENT_MODELS
+        # Showing info on first option
+        agent_models_options = AGENT_MODELS.copy()
+        agent_models_options[0] = "None (Transcription only)"
+
+        model_combobox["values"] = agent_models_options
         current_agent = get_from_config("Default Agent Model")
 
         model_combobox.current(AGENT_MODELS.index(current_agent))
@@ -389,6 +393,7 @@ class SpeechDetectionGUI:
 
         def on_agent_select(event):
             selected_agent = model_combobox.get()
+            selected_agent = "None" if selected_agent == "None (Transcription only)" else selected_agent
 
             # Update if agent should be used
             self.agent_bool_value.value = selected_agent != "None"
