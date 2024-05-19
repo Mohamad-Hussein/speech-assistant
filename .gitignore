@@ -5,12 +5,15 @@ model
 speech-assistant.log
 !effects/*.wav
 .chainlit
+chainlit.md
 
 # Testing
 test*.py
 logs
 performance_testing.py
 model_performance.py
+*test*
+config.ini
 
 # File types
 *.wav
