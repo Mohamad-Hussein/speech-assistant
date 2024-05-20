@@ -17,7 +17,9 @@ from tkinter import (
     BooleanVar,
     Checkbutton,
 )
+import logging
 
+from src import LOAD_MODEL_SIGNAL, UNLOAD_MODEL_SIGNAL, TERMINATE_SIGNAL
 from src.utils.funcs import run_listener
 from src.utils.voice_capturing import main_loop
 from src.speech.processing import change_agent
@@ -34,6 +36,9 @@ from src.config import (
     AGENT_MODELS,
     DEFAULT_AGENT,
 )
+
+# Setting logger
+logger = logging.getLogger(__name__)
 
 
 class SpeechDetectionGUI:
@@ -181,7 +186,7 @@ class SpeechDetectionGUI:
         if not self.model_process:
             self.start_model_service()
         else:
-            self.sound_data_queue.put("Load model")
+            self.sound_data_queue.put(LOAD_MODEL_SIGNAL)
 
         ## Creating process for Key listener
         self.key_listener_thread = Thread(
@@ -236,7 +241,7 @@ class SpeechDetectionGUI:
         parent and key listener processes.
         """
         # For model to unload from memory
-        self.sound_data_queue.put(None)
+        self.sound_data_queue.put(UNLOAD_MODEL_SIGNAL)
 
         # For parent process to terminate
         self.terminate_event.set()
@@ -248,6 +253,7 @@ class SpeechDetectionGUI:
         # Checking if processes are still running
         if self.parent_process.is_alive() or self.key_listener_thread.is_alive():
             self.text_info.config(text="Processes not ended, please restart program!")
+            logger.info("ERROR: Processes not ended")
 
         # Button state change
         self.start_button.config(state=NORMAL)
@@ -260,7 +266,7 @@ class SpeechDetectionGUI:
         """Terminates all processes before closing"""
 
         # To tell model process to terminate
-        self.sound_data_queue.put("Terminate")
+        self.sound_data_queue.put(TERMINATE_SIGNAL)
 
         # For parent process to terminate
         self.terminate_event.set()
@@ -295,16 +301,7 @@ class SpeechDetectionGUI:
             self.root.update()
 
             # Updates text
-            if self.parent_pipe.poll():
-                text = self.parent_pipe.recv()
-
-                # Shortening text if too long
-                if len(text) > self.max_text_length:
-                    text = text[: self.max_text_length] + "..."
-
-                self.text_info.config(text=text)
-
-            self.root.update()
+            self.force_update()
             sleep(0.1)
 
     def force_update(self):
@@ -312,6 +309,10 @@ class SpeechDetectionGUI:
         # Updates text
         if self.parent_pipe.poll():
             text = self.parent_pipe.recv()
+
+            # Handling
+            if "ERROR:" in text:
+                self.stop_detection()
 
             # Shortening text if too long
             if len(text) > self.max_text_length:

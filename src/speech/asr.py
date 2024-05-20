@@ -6,6 +6,7 @@ import logging
 import traceback
 from typing import Any, Callable, Dict
 
+from src import LOAD_MODEL_SIGNAL, UNLOAD_MODEL_SIGNAL, TERMINATE_SIGNAL
 from src.config import SPEECH_MODELS, TASK, TASKS, MODEL_ID
 from src.utils.funcs import find_gpu_config
 from src.speech.processing import perform_request, process_text
@@ -16,7 +17,15 @@ import torch
 
 # from optimum.onnxruntime import ORTModelForSpeechSeq2Seq
 # from optimum.nvidia.pipelines import pipeline
-timeout = 10
+TIMEOUT = 10
+
+
+def clear_mem():
+    # FIXME Clear as much memory as possible (not all memory is cleared)
+    gc.collect()
+
+    with torch.no_grad():
+        torch.cuda.empty_cache()
 
 
 def load_model(gui_pipe, model_event, model_index_value, task_value, logger):
@@ -128,7 +137,21 @@ def run_model(synch_dict: Dict[str, Any], write_method: Callable, logger):
     use_agent_value = synch_dict["Agent Bool"]
 
     # Load the model
-    model_pipe = load_model(gui_pipe, model_event, model_id_value, task_value, logger)
+    try:
+        model_pipe = load_model(
+            gui_pipe, model_event, model_id_value, task_value, logger
+        )
+    except torch.cuda.OutOfMemoryError as e:
+        # Logging
+        logger.error(f"Device out of memory: {e}")
+        gui_pipe.send(f"ERROR: CUDA out of memory.")
+        print(f"\nDevice out of memory: {e}\n")
+
+        # Clear memory and syncronize
+        clear_mem()
+        model_event.set()
+        return
+
     gui_pipe.send("Model loaded. Hold hotkey to start")
     previous_text = ""
 
@@ -140,10 +163,10 @@ def run_model(synch_dict: Dict[str, Any], write_method: Callable, logger):
 
         ## Synchronization control ##
         # This is for process to remove model from memory
-        if audio_bytes is None:
+        if audio_bytes == UNLOAD_MODEL_SIGNAL:
             break
         # This is for process to terminate
-        elif audio_bytes == "Terminate":
+        elif audio_bytes == TERMINATE_SIGNAL:
             raise KeyboardInterrupt
 
         ## Transcribing ##
@@ -161,7 +184,7 @@ def run_model(synch_dict: Dict[str, Any], write_method: Callable, logger):
         # Action report
         speech_to_text_time = time() - t0
         print(
-            f"\nPrinted text: {result['text']}\nSpeech-to-text time: {speech_to_text_time:.3f}s\n"
+            f"\nTranscription: {result['text']}\nSpeech-to-text time: {speech_to_text_time:.3f}s\n"
         )
         previous_text = result["text"]
 
@@ -179,11 +202,7 @@ def run_model(synch_dict: Dict[str, Any], write_method: Callable, logger):
     logger.info("Removing model from memory")
     del model_pipe
 
-    # FIXME Clear as much memory as possible (not all memory is cleared)
-    gc.collect()
-
-    with torch.no_grad():
-        torch.cuda.empty_cache()
+    clear_mem()
 
 
 def audio_processing_service(synch_dict, write_method):
@@ -211,7 +230,9 @@ def audio_processing_service(synch_dict, write_method):
             )
 
             # Signal to load model after stop
-            queue.get(block=True)
+            run_model_signal = False
+            while run_model_signal is False:
+                run_model_signal = queue.get(block=True) == LOAD_MODEL_SIGNAL
 
     except KeyboardInterrupt:
         logger.info("KeyboardInterrupt hit on model_inference")
