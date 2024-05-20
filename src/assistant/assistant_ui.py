@@ -19,7 +19,7 @@ from chainlit.session import WebsocketSession, ws_sessions_id
 from langchain.schema.runnable.config import RunnableConfig
 from langchain_community.llms import Ollama
 
-from src.assistant.assistant import create_agent
+from src.assistant.agent import create_agent
 from src.config import DEFAULT_AGENT, AGENT_MODELS, OLLAMA_HOST
 from src.config import get_from_config
 
