@@ -16,11 +16,11 @@ WRITE = type_writing
 SAVE_AUDIO = False
 
 # Hotkey for the listener.
-# HOTKEY = {"Super", "Shift"}
-HOTKEY = {"Alt", "F9"}
+HOTKEY = {"Super", "Shift"}
+# HOTKEY = {"Alt", "F9"}
 AGENT_TRIGGER = "assistant"
 
-# Available models for ASR
+# Available models for ASR #
 SPEECH_MODELS = [
     "openai/whisper-tiny.en",  # ~400 MiB of GPU memory
     "distil-whisper/distil-small.en",  # ~500-700 MiB of GPU memory
@@ -30,18 +30,6 @@ SPEECH_MODELS = [
     "openai/whisper-large-v3",  # ~4000 MiB of GPU memory
     # "optimum/whisper-tiny.en",  # ~400 MiB of GPU memory
 ]
-AGENT_MODELS = [
-    "None",
-    "llama3:8b",
-    "phi3",
-    # "ChatGPT-3.5 API",
-    # "Phi-2",
-    # "Mixtral",
-    # "Falcon",
-    # "mistral",
-]
-DEFAULT_AGENT_IDX = 1
-OLLAMA_HOST = "http://localhost:11434"
 
 # Available tasks for ASR
 TASKS = ["transcribe", "translate"]
@@ -54,6 +42,21 @@ IGNORE = ["you know.", "you're not."]
 
 # Minimum number of words to be considered a valid transcription
 MIN_WORDS = 2
+
+# Agents #
+AGENT_MODELS = [
+    "None",
+    "llama3:8b",
+    "phi3",
+    # "ChatGPT-3.5 API",
+    # "Phi-2",
+    # "Mixtral",
+    # "Falcon",
+    # "mistral",
+]
+DEFAULT_AGENT_IDX = 0
+OLLAMA_HOST = "http://localhost:11434"
+
 # -----------------------------------
 
 
