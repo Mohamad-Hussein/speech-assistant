@@ -6,6 +6,7 @@ speech-assistant.log
 !effects/*.wav
 .chainlit
 chainlit.md
+.files/
 
 # Testing
 test*.py
@@ -23,3 +24,6 @@ config.ini
 !langchain_test.ipynb
 *.json
 *.log
+
+# User config
+config.py

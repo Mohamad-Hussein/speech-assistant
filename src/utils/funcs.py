@@ -187,7 +187,7 @@ def find_gpu_config(logger):
 
             logger.debug("No GPU detected, using cpu")
             logger.warning(
-                "Attention, using the CPU is not recommended! Computation time will be long."
+                "Attention, using the CPU is NOT recommended! Computation time will be long."
             )
 
     logger.info(

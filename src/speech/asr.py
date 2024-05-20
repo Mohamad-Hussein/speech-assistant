@@ -8,7 +8,7 @@ from typing import Any, Callable, Dict
 
 from src.config import SPEECH_MODELS, TASK, TASKS, MODEL_ID
 from src.utils.funcs import find_gpu_config
-from src.assistant.processing import perform_request, process_text
+from src.speech.processing import perform_request, process_text
 
 from transformers.pipelines import pipeline
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor

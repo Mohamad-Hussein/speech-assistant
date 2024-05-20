@@ -20,8 +20,8 @@ from tkinter import (
 
 from src.utils.funcs import run_listener
 from src.utils.voice_capturing import main_loop
-from src.assistant.processing import change_agent
-from src.assistant.voice_processing import audio_processing_service
+from src.speech.processing import change_agent
+from src.speech.asr import audio_processing_service
 from src.config import get_from_config, update_config
 from src.config import (
     WRITE,
@@ -334,7 +334,6 @@ class SpeechDetectionGUI:
         self.options_window = Tk()
         self.options_window.title("Settings")
         self.options_window.geometry(self.window_size)
-        self.options_window.resizable(False, False)
 
         # Label for settings
         label = Label(
@@ -393,7 +392,11 @@ class SpeechDetectionGUI:
 
         def on_agent_select(event):
             selected_agent = model_combobox.get()
-            selected_agent = "None" if selected_agent == "None (Transcription only)" else selected_agent
+            selected_agent = (
+                "None"
+                if selected_agent == "None (Transcription only)"
+                else selected_agent
+            )
 
             # Update if agent should be used
             self.agent_bool_value.value = selected_agent != "None"
