@@ -4,7 +4,7 @@ import requests
 from typing import Optional, Callable
 
 from src.utils.funcs import copy_writing
-from src.config import IGNORE, MIN_WORDS, AGENT_TRIGGER
+from src.config import CHAINLIT_HOST, IGNORE, MIN_WORDS, AGENT_TRIGGER
 
 LLM_WEBUI_OPENED: bool = False
 SESSION_IDS: list[str] = []
@@ -85,7 +85,7 @@ def invoke_agent(user_prompt: str, id: Optional[str] = "0000"):
     json_data = {
         "message": user_prompt,
     }
-    response = requests.post(f"http://localhost:8000/message/{id}", json=json_data)
+    response = requests.post(f"{CHAINLIT_HOST}/message/{id}", json=json_data)
 
 
 def webui_user_input(user_input: str, id: Optional[str] = "0000"):
@@ -95,7 +95,7 @@ def webui_user_input(user_input: str, id: Optional[str] = "0000"):
         "message": user_input,
     }
 
-    response = requests.post(f"http://localhost:8000/user/{id}", json=json_data)
+    response = requests.post(f"{CHAINLIT_HOST}/user/{id}", json=json_data)
 
 
 def change_agent(model_name: str, id: Optional[str] = "0000"):
@@ -105,6 +105,4 @@ def change_agent(model_name: str, id: Optional[str] = "0000"):
         "model": model_name,
     }
 
-    response = requests.post(
-        f"http://localhost:8000/model/{model_name}/{id}", json=json_data
-    )
+    response = requests.post(f"{CHAINLIT_HOST}/model/{model_name}/{id}", json=json_data)

@@ -16,8 +16,8 @@ WRITE = type_writing
 SAVE_AUDIO = False
 
 # Hotkey for the listener.
-HOTKEY = {"Super", "Shift"}
-# HOTKEY = {"Alt", "F9"}
+# HOTKEY = {"Super", "Shift"}
+HOTKEY = {"Alt", "F9"}
 AGENT_TRIGGER = "assistant"
 
 # Available models for ASR #
@@ -56,6 +56,10 @@ AGENT_MODELS = [
 ]
 DEFAULT_AGENT_IDX = 0
 OLLAMA_HOST = "http://localhost:11434"
+CHAINLIT_HOST = "http://localhost:8000"
+
+# Hosting url for LLM UI
+CHAINLIT_HOST = "http://localhost:8000"
 
 # -----------------------------------
 
