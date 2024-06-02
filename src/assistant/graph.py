@@ -34,11 +34,6 @@ from src.assistant.tools import (
 )
 from src.assistant.decision_function import DecisionMaker
 
-ollama_model = "llama3-chatqa:8b"
-# ollama_model = "llama3:8b"
-
-model = Ollama(model=ollama_model)
-
 
 def add_messages(left: list, right: list):
     """Add-don't-overwrite."""
@@ -79,21 +74,30 @@ def should_continue(
 def decide(state: AgentState) -> Literal["default-agent", "tool-agent"]:
     messages = state["messages"]
     last_message = messages[-1]
+
+    # Checking if a tool call was made
+    if "function_call" not in last_message.additional_kwargs:
+        print(f"No correct response")
+        return "default-agent"
+
+    # Routing to the tool-agent if the LLM makes a tool call
     function_call = last_message.additional_kwargs["function_call"]["name"]
 
-    if "no_system_tool" in function_call:
-        return "default-agent"
-    elif "use_system_tool" in function_call:
+    if "use_system_tool" in function_call:
         return "tool-agent"
     else:
-        print(f"No correct response")
         return "default-agent"
 
 
 def call_decider(state: AgentState):
     last_message = state["messages"][-1]
+
+    if isinstance(last_message, BaseMessage):
+        last_message = last_message.content
+
     print(f"This is the decider messages {last_message}")
-    response = MODEL_DECIDER.invoke([last_message])
+
+    response = MODEL_DECIDER.invoke(last_message)
 
     return {"messages": [response]}
 

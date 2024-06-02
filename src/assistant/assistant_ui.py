@@ -53,7 +53,8 @@ async def inference(message: str):
     user_message = message if isinstance(message, str) else message.content
     cb = cl.AsyncLangchainCallbackHandler(stream_final_answer=True)
     # inputs = {"messages": [history_log + user_message]}
-    history.append(HumanMessage(user_message, role="User"))
+    history.append(HumanMessage(user_message))
+
     inputs = {"messages": history}
 
     if AGENT_TOOLS_ENABLED:
@@ -71,6 +72,9 @@ async def inference(message: str):
             print("\n---\n")
 
         ai_message = value["messages"][0]
+        if isinstance(ai_message, BaseMessage):
+            ai_message = ai_message.content
+
         # Remove "AI:" and strip any leading whitespace
         if ai_message.startswith("AI:"):
             ai_message = ai_message[len("AI:") :].lstrip()
@@ -86,9 +90,7 @@ async def inference(message: str):
         ai_message = msg.content
 
     # Saving history
-    history.append(AIMessage(ai_message, role="Assistant"))
-    # history.append({"User": user_message})
-    # history.append({"Assistant": ai_message})
+    history.append(AIMessage(ai_message))
     print("History:", history)
 
     return ai_message
@@ -297,10 +299,11 @@ async def receive_message(request: Request, session_id: str):
     message = data.get("message")
     print("Received message: ", message)
 
-    msg = cl.Message(content="")
-    await msg.send()
-
-    await inference(message)
+    # Doing inference
+    try:
+        await inference(message)
+    except Exception as e:
+        cl.Message(f"Error: {e}", author="System").send()
 
     return {
         "status": 200,
