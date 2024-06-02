@@ -15,13 +15,83 @@ from chainlit.input_widget import Select
 from chainlit.server import app
 from chainlit.context import init_http_context, init_ws_context
 from chainlit.session import WebsocketSession, ws_sessions_id
+import langchain
 
+langchain.verbose = True
+from langchain_core.messages import (
+    ToolMessage,
+    HumanMessage,
+    BaseMessage,
+    FunctionMessage,
+    AIMessage,
+)
 from langchain.schema.runnable.config import RunnableConfig
 from langchain_community.llms import Ollama
 
-from src.assistant.agent import create_agent
+from src.assistant.agent import create_agent, create_graph
 from src.config import DEFAULT_AGENT, AGENT_MODELS, OLLAMA_HOST
 from src.config import get_from_config
+
+AGENT_TOOLS_ENABLED: bool = True
+
+
+async def inference(message: str):
+    """
+    Inference function when the assistant is started
+    """
+    # Getting the agent
+    agent = cl.user_session.get("agent")
+    if agent.name == "None":
+        await cl.Message(
+            f"No agent is selected. Please select an agent in the options tab in the GUI.",
+            author="System",
+        ).send()
+        return
+
+    history: list[BaseMessage] = cl.user_session.get("history")
+
+    user_message = message if isinstance(message, str) else message.content
+    cb = cl.AsyncLangchainCallbackHandler(stream_final_answer=True)
+    # inputs = {"messages": [history_log + user_message]}
+    history.append(HumanMessage(user_message, role="User"))
+    inputs = {"messages": history}
+
+    if AGENT_TOOLS_ENABLED:
+        for output in agent.stream(
+            inputs,
+            stream_mode="updates",
+            config=RunnableConfig(callbacks=[cb]),
+        ):
+            # stream() yields dictionaries with output keyed by node name
+            for key, value in output.items():
+                print(f"Output from node '{key}':")
+                print("---")
+                print(value)
+
+            print("\n---\n")
+
+        ai_message = value["messages"][0]
+        # Remove "AI:" and strip any leading whitespace
+        if ai_message.startswith("AI:"):
+            ai_message = ai_message[len("AI:") :].lstrip()
+
+        await cl.Message(content=ai_message).send()
+    else:
+        msg = cl.Message(content="", author=agent.name)
+        async for token in agent.astream(
+            {"history": history, "user_input": message.content},
+        ):
+            await msg.stream_token(token)
+
+        ai_message = msg.content
+
+    # Saving history
+    history.append(AIMessage(ai_message, role="Assistant"))
+    # history.append({"User": user_message})
+    # history.append({"Assistant": ai_message})
+    print("History:", history)
+
+    return ai_message
 
 
 @cl.on_chat_start
@@ -40,12 +110,14 @@ async def start():
     logger = logging.getLogger(__name__)
 
     # Create the agent
-    agent_model = get_from_config("Default Agent Model")
+    model = get_from_config("Default Agent Model")
+    if AGENT_TOOLS_ENABLED:
+        agent = create_graph()
+    else:
+        llm = Ollama(model=model, base_url=OLLAMA_HOST)
+        agent = create_agent(llm)
 
-    llm = Ollama(model=agent_model, base_url=OLLAMA_HOST)
-    agent = create_agent(llm)
-
-    logger.info(f"Starting new session with id {session_id}, using llm {agent_model}")
+    logger.info(f"Starting new session with id {session_id}, using llm {model}")
 
     # Store the agent in session
     cl.user_session.set("agent", agent)
@@ -55,7 +127,6 @@ async def start():
     await cl.Avatar(
         name="You",
         path="icons/user-icon.png",
-        # url="https://avatars.githubusercontent.com/u/128686189?s=400&u=a1d1553023f8ea0921fba0debbe92a8c5f840dd9&v=4",
     ).send()
 
     # UI elements
@@ -65,7 +136,8 @@ async def start():
                 id="Model",
                 label="Agent Model",
                 values=AGENT_MODELS,
-                initial_index=AGENT_MODELS.index(agent_model),
+                # initial_index=AGENT_MODELS.index(model),
+                initial_index=1,
                 description="Select the agent model you want to use.",
             )
         ]
@@ -97,8 +169,9 @@ async def setup_agent(settings):
 
     # Updating the agent
     model = settings["Model"]
-    llm = Ollama(model=model)
-    agent = create_agent(llm)
+    agent = create_graph()
+    # llm = Ollama(model=model, base_url=OLLAMA_HOST)
+    # agent = create_agent(llm)
     cl.user_session.set("agent", agent)
 
 
@@ -121,45 +194,9 @@ async def chat_profile():
 @cl.on_message
 async def on_message(message: cl.Message):
     """This is when user types his message on the ui and sends it."""
-    # Getting the agent
-    agent = cl.user_session.get("agent")
-    if agent.name == "None":
-        await cl.Message(
-            f"No agent is selected. Please select an agent in the options tab in the GUI.",
-            author="System",
-        ).send()
-        return
 
-    history = cl.user_session.get("history")
-
-    # Formatting history
-    history_log = format_history(history)
-
-    print("History:\n", history_log)
-
-    # Writing agent message
-    msg = cl.Message(content="", author=agent.name)
-
-    await msg.send()
-
-    # tokens = []
-    # async for token in agent.astream(message.content):
-    #     # await msg.stream_token(token)
-    #     tokens.append(token)
-    # print(tokens)
-
-    async for chunk in agent.astream(
-        {"history": history_log, "user_input": message.content},
-        config=RunnableConfig(callbacks=[cl.LangchainCallbackHandler()]),
-    ):
-        await msg.stream_token(chunk)
-
-    await msg.send()
-
-    # Saving history
-    history.append({"Human": message.content})
-    history.append({"AI": msg.content})
-    print("History:", history)
+    async with cl.Step() as step:
+        await inference(message)
 
     # input = {"user_input": message.content}
     # res = await agent.arun(user_input=input, callbacks=[cl.LangchainCallbackHandler()])
@@ -230,8 +267,10 @@ async def update_agent(
     init_ws_context(ws_session)
 
     # Updating the agent
-    llm = Ollama(model=model)
-    agent = create_agent(llm)
+    agent = create_graph()
+    # llm = Ollama(model=model, base_url=OLLAMA_HOST)
+    # agent = create_agent(llm)
+
     cl.user_session.set("agent", agent)
 
     # Give response to the user
@@ -258,34 +297,14 @@ async def receive_message(request: Request, session_id: str):
     message = data.get("message")
     print("Received message: ", message)
 
-    # Getting the agent
-    agent = cl.user_session.get("agent")
-    history = cl.user_session.get("history")
-
-    # Formatting history
-    history_log = format_history(history)
-
-    # Process the incoming message
-    msg = cl.Message(content="", author=agent.name)
+    msg = cl.Message(content="")
     await msg.send()
 
-    llm_response = []
-    async for chunk in agent.astream(
-        {"history": history_log, "user_input": message},
-        config=RunnableConfig(callbacks=[cl.LangchainCallbackHandler()]),
-    ):
-        llm_response.append(chunk)
-        await msg.stream_token(chunk)
-
-    await msg.send()
-
-    # Saving history
-    history.append({"Human": message})
-    history.append({"AI": msg.content})
+    await inference(message)
 
     return {
         "status": 200,
-        "response": "".join(llm_response),
+        # "response": "".join(llm_response),
         "session_id": session_id,
     }
 

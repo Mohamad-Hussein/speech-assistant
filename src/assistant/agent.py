@@ -1,64 +1,109 @@
-import subprocess
-from typing import Union, Optional
+from typing import Union, List, Annotated, Sequence, TypedDict, Literal, Optional
+import json
 
-from langchain.chains import LLMChain
-from langchain.chains.conversation.memory import ConversationBufferWindowMemory
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.tools import BaseTool, Tool, tool
-from langchain.schema import StrOutputParser
-from langchain.schema.runnable.config import RunnableConfig
+from langchain.prompts import ChatPromptTemplate, PromptTemplate, MessagesPlaceholder
 
-from langchain_core.agents import AgentAction, AgentFinish
-from langchain_core.messages import ToolMessage, HumanMessage
+from langgraph.graph import END, Graph, StateGraph, MessageGraph
+from langgraph.prebuilt import ToolExecutor, ToolInvocation
+
+from langchain_core.messages import (
+    HumanMessage,
+    SystemMessage,
+    AIMessage,
+    FunctionMessage,
+    ToolMessage,
+)
 from langchain_core.tools import tool, BaseTool
-
-from langgraph.graph import END, Graph, MessageGraph
-from langgraph.prebuilt import ToolExecutor
+from langchain_core.output_parsers.string import StrOutputParser
 
 from langchain_community.llms import Ollama
+from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_community.tools import ShellTool
+
+from langchain_experimental.llms.ollama_functions import OllamaFunctions
+
+import chainlit as cl
+from src.assistant.tools import prompt_chatqa, tools, tool_executor, MODEL_FUNC, MODEL
+from src.assistant.graph import (
+    AgentState,
+    call_decider,
+    call_func_model,
+    call_tool,
+    call_default_agent,
+    decide,
+    should_continue,
+)
 
 
-class Multiply(BaseTool):
-    name = "Multiply calculator"
-    description = "use this tool when you need to make a multiplication"
+# initialize the graph
+def create_graph():
+    """Returns a graph that contains the nodes and edges for the conversational system."""
 
-    def _run(
-        self, number1: Union[int, float], number2: Union[int, float]
-    ) -> Union[int, float]:
-        return number1 * number2
+    graph = StateGraph(AgentState)
 
-    def _arun(self, number1: Union[int, float], number2: Union[int, float]):
-        raise NotImplementedError("This tool does not support async")
+    graph.add_node("decision-maker", call_decider)
+    graph.add_node("tool-agent", call_func_model)
+    graph.add_node("tools", call_tool)
+    graph.add_node("default-agent", call_default_agent)
+
+    graph.add_conditional_edges(
+        "decision-maker",
+        decide,
+        path_map={
+            "default-agent": "default-agent",
+            "tool-agent": "tool-agent",
+        },
+    )
+    graph.add_conditional_edges(
+        "tool-agent",
+        should_continue,
+        {
+            "tools": "tools",
+            "tool-agent": "tool-agent",
+        },
+    )
+    # graph.add_edge("tools", "agent")
+    graph.add_edge("tools", END)
+    graph.add_edge("default-agent", END)
+
+    graph.set_entry_point("decision-maker")
+
+    runnable = graph.compile()
+    print(runnable.get_graph().print_ascii())
+
+    chain = runnable
+    return chain
 
 
-tools = [Multiply()]
-tool_executor = ToolExecutor(tools=tools)
+# for output in runnable.stream(inputs, stream_mode="updates"):
+#     # stream() yields dictionaries with output keyed by node name
+#     for key, value in output.items():
+#         print(f"Output from node '{key}':")
+#         print("---")
+#         print(value)
+#     print("\n---\n")
 
 
 def create_agent(llm, system_message: Optional[str] = None):
 
     # # initialize conversational memory
     # conversational_memory = ConversationBufferWindowMemory(
-    #     memory_key="messages", k=5, return_messages=True, 
+    #     memory_key="messages", k=5, return_messages=True,
     # )
 
     prompt = ChatPromptTemplate.from_messages(
         [
-            (
-                "system",
+            SystemMessage(
                 "You are a helpful AI assistant, helping the user accomplish their task."
-                " Use the provided tools to progress towards answering the question."
-                " You have access to the following tools: {tool_names}.\n\n"
-                "Messages: \n\n{history}\n\n"
+                "Messages: \n\n{history}\n\n",
             ),
-            # MessagesPlaceholder(variable_name="messages"),
-            # ("system", "{history}"),
             ("user", "{user_input}"),
         ]
     )
+
     prompt = prompt.partial(tool_names=", ".join([tool.name for tool in tools]))
 
     chain = prompt | llm | StrOutputParser()
     chain.name = llm.model
-    
+
     return chain
