@@ -48,6 +48,7 @@ AGENT_MODELS = [
     "None",
     "llama3:8b",
     "phi3",
+    # "llama3-chatqa:"
     # "ChatGPT-3.5 API",
     # "Phi-2",
     # "Mixtral",
@@ -104,6 +105,7 @@ def save_to_config(filename="config.json"):
         "Default Agent Model": AGENT_MODELS[DEFAULT_AGENT_IDX],
         "Date Created": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "Translate Speech": translate_speech,
+        "Tools Enabled": True
     }
 
     with open(filename, "w") as file:

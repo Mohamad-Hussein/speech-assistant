@@ -35,10 +35,6 @@ from src.assistant.tools import (
 from src.assistant.decision_function import DecisionMaker
 
 
-class AgentGraph:
-    """AgentGraph is a class that contains all the tools and LLMs used by the tool calling agent"""
-
-
 def add_messages(left: list, right: list):
     """Add-don't-overwrite."""
     return left + right
@@ -93,45 +89,6 @@ def decide(state: AgentState) -> Literal["default-agent", "tool-agent"]:
         return "default-agent"
 
 
-def call_decider(state: AgentState):
-    last_message = state["messages"][-1]
-
-    if isinstance(last_message, BaseMessage):
-        last_message = last_message.content
-
-    print(f"This is the decider messages {last_message}")
-
-    response = MODEL_DECIDER.invoke(last_message)
-
-    return {"messages": [response]}
-
-
-def call_model(state: AgentState):
-    messages = state["messages"]
-    response = MODEL.invoke(messages)
-    return {"messages": [response]}
-
-
-def call_default_agent(state: AgentState):
-    """This is to call the LM for a normal response"""
-    messages = state["messages"]
-    messages = clear_state_messages(messages)
-
-    print(f"-----\nThese are the messages it is receiving: {messages}")
-    response = MODEL.invoke(messages)
-    return {"messages": [response]}
-
-
-# Define the function that calls the model
-# @cl.step(name="call_model")
-def call_func_model(state: AgentState):
-    messages = state["messages"]
-    last_message = [messages[-1]]
-    response = MODEL_FUNC.invoke(last_message)
-    # We return a list, because this will get added to the existing list
-    return {"messages": [response]}
-
-
 # Define the function to execute tools
 def call_tool(state: AgentState):
     messages = state["messages"]
@@ -155,7 +112,8 @@ def call_tool(state: AgentState):
     response = tool_executor.invoke(action)
     # We use the response to create a FunctionMessage
     func_message = FunctionMessage(
-        content=f"TOOL USED ({action.tool}), RESULT: " + str(response), name=action.tool
+        content=f"TOOL USED ({action.tool}), RESULT: " + str(response),
+        name=action.tool,
     ).dict()
 
     func_message = f"Tool {action.tool} is used, and here is the result: {response}"
@@ -165,24 +123,67 @@ def call_tool(state: AgentState):
     return {"messages": [func_message]}
 
 
-def call_summarizer(state: AgentState):
-    """This function is called when the user asks for a summary of the results of the tool."""
-    last_message = state["messages"][-1]
+class AgentGraph:
+    """AgentGraph is a class that contains all the tools and LLMs used by the tool calling agent"""
 
-    model = Ollama(model="llama3-chatqa:8b")
+    def __init__(self, ollama_model: str, model, model_decider, model_func):
+        self._model = model
+        self._model_decider = model_decider
+        self._model_func = model_func
 
-    prompt_chatqa = PromptTemplate.from_template(
-        """System: You are a smart assistant that summarizes the results of tools used by an agent.
-        You will be given the name of the tool used as well as the output of that tool.
-        Notify the user in a natural manner and keep it concise.
+    def call_default_agent(self, state: AgentState):
+        """This is to call the LM for a normal response"""
+        messages = state["messages"]
+        messages = clear_state_messages(messages)
+
+        print(f"-----\nThese are the messages it is receiving: {messages}")
+        response = self._model.invoke(messages)
+        return {"messages": [response]}
+
+    def call_decider(self, state: AgentState):
+        last_message = state["messages"][-1]
+
+        if isinstance(last_message, BaseMessage):
+            last_message = last_message.content
+
+        print(f"This is the decider messages {last_message}")
+
+        response = self._model_decider.invoke(last_message)
+
+        return {"messages": [response]}
+
+    # Define the function that calls the model
+    # @cl.step(name="call_model")
+    def call_func_model(self, state: AgentState):
+        messages = state["messages"]
+        last_message = [messages[-1]]
+        response = self._model_func.invoke(last_message)
+        # We return a list, because this will get added to the existing list
+        return {"messages": [response]}
+
+    def call_model(self, state: AgentState):
+        messages = state["messages"]
+        response = MODEL.invoke(messages)
+        return {"messages": [response]}
+
+    def call_summarizer(state: AgentState):
+        """This function is called when the user asks for a summary of the results of the tool."""
+        last_message = state["messages"][-1]
+
+        model = Ollama(model="llama3-chatqa:8b")
+
+        prompt_chatqa = PromptTemplate.from_template(
+            """System: You are a smart assistant that summarizes the results of tools used by an agent.
+            You will be given the name of the tool used as well as the output of that tool.
+            Notify the user in a natural manner and keep it concise.
 
 
-        {instructions}
+            {instructions}
 
-        {result}
+            {result}
 
-        Assistant:"""
-    )
-    response = model.invoke(last_message)
+            Assistant:"""
+        )
+        response = model.invoke(last_message)
 
-    return {"messages": [response]}
+        return {"messages": [response]}
