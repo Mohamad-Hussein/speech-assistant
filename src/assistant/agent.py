@@ -16,6 +16,7 @@ from langchain_core.messages import (
 from langchain_core.tools import tool, BaseTool
 from langchain_core.output_parsers.string import StrOutputParser
 
+from langchain_community.chat_models import ChatOllama
 from langchain_community.llms import Ollama
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_community.tools import ShellTool
@@ -23,13 +24,11 @@ from langchain_community.tools import ShellTool
 from langchain_experimental.llms.ollama_functions import OllamaFunctions
 
 import chainlit as cl
-from src.assistant.tools import prompt_chatqa, tools, tool_executor, MODEL_FUNC, MODEL
+from src.assistant.tools import tools, build_models
 from src.assistant.graph import (
     AgentState,
-    call_decider,
-    call_func_model,
+    AgentGraph,
     call_tool,
-    call_default_agent,
     decide,
     should_continue,
 )
@@ -37,21 +36,27 @@ from src.assistant.graph import (
 
 # initialize the graph
 def create_graph(
-    ollama_model: str, ollama_url: Optional[str] = "http://localhost:11434"
+    model: str, base_url: Optional[str] = "http://localhost:11434"
 ):
     """Returns a graph that contains the nodes and edges for the conversational system."""
 
-    from src.assistant.tools import build_models
-
-    build_models(ollama_model, ollama_url=ollama_url)
+    # NOTE Did it this way to persist the models in the Chainlit context
+    model, model_decider, model_func = build_models(model, ollama_url=base_url)
+    models = AgentGraph(
+        ollama_model=model,
+        model=model,
+        model_decider=model_decider,
+        model_func=model_func,
+    )
 
     graph = StateGraph(AgentState)
 
-    graph.add_node("decision-maker", call_decider)
-    graph.add_node("tool-agent", call_func_model)
+    graph.add_node("decision-maker", models.call_decider)
+    graph.add_node("tool-agent", models.call_func_model)
     graph.add_node("tools", call_tool)
-    graph.add_node("default-agent", call_default_agent)
+    graph.add_node("default-agent", models.call_default_agent)
 
+    # Deciding between calling system tools or respond with default agent
     graph.add_conditional_edges(
         "decision-maker",
         decide,
@@ -60,6 +65,8 @@ def create_graph(
             "tool-agent": "tool-agent",
         },
     )
+
+    # Choice of either calling system tools or regenerate tool call
     graph.add_conditional_edges(
         "tool-agent",
         should_continue,
@@ -68,43 +75,30 @@ def create_graph(
             "tool-agent": "tool-agent",
         },
     )
-    # graph.add_edge("tools", "agent")
+
     graph.add_edge("tools", END)
     graph.add_edge("default-agent", END)
-
     graph.set_entry_point("decision-maker")
 
     runnable = graph.compile()
     print(runnable.get_graph().print_ascii())
 
     chain = runnable
-    chain.name = ollama_model + " agent"
+    chain.name = model + " agent"
     return chain
 
 
-# for output in runnable.stream(inputs, stream_mode="updates"):
-#     # stream() yields dictionaries with output keyed by node name
-#     for key, value in output.items():
-#         print(f"Output from node '{key}':")
-#         print("---")
-#         print(value)
-#     print("\n---\n")
+def create_agent(model: str, base_url: str, system_message: Optional[str] = None):
 
-
-def create_agent(llm, system_message: Optional[str] = None):
-
-    # # initialize conversational memory
-    # conversational_memory = ConversationBufferWindowMemory(
-    #     memory_key="messages", k=5, return_messages=True,
-    # )
+    llm = ChatOllama(model=model, base_url=base_url)
 
     prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessage(
                 "You are a helpful AI assistant, helping the user accomplish their task."
-                "Messages: \n\n{history}\n\n",
             ),
-            ("user", "{user_input}"),
+            MessagesPlaceholder(variable_name="history"),
+            # ("user", "{user_input}"),
         ]
     )
 

@@ -11,7 +11,7 @@ import logging
 import logging.config
 
 import chainlit as cl
-from chainlit.input_widget import Select, Switch
+from chainlit.input_widget import Select, Switch, TextInput
 from chainlit.server import app
 from chainlit.context import init_http_context, init_ws_context
 from chainlit.session import WebsocketSession, ws_sessions_id
@@ -54,7 +54,6 @@ async def inference(message: str):
 
     user_message = message if isinstance(message, str) else message.content
     cb = cl.AsyncLangchainCallbackHandler(stream_final_answer=True)
-    # inputs = {"messages": [history_log + user_message]}
     history.append(HumanMessage(user_message))
 
     inputs = {"messages": history}
@@ -85,8 +84,9 @@ async def inference(message: str):
     else:
         msg = cl.Message(content="", author=agent.name)
         async for token in agent.astream(
-            {"history": history, "user_input": message.content},
+            {"history": history, },
         ):
+            # "user_input": message.content
             await msg.stream_token(token)
 
         ai_message = msg.content
@@ -119,7 +119,14 @@ async def start():
                 label="Agent Tools",
                 initial=tools_enabled,
                 description="Enable the LLM to call tools",
-                tooltip="Enable agent capabilities like tool calling (tools available are in src.assistant.tools)",
+                tooltip="Enable agent capabilities like tool calling (tools available are listed in src.assistant.tools)",
+            ),
+            TextInput(
+                id="Add Model",
+                label="Add Agent Model",
+                placeholder="Enter Ollama model name here...",
+                description="Add a new model to use from the Ollama server",
+                tooltip="Make sure you have pulled the model with `ollama pull <model_name>`!",
             ),
         ]
     ).send()
@@ -142,11 +149,10 @@ async def start():
     # Create the agent
     model = get_from_config("Default Agent Model")
     if settings["Tools Enabled"]:
-        agent = create_graph(model, ollama_url=OLLAMA_HOST)
+        agent = create_graph(model=model, base_url=OLLAMA_HOST)
 
     else:
-        llm = Ollama(model=model, base_url=OLLAMA_HOST)
-        agent = create_agent(llm)
+        agent = create_agent(model=model, base_url=OLLAMA_HOST)
 
     # Store the agent in session
     cl.user_session.set("agent", agent)
@@ -182,11 +188,10 @@ async def update_agent(settings):
     # Updating the agent
     model = settings["Model"]
     if settings["Tools Enabled"]:
-        agent = create_graph(model, ollama_url=OLLAMA_HOST)
+        agent = create_graph(model=model, base_url=OLLAMA_HOST)
 
     else:
-        llm = Ollama(model=model, base_url=OLLAMA_HOST)
-        agent = create_agent(llm)
+        agent = create_agent(model=model, base_url=OLLAMA_HOST)
 
     # llm = Ollama(model=model, base_url=OLLAMA_HOST)
     # agent = create_agent(llm)
@@ -285,9 +290,13 @@ async def update_agent(
     init_ws_context(ws_session)
 
     # Updating the agent
-    agent = create_graph(model)
-    # llm = Ollama(model=model, base_url=OLLAMA_HOST)
-    # agent = create_agent(llm)
+    settings = cl.user_session.get("chat_settings")
+
+    if settings["Tools Enabled"]:
+        agent = create_graph(model=model, base_url=OLLAMA_HOST)
+
+    else:
+        agent = create_agent(model=model, base_url=OLLAMA_HOST)
 
     cl.user_session.set("agent", agent)
 
