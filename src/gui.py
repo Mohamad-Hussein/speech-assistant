@@ -382,13 +382,14 @@ class SpeechDetectionGUI:
             state="readonly",
         )
         # Showing info on first option
-        agent_models_options = AGENT_MODELS.copy()
+        user_models = get_from_config("User Models List")
+        agent_models_options = AGENT_MODELS.copy() + user_models
         agent_models_options[0] = "None (Transcription only)"
 
         model_combobox["values"] = agent_models_options
         current_agent = get_from_config("Default Agent Model")
 
-        model_combobox.current(AGENT_MODELS.index(current_agent))
+        model_combobox.current(agent_models_options.index(current_agent))
         model_combobox.pack(pady=5)
 
         def on_agent_select(event):

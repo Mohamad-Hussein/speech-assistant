@@ -126,8 +126,8 @@ def call_tool(state: AgentState):
 class AgentGraph:
     """AgentGraph is a class that contains all the tools and LLMs used by the tool calling agent"""
 
-    def __init__(self, ollama_model: str, model, model_decider, model_func):
-        self._model = model
+    def __init__(self, ollama_model: str, default_model, model_decider, model_func):
+        self._default_model = default_model
         self._model_decider = model_decider
         self._model_func = model_func
 
@@ -137,7 +137,7 @@ class AgentGraph:
         messages = clear_state_messages(messages)
 
         print(f"-----\nThese are the messages it is receiving: {messages}")
-        response = self._model.invoke(messages)
+        response = self._default_model.invoke(messages)
         return {"messages": [response]}
 
     def call_decider(self, state: AgentState):

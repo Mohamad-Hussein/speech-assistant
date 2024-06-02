@@ -41,10 +41,10 @@ def create_graph(
     """Returns a graph that contains the nodes and edges for the conversational system."""
 
     # NOTE Did it this way to persist the models in the Chainlit context
-    model, model_decider, model_func = build_models(model, ollama_url=base_url)
+    default_model, model_decider, model_func = build_models(model, ollama_url=base_url)
     models = AgentGraph(
         ollama_model=model,
-        model=model,
+        default_model=default_model,
         model_decider=model_decider,
         model_func=model_func,
     )
@@ -98,7 +98,6 @@ def create_agent(model: str, base_url: str, system_message: Optional[str] = None
                 "You are a helpful AI assistant, helping the user accomplish their task."
             ),
             MessagesPlaceholder(variable_name="history"),
-            # ("user", "{user_input}"),
         ]
     )
 
