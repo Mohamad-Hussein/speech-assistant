@@ -35,6 +35,10 @@ from src.assistant.tools import (
 from src.assistant.decision_function import DecisionMaker
 
 
+class AgentGraph:
+    """AgentGraph is a class that contains all the tools and LLMs used by the tool calling agent"""
+
+
 def add_messages(left: list, right: list):
     """Add-don't-overwrite."""
     return left + right

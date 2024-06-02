@@ -11,7 +11,7 @@ import logging
 import logging.config
 
 import chainlit as cl
-from chainlit.input_widget import Select
+from chainlit.input_widget import Select, Switch
 from chainlit.server import app
 from chainlit.context import init_http_context, init_ws_context
 from chainlit.session import WebsocketSession, ws_sessions_id
@@ -30,7 +30,7 @@ from langchain_community.llms import Ollama
 
 from src.assistant.agent import create_agent, create_graph
 from src.config import DEFAULT_AGENT, AGENT_MODELS, OLLAMA_HOST
-from src.config import get_from_config
+from src.config import get_from_config, update_config
 
 AGENT_TOOLS_ENABLED: bool = True
 
@@ -40,6 +40,8 @@ async def inference(message: str):
     Inference function when the assistant is started
     """
     # Getting the agent
+    settings = cl.user_session.get("chat_settings")
+    print(settings)
     agent = cl.user_session.get("agent")
     if agent.name == "None":
         await cl.Message(
@@ -57,7 +59,7 @@ async def inference(message: str):
 
     inputs = {"messages": history}
 
-    if AGENT_TOOLS_ENABLED:
+    if settings["Tools Enabled"]:
         for output in agent.stream(
             inputs,
             stream_mode="updates",
@@ -79,7 +81,7 @@ async def inference(message: str):
         if ai_message.startswith("AI:"):
             ai_message = ai_message[len("AI:") :].lstrip()
 
-        await cl.Message(content=ai_message).send()
+        await cl.Message(content=ai_message, author=agent.name).send()
     else:
         msg = cl.Message(content="", author=agent.name)
         async for token in agent.astream(
@@ -100,7 +102,33 @@ async def inference(message: str):
 async def start():
     """This is done everytime a new sessions starts"""
 
-    session_id = cl.user_session.get("id")
+    # UI elements
+    tools_enabled = get_from_config("Tools Enabled")
+    settings = await cl.ChatSettings(
+        [
+            Select(
+                id="Model",
+                label="Agent Model",
+                values=AGENT_MODELS,
+                # initial_index=AGENT_MODELS.index(model),
+                initial_index=1,
+                description="Select the agent model you want to use.",
+            ),
+            Switch(
+                id="Tools Enabled",
+                label="Agent Tools",
+                initial=tools_enabled,
+                description="Enable the LLM to call tools",
+                tooltip="Enable agent capabilities like tool calling (tools available are in src.assistant.tools)",
+            ),
+        ]
+    ).send()
+
+    # User avatar icon
+    await cl.Avatar(
+        name="You",
+        path="icons/user-icon.png",
+    ).send()
 
     # Logging
     logging.basicConfig(
@@ -113,37 +141,18 @@ async def start():
 
     # Create the agent
     model = get_from_config("Default Agent Model")
-    if AGENT_TOOLS_ENABLED:
-        agent = create_graph()
+    if settings["Tools Enabled"]:
+        agent = create_graph(model, ollama_url=OLLAMA_HOST)
+
     else:
         llm = Ollama(model=model, base_url=OLLAMA_HOST)
         agent = create_agent(llm)
-
-    logger.info(f"Starting new session with id {session_id}, using llm {model}")
 
     # Store the agent in session
     cl.user_session.set("agent", agent)
     cl.user_session.set("user", "User")
     cl.user_session.set("history", [])
-
-    await cl.Avatar(
-        name="You",
-        path="icons/user-icon.png",
-    ).send()
-
-    # UI elements
-    settings = await cl.ChatSettings(
-        [
-            Select(
-                id="Model",
-                label="Agent Model",
-                values=AGENT_MODELS,
-                # initial_index=AGENT_MODELS.index(model),
-                initial_index=1,
-                description="Select the agent model you want to use.",
-            )
-        ]
-    ).send()
+    cl.user_session.set("logger", logger)
 
     print(cl.User("User").identifier)
     print("Session id: ", cl.user_session.get("id"))
@@ -152,7 +161,7 @@ async def start():
     print("User: ", cl.user_session.get("user"))
     print("Chat profile: ", cl.user_session.get("chat_profile"))
     print("Languages: ", cl.user_session.get("languages"))
-    print("SESSION_ID: ", session_id)
+    print("SESSION_ID: ", cl.user_session.get("id"))
 
     await cl.Message(f"Hello! How can I help you?", author=agent.name).send()
 
@@ -165,13 +174,20 @@ def rename(orig_author: str):
 
 
 @cl.on_settings_update
-async def setup_agent(settings):
+async def update_agent(settings):
     """This is to update the agent model through web ui"""
     print("on_settings_update", settings)
 
+    update_config("Tools Enabled", settings["Tools Enabled"])
     # Updating the agent
     model = settings["Model"]
-    agent = create_graph()
+    if settings["Tools Enabled"]:
+        agent = create_graph(model, ollama_url=OLLAMA_HOST)
+
+    else:
+        llm = Ollama(model=model, base_url=OLLAMA_HOST)
+        agent = create_agent(llm)
+
     # llm = Ollama(model=model, base_url=OLLAMA_HOST)
     # agent = create_agent(llm)
     cl.user_session.set("agent", agent)
@@ -269,7 +285,7 @@ async def update_agent(
     init_ws_context(ws_session)
 
     # Updating the agent
-    agent = create_graph()
+    agent = create_graph(model)
     # llm = Ollama(model=model, base_url=OLLAMA_HOST)
     # agent = create_agent(llm)
 

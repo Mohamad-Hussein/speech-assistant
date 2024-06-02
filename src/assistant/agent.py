@@ -36,8 +36,14 @@ from src.assistant.graph import (
 
 
 # initialize the graph
-def create_graph():
+def create_graph(
+    ollama_model: str, ollama_url: Optional[str] = "http://localhost:11434"
+):
     """Returns a graph that contains the nodes and edges for the conversational system."""
+
+    from src.assistant.tools import build_models
+
+    build_models(ollama_model, ollama_url=ollama_url)
 
     graph = StateGraph(AgentState)
 
@@ -72,6 +78,7 @@ def create_graph():
     print(runnable.get_graph().print_ascii())
 
     chain = runnable
+    chain.name = ollama_model + " agent"
     return chain
 
 
