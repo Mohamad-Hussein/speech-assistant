@@ -29,6 +29,7 @@ from langchain_experimental.llms.ollama_functions import (
     convert_to_ollama_tool,
 )
 
+from langchain_community.chat_models import ChatOllama
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_community.tools import ShellTool
 
@@ -38,16 +39,24 @@ from langchain.prompts import PromptTemplate
 from langchain.tools import BaseTool, Tool, tool
 from src.assistant.decision_function import DecisionMaker
 import langchain
+
 langchain.debug = True
 
 from langchain.callbacks.base import BaseCallbackHandler
 
+model_system_prompt = """Engage in productive collaboration with the user 
+utilising multi-step reasoning to answer the question, if there are 
+multiple questions in the initial question split them up and answer them 
+in the order that will provide the most accurate response."""
+
 # ollama_model = "llama3-chatqa:8b"
 ollama_model = "llama3:8b"
-
-MODEL = Ollama(model=ollama_model)
-MODEL_FUNC = OllamaFunctions(model=ollama_model, format="json")
-MODEL_DECIDER = OllamaFunctions(model=ollama_model, format="json")
+TIMEOUT = 30  # seconds
+# MODEL = Ollama(model=ollama_model, timeout=TIMEOUT, system=model_system_prompt)
+# MODEL = Ollama(model=ollama_model, timeout=TIMEOUT)
+MODEL = ChatOllama(model=ollama_model, timeout=TIMEOUT)
+MODEL_FUNC = OllamaFunctions(model=ollama_model, format="json", timeout=TIMEOUT)
+MODEL_DECIDER = DecisionMaker(model=ollama_model, format="json", timeout=TIMEOUT)
 
 # Setting the decider calling prompt
 MODEL_DECIDER.tool_system_prompt_template = """You have access to the following tools:
@@ -84,6 +93,7 @@ If provided tools does not satisfy the user request, then on tools should be use
 }}
 """
 
+
 @tool
 def multiply_calculator(
     number1: Union[int, float], number2: Union[int, float]
@@ -97,10 +107,12 @@ def get_time(location: Optional[str] = None) -> str:
     """A tool that returns the current date and time in the form of %B %d, %Y %I:%M %p"""
     return datetime.datetime.now().strftime("%B %d, %Y %-I:%M %p")
 
+
 @tool
 def inform_user(text: str) -> None:
     """Prints the text"""
     print(text)
+
 
 # Tool dictionaries
 tool_multiply_dict = {
@@ -172,7 +184,6 @@ prompt_chatqa = PromptTemplate.from_template(
     Assistant:"""
 )
 
-MODEL_DECIDER = DecisionMaker(model=ollama_model, format="json")
 
 @tool
 def no_system_tool():
@@ -203,7 +214,7 @@ prompt_template = """
 System: You are a smart assistant that is in charge of deciding if the user is asking
 an assistant to use a system tool on his computer.
 
-The assistant has access to the following system tools:
+The assistant ONLY has access to the following system tools:
 
 Getting time from the user's system, and multiplying two numbers.
 
@@ -220,7 +231,6 @@ You must always select one of the above decision tools for your decision and res
 
 If you are not sure which tool to use, choose no_system_tool.
 """
-# [\n{\n"name": "no_system_tool",\n    "description": "Call this when no system tool is needed to answer the user",\n    "parameters": {\n      "type": "object",\n      "properties": {\n        "request": {}\n      },\n      "required": [\n        "request"\n      ]\n    }\n  },\n  {\n    "name": "use_system_tool",\n    "description": "Call this when tool is needed to get an output from the user\'s computer system",\n    "parameters": {\n      "type": "object",\n      "properties": {\n        "request": {}\n      },\n      "required": [\n        "request"\n      ]\n    }\n  }\n]
 
 
 MODEL_DECIDER.tool_system_prompt_template = prompt_template

@@ -305,13 +305,15 @@ class DecisionMaker(ChatOllama):
         system_message = system_message_prompt_template.format(
             tools=json.dumps(functions, indent=2)
         )
-        print(f"This is the system message: {system_message}")
+        print(f"This is the full prompt: {[system_message] + messages}")
         response_message = super()._generate(
             [system_message] + messages, stop=stop, run_manager=run_manager, **kwargs
         )
         chat_generation_content = response_message.generations[0].text
         if not isinstance(chat_generation_content, str):
             raise ValueError("OllamaFunctions does not support non-string output.")
+
+        # Parsing response
         try:
             parsed_chat_result = json.loads(chat_generation_content)
         except json.JSONDecodeError:
@@ -320,14 +322,24 @@ class DecisionMaker(ChatOllama):
                 Please try again. 
                 Response: {chat_generation_content}"""
             )
+
+        # Getting tool name
         try:
             called_tool_name = parsed_chat_result["tool"]
         except Exception as e:
             print("Failed to parse a tool name from {self.model} output: " + str(e))
-            return AIMessage(
-                content="Error parsing tool name",
-                additional_kwargs={},
+            return ChatResult(
+                generations=[
+                    ChatGeneration(
+                        message=AIMessage(
+                            content=f"Error parsing tool name, LLM response: {json.dumps(parsed_chat_result)}",
+                            additional_kwargs={},
+                        )
+                    )
+                ]
             )
+
+        # Getting arguments
         try:
             called_tool_arguments = parsed_chat_result["tool_input"]
         except Exception as e:
