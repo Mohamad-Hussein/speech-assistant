@@ -1,5 +1,6 @@
 import os
 import sys
+from typing import Union, Optional
 
 sys.path.append(os.getcwd())
 
@@ -84,9 +85,8 @@ async def inference(message: str):
     else:
         msg = cl.Message(content="", author=agent.name)
         async for token in agent.astream(
-            {"history": history, },
+            {"history": history},
         ):
-            # "user_input": message.content
             await msg.stream_token(token)
 
         ai_message = msg.content
@@ -101,35 +101,6 @@ async def inference(message: str):
 @cl.on_chat_start
 async def start():
     """This is done everytime a new sessions starts"""
-
-    # UI elements
-    tools_enabled = get_from_config("Tools Enabled")
-    settings = await cl.ChatSettings(
-        [
-            Select(
-                id="Model",
-                label="Agent Model",
-                values=AGENT_MODELS,
-                # initial_index=AGENT_MODELS.index(model),
-                initial_index=1,
-                description="Select the agent model you want to use.",
-            ),
-            Switch(
-                id="Tools Enabled",
-                label="Agent Tools",
-                initial=tools_enabled,
-                description="Enable the LLM to call tools",
-                tooltip="Enable agent capabilities like tool calling (tools available are listed in src.assistant.tools)",
-            ),
-            TextInput(
-                id="Add Model",
-                label="Add Agent Model",
-                placeholder="Enter Ollama model name here...",
-                description="Add a new model to use from the Ollama server",
-                tooltip="Make sure you have pulled the model with `ollama pull <model_name>`!",
-            ),
-        ]
-    ).send()
 
     # User avatar icon
     await cl.Avatar(
@@ -148,6 +119,11 @@ async def start():
 
     # Create the agent
     model = get_from_config("Default Agent Model")
+    user_model_list = get_from_config("User Models List")
+
+    # Settings
+    settings = await update_settings_ui((AGENT_MODELS + user_model_list).index(model))
+
     if settings["Tools Enabled"]:
         agent = create_graph(model=model, base_url=OLLAMA_HOST)
 
@@ -180,21 +156,64 @@ def rename(orig_author: str):
 
 
 @cl.on_settings_update
-async def update_agent(settings):
+async def settings_update(settings):
     """This is to update the agent model through web ui"""
     print("on_settings_update", settings)
 
-    update_config("Tools Enabled", settings["Tools Enabled"])
-    # Updating the agent
+    # Getting the model
     model = settings["Model"]
+    model_list = get_from_config("User Models List")
+
+    # Updating new model
+    new_model: Union[str, None] = settings["Add Model"]
+
+    if new_model and new_model.lower().strip() != "":
+
+        new_model = new_model.lower().strip()
+
+        # Make sure that the model is available
+        async with cl.Step(name="Ollama model existance check") as step:
+            # Step is sent as soon as the context manager is entered
+            await step.stream_token(f"Checking model...")
+            # step.output = "Checking model"
+
+            # Give an error message
+            try:
+                model = Ollama(model=new_model, base_url=OLLAMA_HOST)
+                model.invoke("")
+                await step.stream_token(f" Model found and loaded!")
+
+            except Exception as e:
+                await cl.ErrorMessage(f"{str(e)}", author="Error").send()
+                await step.stream_token(f" Model not found in Ollama.")
+                return
+
+        # Save the new model to config file
+        model_list = (
+            list(set(model_list + [new_model])) if model_list else [new_model]
+        )
+        update_config("User Models List", model_list)
+
+        # Switching to new model in UI
+        settings["Model"] = new_model
+        new_model_idx = (AGENT_MODELS + model_list).index(new_model)
+        settings = await update_settings_ui(new_model_idx)
+
+        # Overriding the model
+        model = new_model
+
+        # Sending message
+        await cl.Message("Hello! How can I help you?", author=new_model).send()
+
+    # Saving user defined settings
+    update_config("Tools Enabled", settings["Tools Enabled"])
+    update_config("Default Agent Model", model)
+    # Updating the agent
     if settings["Tools Enabled"]:
         agent = create_graph(model=model, base_url=OLLAMA_HOST)
 
     else:
         agent = create_agent(model=model, base_url=OLLAMA_HOST)
-
-    # llm = Ollama(model=model, base_url=OLLAMA_HOST)
-    # agent = create_agent(llm)
     cl.user_session.set("agent", agent)
 
 
@@ -292,6 +311,12 @@ async def update_agent(
     # Updating the agent
     settings = cl.user_session.get("chat_settings")
 
+    # Updating the model in settings tab
+    user_model_list = get_from_config("User Models List")
+
+    new_model_idx = (AGENT_MODELS + user_model_list).index(model)
+    settings = await update_settings_ui(new_model_idx)
+
     if settings["Tools Enabled"]:
         agent = create_graph(model=model, base_url=OLLAMA_HOST)
 
@@ -343,6 +368,47 @@ def format_history(history):
         key, val = next(iter(transaction.items()))
         history_log += f"{key}: {val}\n\n"
     return history_log
+
+
+async def update_settings_ui(change_model_idx: Optional[Union[int, None]] = None):
+
+    # UI elements
+    tools_enabled = get_from_config("Tools Enabled")
+    user_model_list = get_from_config("User Models List") or []
+
+    model_index = 1
+    if change_model_idx is not None:
+        model_index = change_model_idx
+
+    settings = await cl.ChatSettings(
+        [
+            Select(
+                id="Model",
+                label="Model",
+                values=AGENT_MODELS + user_model_list,
+                # initial_index=AGENT_MODELS.index(model),
+                initial_index=change_model_idx or 1,
+                description="Select the agent model you want to use.",
+            ),
+            Switch(
+                id="Tools Enabled",
+                label="Agent Tools",
+                initial=tools_enabled,
+                # description="Enable the LLM to call tools",
+                tooltip="Enable agent capabilities like tool calling (tools available are listed in src.assistant.tools)",
+            ),
+            TextInput(
+                id="Add Model",
+                label="Add Model",
+                placeholder="Enter Ollama model name here...",
+                description="Add a new model to use from the Ollama server",
+                tooltip="Make sure you have pulled the model with `ollama pull <model_name>`!",
+                initial=None,
+            ),
+        ]
+    ).send()
+
+    return settings
 
 
 def run_app():

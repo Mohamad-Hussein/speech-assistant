@@ -79,7 +79,7 @@ def get_from_config(key: str, filename="config.json"):
         with open(filename, "r") as file:
             data = json.load(file)
         # Extract the value from the loaded data
-        value = data.get(key, DEFAULT_MODEL_ID)
+        value = data.get(key, None)
 
         return value
 
@@ -105,7 +105,8 @@ def save_to_config(filename="config.json"):
         "Default Agent Model": AGENT_MODELS[DEFAULT_AGENT_IDX],
         "Date Created": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "Translate Speech": translate_speech,
-        "Tools Enabled": True
+        "Tools Enabled": True,
+        "User Model List": [],
     }
 
     with open(filename, "w") as file:
