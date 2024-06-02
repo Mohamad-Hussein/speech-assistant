@@ -59,7 +59,7 @@ MODEL_FUNC = OllamaFunctions(model=ollama_model, format="json", timeout=TIMEOUT)
 MODEL_DECIDER = DecisionMaker(model=ollama_model, format="json", timeout=TIMEOUT)
 
 # Setting the decider calling prompt
-MODEL_DECIDER.tool_system_prompt_template = """You have access to the following tools:
+decider_system_prompt = """You have access to the following tools:
 
 {tools}
 
@@ -71,7 +71,7 @@ You must always select one of the above tools and respond with only a JSON objec
 }}
 """
 # Setting the function calling prompt
-MODEL_FUNC.tool_system_prompt_template = """You are a smart assistant that helps the user find the information he is looking for using tools. 
+tool_system_prompt = """You are a smart assistant that helps the user find the information he is looking for using tools. 
 
 You have access to the following tools:
 
@@ -188,7 +188,7 @@ prompt_chatqa = PromptTemplate.from_template(
 @tool
 def no_system_tool():
     """Call this when no system tool is needed to answer the user"""
-    return "No tool was used."
+    return "No tool to use."
 
 
 @tool
@@ -233,5 +233,27 @@ If you are not sure which tool to use, choose no_system_tool.
 """
 
 
-MODEL_DECIDER.tool_system_prompt_template = prompt_template
-MODEL_DECIDER = MODEL_DECIDER.bind_tools(tools=decision_tools)
+def build_models(ollama_model: str, ollama_url: str):
+    global MODEL, MODEL_FUNC, MODEL_DECIDER
+
+    MODEL = ChatOllama(model=ollama_model, timeout=TIMEOUT, base_url=ollama_url)
+    MODEL_FUNC = OllamaFunctions(model=ollama_model, format="json", timeout=TIMEOUT, base_url=ollama_url)
+    MODEL_DECIDER = DecisionMaker(model=ollama_model, format="json", timeout=TIMEOUT, base_url=ollama_url)
+
+    # Assigning custom system prompts
+    MODEL_FUNC.tool_system_prompt_template = tool_system_prompt
+    MODEL_DECIDER.tool_system_prompt_template = decider_system_prompt
+
+    # Binding tools to the model
+    MODEL_FUNC = MODEL_FUNC.bind_tools(
+        tools=[
+            tool_time_dict,
+            tool_multiply_dict,
+            # DEFAULT_RESPONSE_FUNCTION,
+        ],
+    )
+    MODEL_DECIDER = MODEL_DECIDER.bind_tools(tools=decision_tools)
+
+    return MODEL, MODEL_DECIDER, MODEL_FUNC
+
+MODEL, MODEL_DECIDER, MODEL_FUNC = build_models(ollama_model, "http://localhost:11434")
