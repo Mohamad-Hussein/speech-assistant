@@ -40,7 +40,6 @@ from langchain.tools import BaseTool, Tool, tool
 from src.assistant.decision_function import DecisionMaker
 import langchain
 
-langchain.debug = True
 
 from langchain.callbacks.base import BaseCallbackHandler
 
@@ -237,8 +236,12 @@ def build_models(ollama_model: str, ollama_url: str):
     global MODEL, MODEL_FUNC, MODEL_DECIDER
 
     MODEL = ChatOllama(model=ollama_model, timeout=TIMEOUT, base_url=ollama_url)
-    MODEL_FUNC = OllamaFunctions(model=ollama_model, format="json", timeout=TIMEOUT, base_url=ollama_url)
-    MODEL_DECIDER = DecisionMaker(model=ollama_model, format="json", timeout=TIMEOUT, base_url=ollama_url)
+    MODEL_FUNC = OllamaFunctions(
+        model=ollama_model, format="json", timeout=TIMEOUT, base_url=ollama_url
+    )
+    MODEL_DECIDER = DecisionMaker(
+        model=ollama_model, format="json", timeout=TIMEOUT, base_url=ollama_url
+    )
 
     # Assigning custom system prompts
     MODEL_FUNC.tool_system_prompt_template = tool_system_prompt
@@ -255,5 +258,6 @@ def build_models(ollama_model: str, ollama_url: str):
     MODEL_DECIDER = MODEL_DECIDER.bind_tools(tools=decision_tools)
 
     return MODEL, MODEL_DECIDER, MODEL_FUNC
+
 
 MODEL, MODEL_DECIDER, MODEL_FUNC = build_models(ollama_model, "http://localhost:11434")
