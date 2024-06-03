@@ -58,6 +58,7 @@ AGENT_MODELS = [
 DEFAULT_AGENT_IDX = 0
 OLLAMA_HOST = "http://localhost:11434"
 CHAINLIT_HOST = "http://localhost:8000"
+DEFAULT_TOOL_ENABLED = False
 
 # Hosting url for LLM UI
 CHAINLIT_HOST = "http://localhost:8000"
@@ -98,6 +99,7 @@ def save_to_config(filename="config.json"):
     # If the file doesn't exist, set the value to the default value
     model_id_idx = DEFAULT_MODEL_ID
     translate_speech = DEFAULT_TRANSLATE_SPEECH
+    tools_enabled = DEFAULT_TOOL_ENABLED
 
     # Save the value to the JSON file
     data = {
@@ -105,8 +107,8 @@ def save_to_config(filename="config.json"):
         "Default Agent Model": AGENT_MODELS[DEFAULT_AGENT_IDX],
         "Date Created": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "Translate Speech": translate_speech,
-        "Tools Enabled": True,
-        "User Model List": [],
+        "Tools Enabled": tools_enabled,
+        "User Models List": [],
     }
 
     with open(filename, "w") as file:
