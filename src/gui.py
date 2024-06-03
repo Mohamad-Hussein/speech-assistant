@@ -144,10 +144,9 @@ class SpeechDetectionGUI:
         webui_path = os.path.join(
             os.path.dirname(__file__), "assistant/assistant_ui.py"
         )
+
         self.webui_process = subprocess.Popen(
             ["python", webui_path],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
             cwd=os.getcwd(),
         )
 

@@ -8,6 +8,8 @@ from src.config import CHAINLIT_HOST, IGNORE, MIN_WORDS, AGENT_TRIGGER
 
 LLM_WEBUI_OPENED: bool = False
 SESSION_IDS: list[str] = []
+CONNECTION_TIMEOUT = 10
+READER_TIMEOUT = 30
 
 
 def perform_request(text: str, write_method: Callable, use_agent: bool):
@@ -85,7 +87,17 @@ def invoke_agent(user_prompt: str, id: Optional[str] = "0000"):
     json_data = {
         "message": user_prompt,
     }
-    response = requests.post(f"{CHAINLIT_HOST}/message/{id}", json=json_data)
+    print(f"Calling {CHAINLIT_HOST}/message/{id}")
+    try:
+        response = requests.post(
+            f"{CHAINLIT_HOST}/message/{id}",
+            json=json_data,
+            timeout=(CONNECTION_TIMEOUT, READER_TIMEOUT),
+        )
+    except requests.exceptions.ReadTimeout as e:
+        print("Request timed out: ", e)
+    except Exception as e:
+        print("Error: ", e)
 
 
 def webui_user_input(user_input: str, id: Optional[str] = "0000"):
@@ -94,8 +106,16 @@ def webui_user_input(user_input: str, id: Optional[str] = "0000"):
     json_data = {
         "message": user_input,
     }
-
-    response = requests.post(f"{CHAINLIT_HOST}/user/{id}", json=json_data)
+    try:
+        response = requests.post(
+            f"{CHAINLIT_HOST}/user/{id}",
+            json=json_data,
+            timeout=(CONNECTION_TIMEOUT, READER_TIMEOUT),
+        )
+    except requests.exceptions.ReadTimeout as e:
+        print("Request timed out: ", e)
+    except Exception as e:
+        print("Error: ", e)
 
 
 def change_agent(model_name: str, id: Optional[str] = "0000"):
