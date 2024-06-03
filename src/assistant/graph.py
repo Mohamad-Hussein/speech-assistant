@@ -1,6 +1,6 @@
 from typing import Union, List, Annotated, Sequence, TypedDict, Literal, Optional
 import json
-
+import asyncio
 from langchain.prompts import ChatPromptTemplate, PromptTemplate, MessagesPlaceholder
 
 from langgraph.graph import END, Graph, StateGraph, MessageGraph
@@ -146,9 +146,9 @@ class AgentGraph:
         if isinstance(last_message, BaseMessage):
             last_message = last_message.content
 
-        print(f"This is the decider messages {last_message}")
+        input: list[BaseMessage] = [HumanMessage(last_message)]
 
-        response = self._model_decider.invoke(last_message)
+        response = self._model_decider.invoke(input)
 
         return {"messages": [response]}
 
@@ -156,10 +156,24 @@ class AgentGraph:
     # @cl.step(name="call_model")
     def call_func_model(self, state: AgentState):
         messages = state["messages"]
-        last_message = [messages[-1]]
-        response = self._model_func.invoke(last_message)
-        # We return a list, because this will get added to the existing list
+        # last_message = [messages[-1]]
+        last_message = messages[-2:]
+        last_message[1] = AIMessage(last_message[1].additional_kwargs["function_call"]["arguments"])
+        print(f"-----\nThese are the messages it is receiving: {last_message}")
+
+
+        response = "Tool call failed..."
+        for i in range(2):
+            try:
+                response = self._model_func.invoke(last_message)
+                break
+            except Exception as e:
+                print("Error in model: ", e)
+                asyncio.run(cl.ErrorMessage(f"Error: {e}", author="Error").send())
+                pass
+
         return {"messages": [response]}
+        # We return a list, because this will get added to the existing list
 
     def call_model(self, state: AgentState):
         messages = state["messages"]
