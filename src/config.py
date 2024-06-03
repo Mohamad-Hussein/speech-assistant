@@ -16,8 +16,8 @@ WRITE = type_writing
 SAVE_AUDIO = False
 
 # Hotkey for the listener.
-# HOTKEY = {"Super", "Shift"}
-HOTKEY = {"Alt", "F9"}
+HOTKEY = {"Super", "Shift"}
+# HOTKEY = {"Alt", "F9"}
 AGENT_TRIGGER = "assistant"
 
 # Available models for ASR #

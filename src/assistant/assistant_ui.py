@@ -171,7 +171,7 @@ async def settings_update(settings):
         new_model = new_model.lower().strip()
 
         # Make sure that the model is available
-        async with cl.Step(name="Ollama model existance check") as step:
+        async with cl.Step(name=f"Checking if `{new_model}` is installed in Ollama") as step:
             # Step is sent as soon as the context manager is entered
             await step.stream_token(f"Checking model...")
             # step.output = "Checking model"
@@ -180,11 +180,11 @@ async def settings_update(settings):
             try:
                 model = Ollama(model=new_model, base_url=OLLAMA_HOST)
                 model.invoke("")
-                await step.stream_token(f" Model found and loaded!")
+                await step.stream_token(f" Model `{new_model}` found and loaded!")
 
             except Exception as e:
                 await cl.ErrorMessage(f"{str(e)}", author="Error").send()
-                await step.stream_token(f" Model not found in Ollama.")
+                await step.stream_token(f" Model `{new_model}` not found in Ollama.")
                 return
 
         # Save the new model to config file

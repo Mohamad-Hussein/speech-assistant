@@ -58,21 +58,30 @@ MODEL_FUNC = OllamaFunctions(model=ollama_model, format="json", timeout=TIMEOUT)
 MODEL_DECIDER = DecisionMaker(model=ollama_model, format="json", timeout=TIMEOUT)
 
 # Setting the decider calling prompt
-DECIDER_SYSTEM_PROMPT = """You have access to the following tools:
+DECIDER_SYSTEM_PROMPT = """
+You are a smart assistant that is in charge of deciding if the user is asking
+an assistant to use a system tool on his computer.
 
+The assistant ONLY has access to the following system tools:
+
+Getting time from the user's system, and multiplying two numbers.
+
+You have access to the following decision tools:
 {tools}
 
-You must always select one of the above tools and respond with only a JSON object matching the following schema:
+You must always select one of the above decision tools and respond with only a JSON object matching the following schema:
 
 {{
   "tool": <name of the selected tool>,
-  "tool_input": <parameters for the selected tool, matching the tool's JSON schema>
+  "tool_input": <the reason why the tool was chosen>
 }}
+If the user request does not match any of these tools, then no system tool is needed.
 """
 # Setting the function calling prompt
-TOOL_SYSTEM_PROMPT = """You are a smart assistant that helps the user find the information he is looking for using tools. 
+TOOL_SYSTEM_PROMPT = """You are a smart personal computer assistant that helps the user find the information he is looking for using tools.
+You have access to the following system tools to find information and respond to the user's request.
 
-You have access to the following tools:
+You have access to the following system tools:
 
 {tools}
 
@@ -111,7 +120,7 @@ def multiply_calculator(
 
 @tool
 def get_time(location: Optional[str] = None) -> str:
-    """A tool that returns the current date and time in the form of %B %d, %Y %I:%M %p"""
+    """A tool that returns the current date and time of the user's computer."""
     return datetime.datetime.now().strftime("%B %d, %Y %-I:%M %p")
 
 
