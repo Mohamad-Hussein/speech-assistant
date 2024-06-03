@@ -32,8 +32,8 @@ from src.assistant.agent import create_agent, create_graph
 from src.config import DEFAULT_AGENT, AGENT_MODELS, OLLAMA_HOST
 from src.config import get_from_config, update_config
 
-langchain.verbose = True
-langchain.debug = True
+# langchain.verbose = True
+# langchain.debug = True
 
 
 async def inference(message: str):
@@ -108,17 +108,16 @@ async def start():
 
     # Logging
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.WARNING,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         filename=os.path.join("logs", "llm-ui.log"),
         filemode="w",
     )
     logger = logging.getLogger(__name__)
-    logger.info("Init")
 
     # Create the agent
     model = get_from_config("Default Agent Model")
-    user_model_list = get_from_config("User Models List")
+    user_model_list: list[str] = get_from_config("User Models List") or []
 
     # Settings
     settings = await update_settings_ui((AGENT_MODELS + user_model_list).index(model))
@@ -135,14 +134,14 @@ async def start():
     cl.user_session.set("history", [])
     cl.user_session.set("logger", logger)
 
-    logger.info(cl.User("User").identifier)
-    logger.info("Session id: ", cl.user_session.get("id"))
-    logger.info("Environment: ", cl.user_session.get("env"))
-    logger.info("Chat settings: ", cl.user_session.get("chat_settings"))
-    logger.info("User: ", cl.user_session.get("user"))
-    logger.info("Chat profile: ", cl.user_session.get("chat_profile"))
-    logger.info("Languages: ", cl.user_session.get("languages"))
-    logger.info("SESSION_ID: ", cl.user_session.get("id"))
+    logger.info(f"User identifier: {cl.User('User').identifier}")
+    logger.info(f"Session id: {cl.user_session.get('id')}")
+    logger.info(f"Environment: {cl.user_session.get('env')}")
+    logger.info(f"Chat settings: {cl.user_session.get('chat_settings')}")
+    logger.info(f"User: {cl.user_session.get('user')}")
+    logger.info(f"Chat profile: {cl.user_session.get('chat_profile')}")
+    logger.info(f"Languages: {cl.user_session.get('languages')}")
+    logger.info(f"SESSION_ID: {cl.user_session.get('id')}")
 
     await cl.Message(f"Hello! How can I help you?", author=agent.name).send()
 
@@ -158,7 +157,7 @@ def rename(orig_author: str):
 async def settings_update(settings):
     """This is to update the agent model through web ui"""
     logger = cl.user_session.get("logger")
-    logger.info("on_settings_update", settings)
+    logger.info(f"on_settings_update: {settings}")
 
     # Getting the model
     model = settings["Model"]
@@ -276,17 +275,19 @@ async def update_user_message(
     session_id: str,
 ):
     """This is to update user message when transcription request is complete."""
+    # Get the context from the session id
     session_id = list(ws_sessions_id.keys())[-1]
-
     ws_session = WebsocketSession.get_by_id(session_id=session_id)
     init_ws_context(ws_session)
 
+    # Get the message from the request
     data = await request.json()
     user_input = data.get("message")
     logger = cl.user_session.get("logger")
-    logger.info("Received message from user:", user_input)
+    logger.info(f"Received message from user: {user_input}")
 
-    res = await cl.Message(content=user_input, author="You").send()
+    # Send the user message to UI
+    await cl.Message(content=user_input, author="You").send()   
 
     return {
         "status": 200,
@@ -311,7 +312,7 @@ async def update_agent(
     settings = cl.user_session.get("chat_settings")
 
     # Updating the model in settings tab
-    user_model_list = get_from_config("User Models List")
+    user_model_list = get_from_config("User Models List") or []
 
     new_model_idx = (AGENT_MODELS + user_model_list).index(model)
     settings = await update_settings_ui(new_model_idx)
@@ -343,13 +344,13 @@ async def receive_message(request: Request, session_id: str):
     init_ws_context(ws_session)
 
     logger = cl.user_session.get("logger")
-    logger.info("Websocket session id:", session_id)
+    logger.info(f"Websocket session id: {session_id}")
 
     try:
         # Getting the message from ASR backend
         data = await request.json()
         message = data.get("message")
-        logger.info("Received message: ", message)
+        logger.info(f"Received message: {message}")
 
         # Doing inference
         await inference(message)

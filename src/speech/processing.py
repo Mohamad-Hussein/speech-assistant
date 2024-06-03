@@ -87,15 +87,16 @@ def invoke_agent(user_prompt: str, id: Optional[str] = "0000"):
     json_data = {
         "message": user_prompt,
     }
-    print(f"Calling {CHAINLIT_HOST}/message/{id}")
     try:
         response = requests.post(
             f"{CHAINLIT_HOST}/message/{id}",
             json=json_data,
-            timeout=(CONNECTION_TIMEOUT, READER_TIMEOUT),
+            # timeout=(CONNECTION_TIMEOUT, READER_TIMEOUT),
         )
+
     except requests.exceptions.ReadTimeout as e:
         print("Request timed out: ", e)
+
     except Exception as e:
         print("Error: ", e)
 
@@ -110,10 +111,12 @@ def webui_user_input(user_input: str, id: Optional[str] = "0000"):
         response = requests.post(
             f"{CHAINLIT_HOST}/user/{id}",
             json=json_data,
-            timeout=(CONNECTION_TIMEOUT, READER_TIMEOUT),
+            # timeout=(CONNECTION_TIMEOUT, READER_TIMEOUT),
         )
+
     except requests.exceptions.ReadTimeout as e:
         print("Request timed out: ", e)
+
     except Exception as e:
         print("Error: ", e)
 

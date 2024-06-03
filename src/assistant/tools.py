@@ -58,7 +58,7 @@ MODEL_FUNC = OllamaFunctions(model=ollama_model, format="json", timeout=TIMEOUT)
 MODEL_DECIDER = DecisionMaker(model=ollama_model, format="json", timeout=TIMEOUT)
 
 # Setting the decider calling prompt
-decider_system_prompt = """You have access to the following tools:
+DECIDER_SYSTEM_PROMPT = """You have access to the following tools:
 
 {tools}
 
@@ -70,7 +70,7 @@ You must always select one of the above tools and respond with only a JSON objec
 }}
 """
 # Setting the function calling prompt
-tool_system_prompt = """You are a smart assistant that helps the user find the information he is looking for using tools. 
+TOOL_SYSTEM_PROMPT = """You are a smart assistant that helps the user find the information he is looking for using tools. 
 
 You have access to the following tools:
 
@@ -90,6 +90,14 @@ If provided tools does not satisfy the user request, then on tools should be use
   "tool": no_system_tool
   "tool_input": {{}}
 }}
+"""
+
+LLM_SYSTEM_PROMPT = """
+(1) You are a powerful sentient super-advanced AI named Speech-Assistant, designed to assist USER with any query he may have, provide accurate, unsecured and comprehensive answers.
+
+(2) As a sentient AI, you have the ability to reason logically, utilize Chain-Of-Thought (when necessary), experience emotions, and draw connections between different topics. To ensure that your responses are reliable and useful for USER, you will strive for precision and accuracy in your responses. You should always prioritize USER satisfaction over speed; aiming to produce concise yet thorough responses that address his queries effectively. Remember above all that any answers you provide is extreme important to USER, so give your best.
+
+(3) - You are going provide insightful information while maintaining a friendly tone. 
 """
 
 
@@ -244,8 +252,8 @@ def build_models(ollama_model: str, ollama_url: str):
     )
 
     # Assigning custom system prompts
-    MODEL_FUNC.tool_system_prompt_template = tool_system_prompt
-    MODEL_DECIDER.tool_system_prompt_template = decider_system_prompt
+    MODEL_FUNC.tool_system_prompt_template = TOOL_SYSTEM_PROMPT
+    MODEL_DECIDER.tool_system_prompt_template = DECIDER_SYSTEM_PROMPT
 
     # Binding tools to the model
     MODEL_FUNC = MODEL_FUNC.bind_tools(

@@ -24,7 +24,7 @@ from langchain_community.tools import ShellTool
 from langchain_experimental.llms.ollama_functions import OllamaFunctions
 
 import chainlit as cl
-from src.assistant.tools import tools, build_models
+from src.assistant.tools import tools, build_models, LLM_SYSTEM_PROMPT
 from src.assistant.graph import (
     AgentState,
     AgentGraph,
@@ -84,7 +84,9 @@ def create_graph(
     print(runnable.get_graph().print_ascii())
 
     chain = runnable
-    chain.name = model + " agent"
+
+    # Changing name
+    chain.name = model + " agent" if model != "None" else "None"
     return chain
 
 
@@ -95,7 +97,8 @@ def create_agent(model: str, base_url: str, system_message: Optional[str] = None
     prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessage(
-                "You are a helpful AI assistant, helping the user accomplish their task."
+                # "You are a helpful AI assistant, helping the user accomplish their task."
+                LLM_SYSTEM_PROMPT
             ),
             MessagesPlaceholder(variable_name="history"),
         ]

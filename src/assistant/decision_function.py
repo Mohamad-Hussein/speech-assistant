@@ -305,7 +305,6 @@ class DecisionMaker(ChatOllama):
         system_message = system_message_prompt_template.format(
             tools=json.dumps(functions, indent=2)
         )
-        print(f"This is the full prompt: {[system_message] + messages}")
         response_message = super()._generate(
             [system_message] + messages, stop=stop, run_manager=run_manager, **kwargs
         )
