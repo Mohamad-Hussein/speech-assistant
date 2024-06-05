@@ -27,13 +27,46 @@ from langchain_core.messages import (
 )
 from langchain.schema.runnable.config import RunnableConfig
 from langchain_community.llms import Ollama
+from langchain_community.chat_models.ollama import ChatOllama
 
 from src.assistant.agent import create_agent, create_graph
 from src.config import DEFAULT_AGENT, AGENT_MODELS, OLLAMA_HOST
 from src.config import get_from_config, update_config
 
+from PIL import Image
+from io import BytesIO
+import base64
+
 # langchain.verbose = True
 # langchain.debug = True
+
+
+async def inference_with_image(message: cl.Message, images: list):
+
+    history = cl.user_session.get("history")
+    history.append(HumanMessage(message.content + "\n[Image]\n"))
+
+    vision_model = cl.user_session.get("vision model")
+
+    # Read the first image
+    with Image.open(images[0].path) as img:
+        with BytesIO() as buffer:
+            img.save(buffer, format="PNG")
+            img_str = base64.b64encode(buffer.getvalue()).decode("utf-8")
+
+    model = Ollama(
+        model=vision_model,
+    )
+    model = model.bind(images=[img_str])
+    input = [HumanMessage(content=message.content)]
+
+    # Inference
+    msg = cl.Message(content="", author=vision_model)
+    async for token in model.astream(input):
+        await msg.stream_token(token)
+
+    # Update the history
+    history.append(AIMessage(msg.content))
 
 
 async def inference(message: str):
@@ -118,6 +151,7 @@ async def start():
     # Create the agent
     model = get_from_config("Default Agent Model")
     user_model_list: list[str] = get_from_config("User Models List") or []
+    vision_model = "llava-llama3"
 
     # Settings
     settings = await update_settings_ui((AGENT_MODELS + user_model_list).index(model))
@@ -130,6 +164,7 @@ async def start():
 
     # Store the agent in session
     cl.user_session.set("agent", agent)
+    cl.user_session.set("vision model", vision_model)
     cl.user_session.set("user", "User")
     cl.user_session.set("history", [])
     cl.user_session.set("logger", logger)
@@ -171,10 +206,11 @@ async def settings_update(settings):
         new_model = new_model.lower().strip()
 
         # Make sure that the model is available
-        async with cl.Step(name=f"Checking if `{new_model}` is installed in Ollama") as step:
+        async with cl.Step(
+            name=f"Checking if `{new_model}` is installed in Ollama"
+        ) as step:
             # Step is sent as soon as the context manager is entered
             await step.stream_token(f"Checking model...")
-            # step.output = "Checking model"
 
             # Give an error message
             try:
@@ -234,8 +270,18 @@ async def chat_profile():
 async def on_message(message: cl.Message):
     """This is when user types his message on the ui and sends it."""
 
-    async with cl.Step() as step:
-        await inference(message)
+    # Processing images exclusively
+    images = [file for file in message.elements if "image" in file.mime]
+
+    # Image prompt
+    if images:
+
+        await inference_with_image(message, images)
+
+    # Normal prompt
+    else:
+        async with cl.Step(name="request to LLM response") as step:
+            await inference(message)
 
     # input = {"user_input": message.content}
     # res = await agent.arun(user_input=input, callbacks=[cl.LangchainCallbackHandler()])
@@ -287,7 +333,7 @@ async def update_user_message(
     logger.info(f"Received message from user: {user_input}")
 
     # Send the user message to UI
-    await cl.Message(content=user_input, author="You").send()   
+    await cl.Message(content=user_input, author="You").send()
 
     return {
         "status": 200,
