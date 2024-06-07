@@ -25,7 +25,7 @@ SPEECH_MODELS = [
     "openai/whisper-tiny.en",  # ~400 MiB of GPU memory
     "distil-whisper/distil-small.en",  # ~500-700 MiB of GPU memory
     "distil-whisper/distil-medium.en",  # ~900-1500 MiB of GPU memory
-    "distil-whisper/distil-large-v2",  # ~1700-2000 MiB of GPU memory
+    "distil-whisper/distil-large-v3",  # ~1700-2000 MiB of GPU memory
     "openai/whisper-large-v2",  # ~4000 MiB of GPU memory
     "openai/whisper-large-v3",  # ~4000 MiB of GPU memory
     # "optimum/whisper-tiny.en",  # ~400 MiB of GPU memory
