@@ -25,4 +25,4 @@ dependencies:
       - langchain-community
       - langchain-experimental
       - langgraph
-      - chainlit==1.0.506
+      - chainlit
