@@ -173,7 +173,15 @@ def run_model(synch_dict: Dict[str, Any], write_method: Callable, logger):
             raise KeyboardInterrupt
 
         ## Transcribing ##
-        result = model_pipe(audio_bytes)
+        try:
+            with torch.no_grad():
+                result = model_pipe(audio_bytes)
+            clear_mem()
+        except torch.cuda.OutOfMemoryError as e:
+            logger.error("Out of memory error")
+            gui_pipe.send("CUDA: Out of memory")
+            continue
+
         logger.info(f"Time for inference: {time() - t0:.4f} seconds")
 
         # Process text
@@ -239,7 +247,9 @@ def audio_processing_service(synch_dict, write_method):
             # Signal to load model after stop
             run_model_signal = False
             while run_model_signal is False:
-                run_model_signal = queue.get(block=True).get("message", None) == LOAD_MODEL_SIGNAL
+                run_model_signal = (
+                    queue.get(block=True).get("message", None) == LOAD_MODEL_SIGNAL
+                )
 
     except KeyboardInterrupt:
         logger.info("KeyboardInterrupt hit on model_inference")
