@@ -20,10 +20,11 @@ from tkinter import (
 import logging
 
 from src import LOAD_MODEL_SIGNAL, UNLOAD_MODEL_SIGNAL, TERMINATE_SIGNAL
-from src.utils.funcs import run_listener
-from src.utils.voice_capturing import main_loop
 from src.speech.processing import change_agent
 from src.speech.asr import audio_processing_service
+from src.assistant.assistant_ui import run_ui
+from src.utils.funcs import run_listener
+from src.utils.voice_capturing import main_loop
 from src.config import get_from_config, update_config
 from src.config import (
     WRITE,
@@ -145,10 +146,12 @@ class SpeechDetectionGUI:
             os.path.dirname(__file__), "assistant/assistant_ui.py"
         )
 
-        self.webui_process = subprocess.Popen(
-            ["python", webui_path],
-            cwd=os.getcwd(),
+        self.webui_process = Process(
+            target=run_ui,
+            args=(self.sound_data_queue,),
+            name="chainlit_webui",
         )
+        self.webui_process.start()
 
     def start_model_service(self):
         """Loads the ASR model and starts the model service."""
@@ -185,7 +188,7 @@ class SpeechDetectionGUI:
         if not self.model_process:
             self.start_model_service()
         else:
-            self.sound_data_queue.put(LOAD_MODEL_SIGNAL)
+            self.sound_data_queue.put({"message": LOAD_MODEL_SIGNAL})
 
         ## Creating process for Key listener
         self.key_listener_thread = Thread(
@@ -240,7 +243,7 @@ class SpeechDetectionGUI:
         parent and key listener processes.
         """
         # For model to unload from memory
-        self.sound_data_queue.put(UNLOAD_MODEL_SIGNAL)
+        self.sound_data_queue.put({"message": UNLOAD_MODEL_SIGNAL})
 
         # For parent process to terminate
         self.terminate_event.set()
@@ -265,7 +268,7 @@ class SpeechDetectionGUI:
         """Terminates all processes before closing"""
 
         # To tell model process to terminate
-        self.sound_data_queue.put(TERMINATE_SIGNAL)
+        self.sound_data_queue.put({"message": TERMINATE_SIGNAL})
 
         # For parent process to terminate
         self.terminate_event.set()

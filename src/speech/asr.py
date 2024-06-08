@@ -158,7 +158,10 @@ def run_model(synch_dict: Dict[str, Any], write_method: Callable, logger):
     while not terminate_event.is_set():
 
         # Get audio bytes from queue
-        audio_bytes = queue.get(block=True)
+        message: dict = queue.get(block=True)
+        audio_bytes = message.get("message", None)
+        do_action = message.get("do_action", True)
+
         t0 = time()
 
         ## Synchronization control ##
@@ -188,8 +191,12 @@ def run_model(synch_dict: Dict[str, Any], write_method: Callable, logger):
         )
         previous_text = result["text"]
 
-        # LLM inference and actions taken
-        perform_request(processed_text, write_method, use_agent_value.value)
+        if do_action:
+            # LLM inference and actions taken
+            perform_request(processed_text, write_method, use_agent_value.value)
+        else:
+            # Send text to queue for web ui
+            queue.put({"transcription": processed_text})
 
         # Resetting
         logger.debug(f"Result: {result}")
@@ -232,7 +239,7 @@ def audio_processing_service(synch_dict, write_method):
             # Signal to load model after stop
             run_model_signal = False
             while run_model_signal is False:
-                run_model_signal = queue.get(block=True) == LOAD_MODEL_SIGNAL
+                run_model_signal = queue.get(block=True).get("message", None) == LOAD_MODEL_SIGNAL
 
     except KeyboardInterrupt:
         logger.info("KeyboardInterrupt hit on model_inference")
