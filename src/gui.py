@@ -253,9 +253,16 @@ class SpeechDetectionGUI:
         self.parent_process.join(timeout=10)
         self.key_listener_thread.join(timeout=10)
         # Checking if processes are still running
+        processes_alive = [
+            self.parent_process.is_alive(),
+            self.key_listener_thread.is_alive(),
+        ]
         if self.parent_process.is_alive() or self.key_listener_thread.is_alive():
             self.text_info.config(text="Processes not ended, please restart program!")
-            logger.info("ERROR: Processes not ended")
+            if processes_alive[0]:
+                logger.info("ERROR: Parent process not ended")
+            if processes_alive[1]:
+                logger.info("ERROR: Key listener process not ended")
 
         # Button state change
         self.start_button.config(state=NORMAL)
@@ -321,6 +328,20 @@ class SpeechDetectionGUI:
                 text = text[: self.max_text_length] + "..."
 
             self.text_info.config(text=text)
+
+        # Changing incorrect updates
+        try:
+            if (
+                self.text_info
+                and "Model loaded" in self.text_info.cget("text")
+                and not self.parent_process.is_alive()
+                and not "ERROR:" in self.text_info.cget("text")
+            ):
+                self.text_info.config(text="Press start to begin speech detection.")
+        except:
+            # NOTE - This is a workaround for an issue with Tkinter
+            #   that Label cget is used after root is destroyed
+            pass
 
         self.root.update()
 
