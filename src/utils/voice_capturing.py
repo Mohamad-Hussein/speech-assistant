@@ -57,7 +57,7 @@ def start_recording(start_event, model_event, queue):
         sound_byte_wav = pcm_to_wav(b"".join(frames))
 
         # Sending sound to model for inference
-        queue.put(sound_byte_wav)
+        queue.put({"message": sound_byte_wav, "do_action": True})
 
         # Checking extreme case
         if model_event.is_set():

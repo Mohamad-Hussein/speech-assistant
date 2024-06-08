@@ -1,6 +1,9 @@
 import os
 import sys
 from typing import Union, Optional
+from multiprocessing.queues import Queue as QueueType
+from multiprocessing import Queue
+
 
 sys.path.append(os.getcwd())
 
@@ -15,6 +18,7 @@ from chainlit.input_widget import Select, Switch, TextInput
 from chainlit.server import app
 from chainlit.context import init_http_context, init_ws_context
 from chainlit.session import WebsocketSession, ws_sessions_id
+
 import langchain
 
 
@@ -32,13 +36,69 @@ from langchain_community.chat_models.ollama import ChatOllama
 from src.assistant.agent import create_agent, create_graph
 from src.config import DEFAULT_AGENT, AGENT_MODELS, OLLAMA_HOST
 from src.config import get_from_config, update_config
+from src.utils.funcs import pcm_to_wav
 
 from PIL import Image
 from io import BytesIO
 import base64
+import wave
 
 # langchain.verbose = True
 # langchain.debug = True
+
+
+async def transcribe_audio(audio: list):
+
+    # from chainlit import secret
+    from chainlit import secret
+
+    # Send error if no audio queue is available
+    if not type(secret.chars) == QueueType:
+        await cl.ErrorMessage(
+            "There is no queue to send the audio to the Speech-Assistant ASR module",
+            author="Error",
+        ).send()
+
+    # Multiple files
+    res = None
+    if len(audio) > 1:
+        res = await cl.AskActionMessage(
+            content="Would you like to transcribe multiple audio files?",
+            author="Speech-Assistant",
+            actions=[
+                cl.Action(name="continue", value="continue", label="✅ Continue"),
+                cl.Action(name="cancel", value="cancel", label="❌ Cancel"),
+            ],
+        ).send()
+    # Return on cancel
+    if res and res.get("value") == "cancel":
+        return
+
+    # Iterating over the audio files
+    for file in audio:
+
+        # Sending sound to model for inference
+        queue: Queue = secret.chars
+        queue.put({"message": file.path, "do_action": False})
+
+        output = queue.get(block=True, timeout=10)
+        transcription = output.get("transcription", None)
+
+        if transcription:
+            # This to keep queue in the global scope
+            print(f"\n\nResults: {transcription}\n\n")
+            await cl.Message(
+                f"**Transcription of `{file.name}`:** \n\n{transcription}",
+                author="Speech-Assistant",
+            ).send()
+        else:
+            await cl.ErrorMessage(
+                f"Please start the transcription service on the GUI and try again.",
+                author="❌ Error",
+            ).send()
+            return
+
+    await cl.Message(f"**Transcription Finished!**", author="Speech-Assistant").send()
 
 
 async def inference_with_image(message: cl.Message, images: list):
@@ -132,6 +192,13 @@ async def inference(message: str):
 @cl.on_chat_start
 async def start():
     """This is done everytime a new sessions starts"""
+
+    from chainlit import secret
+
+    if type(secret.chars) == QueueType:
+        # This to keep queue in the global scope
+        queue: Queue = secret.chars
+        print(f"\nQueue to ASR process included: {queue}\n")
 
     # User avatar icon
     await cl.Avatar(
@@ -270,13 +337,18 @@ async def chat_profile():
 async def on_message(message: cl.Message):
     """This is when user types his message on the ui and sends it."""
 
-    # Processing images exclusively
+    # Processing images and audio exclusively
     images = [file for file in message.elements if "image" in file.mime]
+    audio = [file for file in message.elements if "audio" in file.mime]
 
+    print([file for file in message.elements])
     # Image prompt
     if images:
-
         await inference_with_image(message, images)
+
+    # Audio files to transcribe
+    elif audio:
+        await transcribe_audio(audio)
 
     # Normal prompt
     else:
@@ -462,6 +534,16 @@ async def update_settings_ui(change_model_idx: Optional[Union[int, None]] = None
 def run_app():
 
     from chainlit.cli import run_chainlit
+    from chainlit import secret
+
+    run_chainlit(__file__)
+
+
+def run_ui(queue: Queue):
+    from chainlit.cli import run_chainlit
+    from chainlit import secret
+
+    secret.chars = queue
 
     run_chainlit(__file__)
 
