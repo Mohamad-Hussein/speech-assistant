@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 def start_recording(start_event, model_event, queue):
-    logger.info("sound-high played")
+    logger.debug("sound-high played")
     t0 = time()
 
     # This line to wake device from sleep state
@@ -44,7 +44,7 @@ def start_recording(start_event, model_event, queue):
     try:
         # Playing start sound
         sound1.start()
-        logger.info(f"From start to capture: {time() - t0:.2f}s")
+        logger.debug(f"From start to capture: {time() - t0:.2f}s")
 
         # Capturing audio
         print("Capture STARTED")
@@ -69,7 +69,7 @@ def start_recording(start_event, model_event, queue):
 
         # Playing end sound
         sound2.start()
-        logger.info("sound-low played")
+        logger.debug("sound-low played")
 
     except KeyboardInterrupt:
         print("Keyboard interrupt")
@@ -119,10 +119,10 @@ def main_loop(
     # No audio being recorded
     stream_input.stop_stream()
 
-    logger.info(f"Audio: Default input info: {audio.get_default_input_device_info()}")
-    logger.info(f"Audio: Default output info: {audio.get_default_output_device_info()}")
-    logger.info(f"Audio: Device count: {audio.get_device_count()}")
-    logger.info(f"Audio: Host API count: {audio.get_host_api_count()}")
+    logger.debug(f"Audio: Default input info: {audio.get_default_input_device_info()}")
+    logger.debug(f"Audio: Default output info: {audio.get_default_output_device_info()}")
+    logger.debug(f"Audio: Device count: {audio.get_device_count()}")
+    logger.debug(f"Audio: Host API count: {audio.get_host_api_count()}")
 
     # Input device
     print(
@@ -175,4 +175,4 @@ def main_loop(
         stream_input.close()
         audio.terminate()
         # Logging
-        logger.info("Program End")
+        logger.info("Parent process end")

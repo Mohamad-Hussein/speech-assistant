@@ -53,7 +53,7 @@ def load_model(gui_pipe, model_event, model_index_value, task_value, logger):
     # Downloading the model from HuggingFace Hub
     gui_pipe.send(f"Downloading {basename(model_id)}...")
     logger.info(
-        f"Downloading mode {basename(model_id)} into {realpath(local_cache_dir)}"
+        f"Downloading model {basename(model_id)} into {realpath(local_cache_dir)}"
     )
 
     model = AutoModelForSpeechSeq2Seq.from_pretrained(
@@ -238,15 +238,18 @@ def audio_processing_service(synch_dict, write_method):
                 logger,
             )
 
-            # Signal to load model after stop
+            # Signal to load model or terminate thread after stop
             run_model_signal = False
             while run_model_signal is False:
-                run_model_signal = (
-                    queue.get(block=True).get("message", None) == LOAD_MODEL_SIGNAL
-                )
+                message = queue.get(block=True)
+                run_model_signal = message.get("message", None) == LOAD_MODEL_SIGNAL
+                
+                # Terminate the model thread
+                if message.get("message", None) == TERMINATE_SIGNAL:
+                    raise KeyboardInterrupt
 
     except KeyboardInterrupt:
-        logger.info("KeyboardInterrupt hit on model_inference")
+        logger.debug("KeyboardInterrupt hit on model_inference")
         print("\n\033[92m\033[4mmodel_inference.py\033[0m \033[92mprocess ended\033[0m")
     except Exception as e:
         logger.error(f"Exception hit: {e}")

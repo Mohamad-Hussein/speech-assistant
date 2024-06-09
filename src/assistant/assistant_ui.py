@@ -193,19 +193,6 @@ async def inference(message: str):
 async def start():
     """This is done everytime a new sessions starts"""
 
-    from chainlit import secret
-
-    if type(secret.chars) == QueueType:
-        # This to keep queue in the global scope
-        queue: Queue = secret.chars
-        print(f"\nQueue to ASR process included: {queue}\n")
-
-    # User avatar icon
-    await cl.Avatar(
-        name="You",
-        path="icons/user-icon.png",
-    ).send()
-
     # Logging
     logging.basicConfig(
         level=logging.WARNING,
@@ -214,6 +201,19 @@ async def start():
         filemode="w",
     )
     logger = logging.getLogger(__name__)
+
+    from chainlit import secret
+
+    if type(secret.chars) == QueueType:
+        # This to keep queue in the global scope
+        queue: Queue = secret.chars
+        logger.debug(f"\nQueue to ASR process included: {queue}\n")
+
+    # User avatar icon
+    await cl.Avatar(
+        name="You",
+        path="icons/user-icon.png",
+    ).send()
 
     # Create the agent
     model = get_from_config("Default Agent Model")
@@ -236,14 +236,15 @@ async def start():
     cl.user_session.set("history", [])
     cl.user_session.set("logger", logger)
 
-    logger.info(f"User identifier: {cl.User('User').identifier}")
-    logger.info(f"Session id: {cl.user_session.get('id')}")
-    logger.info(f"Environment: {cl.user_session.get('env')}")
-    logger.info(f"Chat settings: {cl.user_session.get('chat_settings')}")
-    logger.info(f"User: {cl.user_session.get('user')}")
-    logger.info(f"Chat profile: {cl.user_session.get('chat_profile')}")
-    logger.info(f"Languages: {cl.user_session.get('languages')}")
-    logger.info(f"SESSION_ID: {cl.user_session.get('id')}")
+    logger.info(f"Open chat window...")
+    logger.debug(f"User identifier: {cl.User('User').identifier}")
+    logger.debug(f"Session id: {cl.user_session.get('id')}")
+    logger.debug(f"Environment: {cl.user_session.get('env')}")
+    logger.debug(f"Chat settings: {cl.user_session.get('chat_settings')}")
+    logger.debug(f"User: {cl.user_session.get('user')}")
+    logger.debug(f"Chat profile: {cl.user_session.get('chat_profile')}")
+    logger.debug(f"Languages: {cl.user_session.get('languages')}")
+    logger.debug(f"SESSION_ID: {cl.user_session.get('id')}")
 
     await cl.Message(f"Hello! How can I help you?", author=agent.name).send()
 

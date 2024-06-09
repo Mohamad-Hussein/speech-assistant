@@ -46,8 +46,8 @@ class SpeechDetectionGUI:
     def __init__(self):
         # Concurrency construct
         self.key_listener_thread = None
-        self.model_process = None
-        self.parent_process = None
+        self.model_thread = None
+        self.parent_thread = None
 
         ## Concurrency variables
         # Events for synchronization
@@ -146,6 +146,7 @@ class SpeechDetectionGUI:
             os.path.dirname(__file__), "assistant/assistant_ui.py"
         )
 
+        # Keeping this as a process to terminate it later on
         self.webui_process = Process(
             target=run_ui,
             args=(self.sound_data_queue,),
@@ -156,7 +157,7 @@ class SpeechDetectionGUI:
     def start_model_service(self):
         """Loads the ASR model and starts the model service."""
         ## Creating process for model as it takes the longest to load
-        self.model_process = Process(
+        self.model_thread = Thread(
             target=audio_processing_service,
             args=(
                 self.synch_dict,
@@ -164,7 +165,7 @@ class SpeechDetectionGUI:
             ),
             name="WhisperModel",
         )
-        self.model_process.start()
+        self.model_thread.start()
 
         # Waiting for model to load
         print(f"Waiting for model to load\n\nModel message: ", end="")
@@ -185,7 +186,7 @@ class SpeechDetectionGUI:
         self.terminate_event.clear()
 
         ## Loading model depending on the case
-        if not self.model_process:
+        if not self.model_thread:
             self.start_model_service()
         else:
             self.sound_data_queue.put({"message": LOAD_MODEL_SIGNAL})
@@ -208,7 +209,7 @@ class SpeechDetectionGUI:
         self.start_event.clear()
 
         ## Creating process for parent
-        self.parent_process = Process(
+        self.parent_thread = Thread(
             target=main_loop,
             args=(
                 self.start_event,
@@ -218,7 +219,7 @@ class SpeechDetectionGUI:
             ),
             name="SA-Parent",
         )
-        self.parent_process.start()
+        self.parent_thread.start()
 
     def start_detection(self):
         """Starts the speech detection process"""
@@ -250,14 +251,14 @@ class SpeechDetectionGUI:
         self.start_event.set()
 
         # Making sure processes are joined
-        self.parent_process.join(timeout=10)
+        self.parent_thread.join(timeout=10)
         self.key_listener_thread.join(timeout=10)
         # Checking if processes are still running
         processes_alive = [
-            self.parent_process.is_alive(),
+            self.parent_thread.is_alive(),
             self.key_listener_thread.is_alive(),
         ]
-        if self.parent_process.is_alive() or self.key_listener_thread.is_alive():
+        if self.parent_thread.is_alive() or self.key_listener_thread.is_alive():
             self.text_info.config(text="Processes not ended, please restart program!")
             if processes_alive[0]:
                 logger.info("ERROR: Parent process not ended")
@@ -282,16 +283,17 @@ class SpeechDetectionGUI:
         self.start_event.set()
 
         # Terminate processes and joining threads
-        if self.model_process:
-            self.model_process.terminate()
-            self.model_process.join()
-        if self.parent_process:
-            self.parent_process.terminate()
-            self.parent_process.join()
-        if self.key_listener_thread:
-            self.key_listener_thread.join()
         if self.webui_process:
             self.webui_process.terminate()
+            self.webui_process.join()
+        if self.model_thread:
+            # self.model_process.terminate()
+            self.model_thread.join()
+        if self.parent_thread:
+            # self.parent_process.terminate()
+            self.parent_thread.join()
+        if self.key_listener_thread:
+            self.key_listener_thread.join()
 
         # Destroys all GUIs
         if self.option_window_open:
@@ -334,7 +336,7 @@ class SpeechDetectionGUI:
             if (
                 self.text_info
                 and "Model loaded" in self.text_info.cget("text")
-                and not self.parent_process.is_alive()
+                and not self.parent_thread.is_alive()
                 and not "ERROR:" in self.text_info.cget("text")
             ):
                 self.text_info.config(text="Press start to begin speech detection.")
