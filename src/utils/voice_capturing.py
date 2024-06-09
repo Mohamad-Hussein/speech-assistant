@@ -132,6 +132,7 @@ def main_loop(
     # Waiting for model to be loaded
     while not (model_event.is_set() or terminate_event.is_set()):
         sleep(0.5)
+    model_event.clear()
 
     ## Main loop ##
     try:

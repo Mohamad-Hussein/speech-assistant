@@ -108,12 +108,6 @@ def load_model(gui_pipe, model_event, model_index_value, task_value, logger):
     # Telling parent that model is loaded
     model_event.set()
 
-    # To make sure event is cleared before model inference
-    sleep(1)
-
-    # Make sure event is cleared before then
-    model_event.clear()
-
     return model_pipe
 
 
