@@ -150,10 +150,10 @@ def find_gpu_config(logger):
         logger.debug("GPU detected from cuda")
         logger.info(f"Device: {device}")
         logger.info(f"Device name: {cuda.get_device_name()}")
-        logger.info(f"Device properties: {cuda.get_device_properties(device)}")
-        logger.info(f"Device count: {cuda.device_count()}")
-        logger.info(f"Device capability: {cuda.get_device_capability()}")
-        logger.info(f"Current memory allocated: {cuda.mem_get_info()}")
+        logger.debug(f"Device properties: {cuda.get_device_properties(device)}")
+        logger.debug(f"Device count: {cuda.device_count()}")
+        logger.debug(f"Device capability: {cuda.get_device_capability()}")
+        logger.debug(f"Current memory allocated: {cuda.mem_get_info()}")
 
     # AMD
     else:
@@ -166,10 +166,10 @@ def find_gpu_config(logger):
                 device_name = dml.device_name(dml.default_device())
 
                 logger.debug("GPU detected from torch_directml")
-                logger.info(f"Available: {dml.is_available()}")
-                logger.info(f"Devices Available: {dml.device_count()}")
                 logger.info(f"Device: {device}")
                 logger.info(f"Default device: {dml.default_device()}")
+                logger.info(f"Available: {dml.is_available()}")
+                logger.info(f"Devices Available: {dml.device_count()}")
                 logger.info(f"Device name: {dml.device_name(0)}")
                 logger.info(f"GPU memory: {dml.gpu_memory()}")
             else:
