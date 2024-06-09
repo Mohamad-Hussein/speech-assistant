@@ -58,10 +58,12 @@ class Listener:
                             "Terminate event is set on key_listener_win.py"
                         )
                         raise KeyboardInterrupt
+                    sleep(0.05)
 
                 # So model can finish its inference first before continuing
                 if self.model_event.is_set():
-                    self.logger.warn("Hotkey pressed while inference is happening")
+                    self.logger.warn("Hotkey pressed while loading or inference is happening!")
+                    sleep(0.5)
                     continue
 
                 self.down()
