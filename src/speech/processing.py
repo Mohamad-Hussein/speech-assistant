@@ -4,12 +4,15 @@ import requests
 from typing import Optional, Callable
 
 from src.utils.funcs import copy_writing
-from src.config import CHAINLIT_HOST, IGNORE, MIN_WORDS, AGENT_TRIGGER
-
-LLM_WEBUI_OPENED: bool = False
-SESSION_IDS: list[str] = []
-CONNECTION_TIMEOUT = 10
-READER_TIMEOUT = 30
+from src.config import (
+    CHAINLIT_HOST,
+    CHAINLIT_PORT,
+    IGNORE,
+    MIN_WORDS,
+    AGENT_TRIGGER,
+    CONNECTION_TIMEOUT,
+    READER_TIMEOUT,
+)
 
 
 def perform_request(text: str, write_method: Callable, use_agent: bool):
@@ -89,7 +92,7 @@ def invoke_agent(user_prompt: str, id: Optional[str] = "0000"):
     }
     try:
         response = requests.post(
-            f"{CHAINLIT_HOST}/message/{id}",
+            f"{CHAINLIT_HOST}:{CHAINLIT_PORT}/message/{id}",
             json=json_data,
             # timeout=(CONNECTION_TIMEOUT, READER_TIMEOUT),
         )
@@ -109,7 +112,7 @@ def webui_user_input(user_input: str, id: Optional[str] = "0000"):
     }
     try:
         response = requests.post(
-            f"{CHAINLIT_HOST}/user/{id}",
+            f"{CHAINLIT_HOST}:{CHAINLIT_PORT}/user/{id}",
             json=json_data,
             # timeout=(CONNECTION_TIMEOUT, READER_TIMEOUT),
         )

@@ -1,6 +1,8 @@
 import os
 import sys
 from typing import Union, Optional
+import logging
+import logging.config
 from multiprocessing.queues import Queue as QueueType
 from multiprocessing import Queue
 
@@ -8,19 +10,13 @@ from multiprocessing import Queue
 sys.path.append(os.getcwd())
 
 from fastapi import Request, Response
-from fastapi.responses import HTMLResponse
 
-import logging
-import logging.config
 
 import chainlit as cl
 from chainlit.input_widget import Select, Switch, TextInput
 from chainlit.server import app
 from chainlit.context import init_http_context, init_ws_context
 from chainlit.session import WebsocketSession, ws_sessions_id
-
-import langchain
-
 
 from langchain_core.messages import (
     ToolMessage,
@@ -34,14 +30,19 @@ from langchain_community.llms import Ollama
 from langchain_community.chat_models.ollama import ChatOllama
 
 from src.assistant.agent import create_agent, create_graph
-from src.config import DEFAULT_AGENT, AGENT_MODELS, OLLAMA_HOST
-from src.config import get_from_config, update_config
-from src.utils.funcs import pcm_to_wav
+from src.config import (
+    get_from_config,
+    update_config,
+    DEFAULT_AGENT,
+    AGENT_MODELS,
+    OLLAMA_HOST,
+    CHAINLIT_HOST,
+    CHAINLIT_PORT,
+)
 
 from PIL import Image
 from io import BytesIO
 import base64
-import wave
 
 # langchain.verbose = True
 # langchain.debug = True
@@ -474,7 +475,7 @@ async def receive_message(request: Request, session_id: str):
         # Doing inference
         await inference(message)
     except Exception as e:
-        cl.ErrorMessage(f"Error: {e}", author="Error").send()
+        await cl.ErrorMessage(f"Error: {e}", author="Error").send()
 
     return {
         "status": 200,
@@ -546,6 +547,8 @@ def run_ui(queue: Queue):
 
     secret.chars = queue
 
+    os.environ["CHAINTLIT_HOST"] = CHAINLIT_HOST
+    os.environ["CHAINLIT_PORT"] = CHAINLIT_PORT
     run_chainlit(__file__)
 
 

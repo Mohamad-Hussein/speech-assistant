@@ -57,11 +57,15 @@ AGENT_MODELS = [
 ]
 DEFAULT_AGENT_IDX = 0
 OLLAMA_HOST = "http://localhost:11434"
-CHAINLIT_HOST = "http://localhost:8000"
 DEFAULT_TOOL_ENABLED = False
 
 # Hosting url for LLM UI
-CHAINLIT_HOST = "http://localhost:8000"
+CHAINLIT_HOST = "http://localhost"
+CHAINLIT_PORT = "8000"
+
+# This how many seconds to wait for a response from chainlit before timeout
+CONNECTION_TIMEOUT = 10
+READER_TIMEOUT = 30
 
 # -----------------------------------
 
