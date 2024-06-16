@@ -131,4 +131,4 @@ def change_agent(model_name: str, id: Optional[str] = "0000"):
         "model": model_name,
     }
 
-    response = requests.post(f"{CHAINLIT_HOST}/model/{model_name}/{id}", json=json_data)
+    response = requests.post(f"{CHAINLIT_HOST}:{CHAINLIT_PORT}/model/{model_name}/{id}", json=json_data)
