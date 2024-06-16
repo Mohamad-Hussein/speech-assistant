@@ -1,25 +1,37 @@
+"""
+NOTE if you every want to make this into .exe,
+    you have to use the `--onedir` option instead of
+    `--onefile` because customtkinter has data files
+    like .json and .otf
+"""
+
 import os
 from time import sleep
 import logging
 from multiprocessing import Event, Queue, Process, Pipe, Value
 from threading import Thread
-from tkinter.ttk import Combobox, Button
-import tkinter.ttk as ttk
 from tkinter import (
-    Tk,
-    Frame,
     Menu,
-    Label,
-    StringVar,
     DISABLED,
     NORMAL,
     LEFT,
     RIGHT,
-    BooleanVar,
-    Checkbutton,
-    IntVar,
+    CENTER,
 )
-from customtkinter import CTk
+
+import customtkinter
+from customtkinter import (
+    CTk,
+    CTkToplevel,
+    CTkLabel,
+    CTkButton,
+    CTkFrame,
+    CTkSwitch,
+    CTkCheckBox,
+    CTkOptionMenu,
+    CTkComboBox,
+)
+
 
 from src import LOAD_MODEL_SIGNAL, UNLOAD_MODEL_SIGNAL, TERMINATE_SIGNAL
 from src.speech.processing import change_agent
@@ -42,6 +54,7 @@ from src.config import (
 
 # Setting logger
 logger = logging.getLogger(__name__)
+customtkinter.set_default_color_theme("dark-blue")
 
 
 class SpeechDetectionGUI:
@@ -86,6 +99,7 @@ class SpeechDetectionGUI:
 
         # GUI parameters
         self.root = CTk()
+        self.options_window = None
         self.root.title("Speech-Assistant")
         # Calculate screen width and height
         screen_width = self.root.winfo_screenwidth()
@@ -110,7 +124,7 @@ class SpeechDetectionGUI:
 
         ## Menu
         self.menu = Menu(self.root, bg="white", font=("Consolas", 8))
-        self.root.config(menu=self.menu)
+        self.root.configure(menu=self.menu)
 
         # File menu
         self.file_menu = Menu(self.menu, tearoff=0, bg="white", font=("Consolas", 8))
@@ -119,20 +133,22 @@ class SpeechDetectionGUI:
         self.file_menu.add_command(label="Exit", command=self.on_close)
 
         ## Text box
-        self.text_info = Label(self.root, text="Press start to begin speech detection.")
-        self.text_info.pack(pady=10)
+        self.text_info = CTkLabel(
+            self.root, text="Press start to begin speech detection."
+        )
+        self.text_info.pack(pady=(10,), anchor=CENTER)
 
-        buttons_frame = Frame(self.root)
-        buttons_frame.pack()
+        buttons_frame = CTkFrame(self.root)
+        buttons_frame.pack(anchor=CENTER)
 
         ## Start button
-        self.start_button = Button(
+        self.start_button = CTkButton(
             buttons_frame, text="Start", command=self.start_detection
         )
         self.start_button.pack(side="left", padx=5, pady=10)
 
         ## Stop button
-        self.stop_button = Button(
+        self.stop_button = CTkButton(
             buttons_frame,
             text="Stop",
             command=self.stop_detection,
@@ -142,11 +158,23 @@ class SpeechDetectionGUI:
 
         ## Transcribe check button
         # Create a variable to track the switch state
-        from customtkinter import CTkSwitch
+        def transcribe_switch():
+            if switch.get() == True:
+                self.agent_bool_value.value = False
+            else:
+                self.agent_bool_value.value = True
 
-        switch = CTkSwitch(master=self.root, text="Option")
+        switch = CTkSwitch(
+            master=self.root,
+            text="Transcribe",
+            command=transcribe_switch,
+        )
+
+        # To set initial value of switch
+        if get_from_config("Default Agent Model") == "None":
+            switch.toggle()
         switch.place(relx=20, rely=150, anchor="center")
-        switch.pack()
+        switch.pack(pady=(10, 0))
 
         ## GUI protocols
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -216,6 +244,7 @@ class SpeechDetectionGUI:
 
         # Waiting for key listener to start
         self.start_event.wait()
+        self.child_pipe.send("Starting processes and threads...")
         self.start_event.clear()
 
         ## Creating process for parent
@@ -234,7 +263,7 @@ class SpeechDetectionGUI:
     def start_detection(self):
         """Starts the speech detection process"""
         # Button state change
-        self.start_button.config(state=DISABLED)
+        self.start_button.configure(state=DISABLED)
         self.child_pipe.send("Starting speech recognition processes...")
         self.force_update()
 
@@ -245,7 +274,7 @@ class SpeechDetectionGUI:
         while self.model_event.is_set():
             self.force_update()
             sleep(0.1)
-        self.stop_button.config(state=NORMAL)
+        self.stop_button.configure(state=NORMAL)
 
     def stop_detection(self):
         """
@@ -269,18 +298,20 @@ class SpeechDetectionGUI:
             self.key_listener_thread.is_alive(),
         ]
         if self.parent_thread.is_alive() or self.key_listener_thread.is_alive():
-            self.text_info.config(text="Processes not ended, please restart program!")
+            self.text_info.configure(
+                text="Processes not ended, please restart program!"
+            )
             if processes_alive[0]:
                 logger.info("ERROR: Parent process not ended")
             if processes_alive[1]:
                 logger.info("ERROR: Key listener process not ended")
 
         # Button state change
-        self.start_button.config(state=NORMAL)
-        self.stop_button.config(state=DISABLED)
+        self.start_button.configure(state=NORMAL)
+        self.stop_button.configure(state=DISABLED)
 
         # Removes speech text
-        self.text_info.config(text="Press start to begin speech detection.")
+        self.text_info.configure(text="Press start to begin speech detection.")
 
     def on_close(self):
         """Terminates all processes before closing"""
@@ -339,7 +370,7 @@ class SpeechDetectionGUI:
             if len(text) > self.max_text_length:
                 text = text[: self.max_text_length] + "..."
 
-            self.text_info.config(text=text)
+            self.text_info.configure(text=text)
 
         # Changing incorrect updates
         try:
@@ -349,7 +380,7 @@ class SpeechDetectionGUI:
                 and not self.parent_thread.is_alive()
                 and not "ERROR:" in self.text_info.cget("text")
             ):
-                self.text_info.config(text="Press start to begin speech detection.")
+                self.text_info.configure(text="Press start to begin speech detection.")
         except:
             # NOTE - This is a workaround for an issue with Tkinter
             #   that Label cget is used after root is destroyed
@@ -360,40 +391,36 @@ class SpeechDetectionGUI:
     def open_options(self):
         """Opens the options window"""
 
+        # Refocuses to window if already open
         if self.option_window_open:
             self.options_window.focus_force()
+            self.options_window.lift()
+            return
+        # If window is closed, open from withdrawn window
+        elif self.options_window:
+            self.options_window.deiconify()
             return
 
         self.option_window_open = True
 
         # Create a new Tkinter window
-        self.options_window = Tk()
+        self.options_window = CTkToplevel(self.root)
+
         self.options_window.title("Settings")
         self.options_window.geometry(self.window_size)
 
         # Label for settings
-        label = Label(
+        label = CTkLabel(
             self.options_window,
             text="Change the speech model used \nand the assistant model.",
         )
         label.pack()
 
         ## Model selection for Speech-to-Text
-        speech_model_var = StringVar()
-        speech_model_label = Label(
+        speech_model_label = CTkLabel(
             self.options_window, text="Select Speech-To-Text Model:"
         )
-        speech_model_label.pack(pady=(20, 5))
-        speech_model_combobox = Combobox(
-            self.options_window,
-            textvariable=speech_model_var,
-            width=40,
-            justify="center",
-            state="readonly",
-        )
-        speech_model_combobox["values"] = SPEECH_MODELS
-        speech_model_combobox.current(self.model_index_value.value)
-        speech_model_combobox.pack(pady=5)
+        speech_model_label.pack(pady=(20, 0))
 
         def on_model_select(event):
             selected_model = speech_model_combobox.get()
@@ -402,33 +429,28 @@ class SpeechDetectionGUI:
             update_config("Default Model Index", self.model_index_value.value)
             print(f"\nASR model changed to {selected_model}\n")
 
-        # Bind the on_model_select function to the <<ComboboxSelected>> event
-        speech_model_combobox.bind("<<ComboboxSelected>>", on_model_select)
-
-        ## Model selection Combobox
-        model_var = StringVar()
-        model_label = Label(self.options_window, text="Select Assistant Model:")
-        model_label.pack(pady=5)
-        model_combobox = Combobox(
+        speech_model_combobox = CTkComboBox(
             self.options_window,
-            textvariable=model_var,
-            width=40,
+            values=SPEECH_MODELS,
+            width=250,
+            command=on_model_select,
             justify="center",
+            hover=True,
             state="readonly",
         )
+        speech_model_combobox.set(SPEECH_MODELS[self.model_index_value.value])
+        speech_model_combobox.pack(pady=5)
+
+        ## Model selection Combobox
+        model_label = CTkLabel(self.options_window, text="Select Assistant Model:")
+        model_label.pack(pady=(10, 0))
         # Showing info on first option
         user_models = get_from_config("User Models List") or []
         agent_models_options = AGENT_MODELS.copy() + user_models
         agent_models_options[0] = "None (Transcription only)"
 
-        model_combobox["values"] = agent_models_options
+        # model_combobox["values"] = agent_models_options
         current_agent = get_from_config("Default Agent Model")
-
-        # current agent is None if user doesn't want to communicate with agent
-        model_combobox.current(
-            (AGENT_MODELS.copy() + user_models).index(str(current_agent))
-        )
-        model_combobox.pack(pady=5)
 
         def on_agent_select(event):
             selected_agent = model_combobox.get()
@@ -444,52 +466,54 @@ class SpeechDetectionGUI:
             update_config("Default Agent Model", selected_agent)
 
             # Change agent
-            if selected_agent != "None":
-                change_agent(selected_agent)
+            change_agent(selected_agent)
 
             print(f"\nAgent model changed to {selected_agent}\n")
 
+        # current agent is None if user doesn't want to communicate with agent
+        model_combobox = CTkComboBox(
+            self.options_window,
+            values=agent_models_options,
+            command=on_agent_select,
+            width=250,
+            justify="center",
+            state="readonly",
+            hover=True,
+        )
+        model_combobox.set(
+            current_agent if current_agent != "None" else agent_models_options[0]
+        )
+        model_combobox.pack(pady=5)
         model_combobox.bind("<<ComboboxSelected>>", on_agent_select)
 
         ## Translate Speech Checkbox
-        frame = Frame(self.options_window)
-        frame.pack()
 
-        # Create the text label
-        text_label = Label(frame, text="Translate to English")
-        text_label.pack(side=RIGHT)
+        def on_check():
+            # Update the task
+            self.task_bool_value.value = translate_speech_check.get()
 
-        # Create the checkbox for translate speech
-        translate_speech = BooleanVar(value=self.task_bool_value.value)
-        # check_button = Checkbutton(frame, variable=translate_speech, command=on_checked)
+            # Update the config file
+            update_config("Translate Speech", translate_speech_check.get())
 
-        translate_speech_command = self.update_config_command(
-            translate_speech, self.task_bool_value, "Translate Speech"
-        )
-        translate_speech_button = Checkbutton(
-            frame,
-            variable=translate_speech,
-            command=translate_speech_command,
+        translate_speech_check = CTkCheckBox(
+            self.options_window,
+            text="Translate to English",
+            command=on_check,
         )
 
-        (
-            translate_speech_button.select()
-            if translate_speech.get()
-            else translate_speech_button.deselect()
-        )
-        translate_speech_button.pack(side=LEFT)
+        translate_speech_check.pack(pady=(20, 0))
 
         # TODO add a check for using local_files_only
 
-        info_label = Label(self.options_window, text="(applicable to Whisper-Large)")
+        info_label = CTkLabel(self.options_window, text="(applicable to Whisper-Large)")
         info_label.pack()
 
         self.options_window.protocol("WM_DELETE_WINDOW", self.close_options)
 
     def close_options(self):
-        self.option_window_open = False
         self.root.focus_set()
-        self.options_window.destroy()
+        self.option_window_open = False
+        self.options_window.withdraw()
 
     def update_config_command(self, bool_var, val_to_change, config_name):
         """Returns a command to update command when checking a box
