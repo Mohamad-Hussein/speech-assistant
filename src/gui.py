@@ -1,9 +1,10 @@
 import os
 from time import sleep
-import subprocess
+import logging
 from multiprocessing import Event, Queue, Process, Pipe, Value
 from threading import Thread
 from tkinter.ttk import Combobox, Button
+import tkinter.ttk as ttk
 from tkinter import (
     Tk,
     Frame,
@@ -16,8 +17,9 @@ from tkinter import (
     RIGHT,
     BooleanVar,
     Checkbutton,
+    IntVar,
 )
-import logging
+from customtkinter import CTk
 
 from src import LOAD_MODEL_SIGNAL, UNLOAD_MODEL_SIGNAL, TERMINATE_SIGNAL
 from src.speech.processing import change_agent
@@ -83,7 +85,7 @@ class SpeechDetectionGUI:
         self.option_window_open: bool = False
 
         # GUI parameters
-        self.root = Tk()
+        self.root = CTk()
         self.root.title("Speech-Assistant")
         # Calculate screen width and height
         screen_width = self.root.winfo_screenwidth()
@@ -137,6 +139,14 @@ class SpeechDetectionGUI:
             state=DISABLED,
         )
         self.stop_button.pack(side="right", padx=5, pady=10)
+
+        ## Transcribe check button
+        # Create a variable to track the switch state
+        from customtkinter import CTkSwitch
+
+        switch = CTkSwitch(master=self.root, text="Option")
+        switch.place(relx=20, rely=150, anchor="center")
+        switch.pack()
 
         ## GUI protocols
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)

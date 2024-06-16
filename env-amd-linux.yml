@@ -7,6 +7,7 @@ channels:
 dependencies:
   - ffmpeg=4.3
   - python=3.11.5
+  - tk=*=xft_* # For Linux customtkinter support (solution https://github.com/ContinuumIO/anaconda-issues/issues/6833#issuecomment-1805812007)
   - pip=23.3
   - pip:
       - --index-url https://download.pytorch.org/whl/rocm5.6
@@ -27,4 +28,5 @@ dependencies:
       - langchain-community
       - langchain-experimental
       - langgraph
-      - chainlit
+      - chainlit==1.1.202
+      - customtkinter
