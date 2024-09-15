@@ -90,7 +90,7 @@ The program will download the ```distil-whisper/distil-small.en``` model by defa
 
 *Please note that the distil models are currently English only, except for `whisper-large`, which supports transcription and translation capabilities of multiple languages.*
 
-# Notes and Considerations
+# Notes and Suggestions
 - You can translate your speech to English in real-time using Whisper-Large by going to `options` and checking `Translate to English`
 - Users with dedicated graphics cards will have a better experience running the big models.
 - Make sure to locate your primary sound input device!
@@ -99,11 +99,9 @@ The program will download the ```distil-whisper/distil-small.en``` model by defa
 - For transcribing on Windows you can use its built-in dictation service with left windows + h. However, the whisper models can be useful for formatting expressive punctuation, and the implementation allows for private and quick dictation.
 
 # Future contributions
-## Future features
-- Adding tools for agent
+## Features
+- Adding more tools for agent
 - Add sequential inference, for transcription as you talk (WhisperLive)
-  
-## Needed features
 - Add the option to use whatever key bind of the user's choosing (GUI)
 - Make Dockerfile for containers
 
