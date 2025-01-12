@@ -1,0 +1,35 @@
+name: speech-assistant
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - ffmpeg=4.3
+  # - openh264=2.1.1=h4ff587b_0 # This is needed for reading audio bytes rather than a file (https://stackoverflow.com/a/63977043/5288816)
+  - openh264=2.5.0 # This is needed for reading audio bytes rather than a file (https://stackoverflow.com/a/63977043/5288816)
+  - python=3.9
+  # Use this when there is a rendering problem from customtkinter
+  # - conda-forge::tk=*=xft_* # For Linux customtkinter support (solution https://github.com/ContinuumIO/anaconda-issues/issues/6833#issuecomment-1805812007)
+  - cpuonly=2.0
+  - pytorch=2.0.0
+  - pip
+  - pip:
+      - torch-directml
+      - accelerate==0.24.1
+      - optimum==1.15.0
+      - pyaudio==0.2.14
+      - pydantic==2.10.1
+      - playsound==1.2.2
+      - pyautogui==0.9.54
+      - pyclip==0.7.0
+      - python-xlib==0.33
+      - python3-xlib==0.15
+      - transformers==4.35.2
+      - keyboard==0.13.5
+      - langchain
+      - langchain-core
+      - langchain-community
+      - langchain-experimental
+      - langgraph
+      - chainlit==1.1.202
+      - customtkinter
