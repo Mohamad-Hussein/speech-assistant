@@ -51,16 +51,16 @@ You can get started on any operating system you would like. The program was test
 3. **Install dependencies.** Please use the command for your corresponding GPU type and operating system. Depending on your internet connection, this will take ~5-15 minutes (Type ```y``` and press enter when asked to download packages).
    - **Nvidia GPU:**
      ```bash
-     conda env create -f env-cuda.yml
+     conda env create -f env-cuda.yaml
      ```
    - **AMD GPU or any CPU Integrated Graphics on Windows:**
      ```powershell
-     conda env create -f env-general-win.yml
+     conda env create -f env-general-win.yaml
      ```
 
    - **AMD GPU on Linux:**
      ```bash
-     conda env create -f env-amd-linux.yml
+     conda env create -f env-amd-linux.yaml
      ```
 4. **Activate the conda environment.**
     ```bash
@@ -109,7 +109,7 @@ The program will download the ```distil-whisper/distil-small.en``` model by defa
 
 Distil-whisper paper:
 
-- **Title:** Distil-Whisper: Robust Knowledge Distillation via Large-Scale Pseudo Labelling
+- **Title:** Distil-Whisper: Robust Knowledge Distillation via Large-Scale Pseudo Labeling
 - **Authors:** Sanchit Gandhi, Patrick von Platen, Alexander M. Rush
 - **Year:** 2023
 - **Link:** [ArXiv](https://arxiv.org/abs/2311.00430)
